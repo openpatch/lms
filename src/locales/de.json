@@ -1,0 +1,158 @@
+{
+  "common": {
+    "appName": "Lernen mit Spaß",
+    "tagline": "Minispiele für Mathematik und Informatik",
+    "enterArena": "Arena betreten",
+    "join": "Beitreten",
+    "back": "Zurück",
+    "start": "Spiel starten",
+    "restart": "Neue Runde",
+    "players": "Spieler",
+    "waiting": "Warten auf Spieler...",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "close": "Schließen",
+    "builtBy": "Entwickelt mit",
+    "byOpenPatch": "von OpenPatch",
+    "github": "GitHub"
+  },
+  "landing": {
+    "title": "Spiele für den Unterricht.",
+    "subtitle": "Als Einstieg, Auflockerung oder einfach zwischendurch.",
+    "description": "Spiel wählen, 6-stelligen Code zeigen — die Klasse spielt sofort mit. Für Schüler:innen kein Account nötig.",
+    "teacher": "Ich bin Lehrperson",
+    "student": "Ich bin Schüler:in",
+    "howItWorks": "So funktioniert es",
+    "step1": "Spiel auswählen und Lobby erstellen",
+    "step2": "6-stelligen Code teilen",
+    "step3": "Klasse spielt sofort mit"
+  },
+  "arena": {
+    "title": "Spielbibliothek",
+    "all": "Alle",
+    "math": "Mathematik",
+    "cs": "Informatik",
+    "live": "Live",
+    "new": "Neu",
+    "soon": "Bald"
+  },
+  "game": {
+    "createLobby": "Lobby erstellen",
+    "players": "{{count}} Spieler",
+    "minPlayers": "Mindestens {{count}} Spieler",
+    "maxPlayers": "Maximal {{count}} Spieler",
+    "rules": "Spielregeln",
+    "settings": "Einstellungen",
+    "round": "Runde {{current}} / {{total}}",
+    "roundResults": "Rundenergebnisse",
+    "finalResults": "Endresultat",
+    "nextRound": "Nächste Runde",
+    "waitingNextRound": "Warten auf nächste Runde...",
+    "letsGo": "Los geht's!",
+    "waitingForHost": "Warte auf die Lehrperson...",
+    "go": "Los!"
+  },
+  "lobby": {
+    "title": "Lobby",
+    "joinCode": "Beitrittscode",
+    "players": "Spieler",
+    "waiting": "Warten auf Spieler...",
+    "ready": "Bereit zum Starten!",
+    "start": "Spiel starten",
+    "kick": "Entfernen",
+    "copyCode": "Code kopieren",
+    "copied": "Kopiert!",
+    "shareCode": "Teile diesen Code mit deiner Klasse",
+    "playerJoined": "{{name}} ist beigetreten",
+    "playerLeft": "{{name}} hat verlassen",
+    "needMorePlayers": "Mindestens {{count}} Spieler nötig"
+  },
+  "join": {
+    "title": "Spiel beitreten",
+    "codeLabel": "Beitrittscode",
+    "codePlaceholder": "ABC123",
+    "nameLabel": "Dein Name",
+    "namePlaceholder": "Max",
+    "submit": "Beitreten",
+    "invalidCode": "Ungültiger Code",
+    "emptyName": "Bitte gib einen Namen ein"
+  },
+  "play": {
+    "connecting": "Verbinde...",
+    "waitingHost": "Warten auf Spielstart",
+    "disconnected": "Verbindung verloren",
+    "results": "Ergebnisse",
+    "backToLobby": "Zurück zur Lobby"
+  },
+  "games": {
+    "example": {
+      "title": "Beispielspiel",
+      "description": "Ein Beispielspiel zum Testen des Frameworks.",
+      "click": "Klicken!",
+      "score": "Punkte: {{count}}",
+      "timeLeft": "Zeit: {{seconds}}s",
+      "done": "Spiel vorbei!",
+      "round": "Runde {{current}} / {{total}}",
+      "roundResults": "Rundenergebnisse",
+      "finalResults": "Endresultat",
+      "nextRound": "Nächste Runde",
+      "waitingNextRound": "Warten auf nächste Runde...",
+      "settings": {
+        "rounds": "Runden",
+        "duration": "Rundendauer (Sekunden)",
+        "targetScore": "Ziel-Punkte"
+      },
+      "explanation": {
+        "title": "Spielregeln",
+        "description": "Klicke so oft wie möglich in {{seconds}} Sekunden. Ziel: {{target}} Klicks!",
+        "getReady": "Mach dich bereit!",
+        "hostInfo": "Erkläre die Regeln und klicke auf 'Los geht's!', um das Spiel zu starten."
+      },
+      "letsGo": "Los geht's!",
+      "waitingForHost": "Warte auf die Lehrperson...",
+      "go": "Los!"
+    },
+    "squareroot": {
+      "title": "Wurzel-Challenge",
+      "description": "Drei Runden mit Quadratwurzeln: Tempo, Zahlenstrahl und Klassifizierung.",
+      "round1": "Runde 1: Tempo",
+      "round2": "Runde 2: Zahlenstrahl",
+      "round3": "Runde 3: Klassifizieren",
+      "timeLeft": "Zeit: {{seconds}}s",
+      "progress": "Frage {{current}} / {{total}}",
+      "submit": "Bestätigen",
+      "typeAnswer": "Deine Antwort",
+      "clickOnLine": "Klicke auf den Zahlenstrahl, um den Wert zu schätzen",
+      "yourAnswer": "Deine Antwort",
+      "allAnswered": "Alle Fragen beantwortet! Warte auf die anderen...",
+      "natural": "Natürlich",
+      "rational": "Rational",
+      "irrational": "Irrational",
+      "classifyPrompt": "ist...",
+      "hostView": "Schüler:innen antworten. Verfolge den Fortschritt:",
+      "streak": "Serie",
+      "bonus": "Bonus",
+      "pts": "Pkt",
+      "settings": {
+        "questionsPerRound": "Fragen pro Runde",
+        "duration": "Zeit pro Runde (Sekunden)"
+      },
+      "explanation": {
+        "speed": {
+          "title": "Tempo-Runde",
+          "description": "Löse {{count}} Quadratwurzeln so schnell wie möglich. Alle Antworten sind natürliche Zahlen. Je schneller du richtig antwortest, desto mehr Punkte bekommst du. Du hast {{seconds}} Sekunden."
+        },
+        "numberline": {
+          "title": "Zahlenstrahl-Runde",
+          "description": "Schätze {{count}} Quadratwurzeln, indem du auf den Zahlenstrahl klickst. Je näher du am echten Wert bist, desto mehr Punkte bekommst du. Du hast {{seconds}} Sekunden."
+        },
+        "classify": {
+          "title": "Klassifizierungs-Runde",
+          "description": "Klassifiziere {{count}} Quadratwurzeln als natürlich, rational oder irrational. Jede richtige Antwort gibt 100 Punkte. Du hast {{seconds}} Sekunden."
+        },
+        "getReady": "Mach dich bereit!",
+        "hostInfo": "Erkläre die Regeln und klicke auf 'Los geht's!', um zu starten."
+      }
+    }
+  }
+}

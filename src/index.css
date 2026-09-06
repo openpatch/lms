@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #e6f2ef;
+  --color-brand-100: #cce4df;
+  --color-brand-200: #b5e3d8;
+  --color-brand-300: #7fc7ba;
+  --color-brand-400: #4aa594;
+  --color-brand-500: #1c8472;
+  --color-brand-600: #007864;
+  --color-brand-700: #006553;
+  --color-brand-800: #004c45;
+  --color-brand-900: #003a32;
+}
+
+@keyframes feedback-flash {
+  0%   { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+.animate-feedback-flash {
+  animation: feedback-flash 0.6s ease-out forwards;
+}
+
+@keyframes question-in {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-question-in {
+  animation: question-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+@keyframes streak-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-streak-pop {
+  animation: streak-pop 0.4s ease-out;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.1); }
+}
+.animate-timer-pulse {
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes marker-drop {
+  0%   { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+.animate-marker-drop {
+  animation: marker-drop 0.2s ease-out;
+}
+
+@keyframes celebrate-bounce {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+.animate-celebrate {
+  animation: celebrate-bounce 0.6s ease-in-out;
+}
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+.animate-confetti {
+  animation: confetti-fall 3s linear forwards;
+}
+
+@keyframes medal-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
+  50%      { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+}
+.animate-medal-glow {
+  animation: medal-glow 2s ease-in-out infinite;
+}

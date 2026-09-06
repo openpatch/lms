@@ -1,0 +1,7 @@
+{
+  "name": "lernen-mit-spass",
+  "main": "server/index.ts",
+  "compatibilityDate": "2025-01-01",
+  "persist": false,
+  "port": 1997
+}

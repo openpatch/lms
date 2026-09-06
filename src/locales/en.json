@@ -1,0 +1,158 @@
+{
+  "common": {
+    "appName": "Learning with Fun",
+    "tagline": "Mini games for math and computer science",
+    "enterArena": "Enter Arena",
+    "join": "Join",
+    "back": "Back",
+    "start": "Start Game",
+    "restart": "New Round",
+    "players": "Players",
+    "waiting": "Waiting for players...",
+    "loading": "Loading...",
+    "error": "Error",
+    "close": "Close",
+    "builtBy": "Built with",
+    "byOpenPatch": "by OpenPatch",
+    "github": "GitHub"
+  },
+  "landing": {
+    "title": "Games for the classroom.",
+    "subtitle": "As an introduction, a break, or just in between.",
+    "description": "Pick a game, show the 6-digit code — the class plays along instantly. No account needed for students.",
+    "teacher": "I'm a teacher",
+    "student": "I'm a student",
+    "howItWorks": "How it works",
+    "step1": "Choose a game and create a lobby",
+    "step2": "Share the 6-digit code",
+    "step3": "Class plays instantly"
+  },
+  "arena": {
+    "title": "Game Library",
+    "all": "All",
+    "math": "Math",
+    "cs": "Computer Science",
+    "live": "Live",
+    "new": "New",
+    "soon": "Soon"
+  },
+  "game": {
+    "createLobby": "Create Lobby",
+    "players": "{{count}} players",
+    "minPlayers": "At least {{count}} players",
+    "maxPlayers": "At most {{count}} players",
+    "rules": "Rules",
+    "settings": "Settings",
+    "round": "Round {{current}} / {{total}}",
+    "roundResults": "Round Results",
+    "finalResults": "Final Results",
+    "nextRound": "Next Round",
+    "waitingNextRound": "Waiting for next round...",
+    "letsGo": "Let's go!",
+    "waitingForHost": "Waiting for the teacher...",
+    "go": "Go!"
+  },
+  "lobby": {
+    "title": "Lobby",
+    "joinCode": "Join Code",
+    "players": "Players",
+    "waiting": "Waiting for players...",
+    "ready": "Ready to start!",
+    "start": "Start Game",
+    "kick": "Kick",
+    "copyCode": "Copy Code",
+    "copied": "Copied!",
+    "shareCode": "Share this code with your class",
+    "playerJoined": "{{name}} joined",
+    "playerLeft": "{{name}} left",
+    "needMorePlayers": "At least {{count}} players needed"
+  },
+  "join": {
+    "title": "Join Game",
+    "codeLabel": "Join Code",
+    "codePlaceholder": "ABC123",
+    "nameLabel": "Your Name",
+    "namePlaceholder": "Max",
+    "submit": "Join",
+    "invalidCode": "Invalid code",
+    "emptyName": "Please enter a name"
+  },
+  "play": {
+    "connecting": "Connecting...",
+    "waitingHost": "Waiting for host to start",
+    "disconnected": "Connection lost",
+    "results": "Results",
+    "backToLobby": "Back to Lobby"
+  },
+  "games": {
+    "example": {
+      "title": "Example Game",
+      "description": "An example game to test the framework.",
+      "click": "Click!",
+      "score": "Score: {{count}}",
+      "timeLeft": "Time: {{seconds}}s",
+      "done": "Game over!",
+      "round": "Round {{current}} / {{total}}",
+      "roundResults": "Round Results",
+      "finalResults": "Final Results",
+      "nextRound": "Next Round",
+      "waitingNextRound": "Waiting for next round...",
+      "settings": {
+        "rounds": "Rounds",
+        "duration": "Round duration (seconds)",
+        "targetScore": "Target score"
+      },
+      "explanation": {
+        "title": "How to Play",
+        "description": "Click as many times as possible in {{seconds}} seconds. Target: {{target}} clicks!",
+        "getReady": "Get ready!",
+        "hostInfo": "Explain the rules, then click 'Let's go!' to start the game."
+      },
+      "letsGo": "Let's go!",
+      "waitingForHost": "Waiting for the teacher...",
+      "go": "Go!"
+    },
+    "squareroot": {
+      "title": "Square Root Challenge",
+      "description": "Three rounds of square roots: speed, number line, and classification.",
+      "round1": "Round 1: Speed",
+      "round2": "Round 2: Number Line",
+      "round3": "Round 3: Classify",
+      "timeLeft": "Time: {{seconds}}s",
+      "progress": "Question {{current}} / {{total}}",
+      "submit": "Submit",
+      "typeAnswer": "Your answer",
+      "clickOnLine": "Click on the number line to estimate the value",
+      "yourAnswer": "Your answer",
+      "allAnswered": "All questions answered! Waiting for others...",
+      "natural": "Natural",
+      "rational": "Rational",
+      "irrational": "Irrational",
+      "classifyPrompt": "is...",
+      "hostView": "Players are answering. Watch their progress:",
+      "streak": "streak",
+      "bonus": "bonus",
+      "pts": "pts",
+      "settings": {
+        "questionsPerRound": "Questions per round",
+        "duration": "Time per round (seconds)"
+      },
+      "explanation": {
+        "speed": {
+          "title": "Speed Round",
+          "description": "Solve {{count}} square roots as fast as possible. All answers are natural numbers. The faster you answer correctly, the more points you get. You have {{seconds}} seconds."
+        },
+        "numberline": {
+          "title": "Number Line Round",
+          "description": "Estimate {{count}} square roots by clicking on the number line. The closer you are to the real value, the more points you get. You have {{seconds}} seconds."
+        },
+        "classify": {
+          "title": "Classification Round",
+          "description": "Classify {{count}} square roots as natural, rational, or irrational. Each correct answer is worth 100 points. You have {{seconds}} seconds."
+        },
+        "getReady": "Get ready!",
+        "hostInfo": "Explain the rules, then click 'Let's go!' to start."
+      }
+    }
+  }
+}
