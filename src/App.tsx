@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router";
+import { HashRouter, Routes, Route } from "react-router";
 import Layout from "./components/Layout";
 import Landing from "./pages/Landing";
 import Arena from "./pages/Arena";
@@ -9,7 +9,7 @@ import Play from "./pages/Play";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Layout>
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -20,6 +20,6 @@ export default function App() {
           <Route path="/play/:code" element={<Play />} />
         </Routes>
       </Layout>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
