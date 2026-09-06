@@ -41,8 +41,7 @@ jobs:
         run: |
           url="${{ vars.VITE_PARTYKIT_HOST }}"
           if [ -z "$url" ]; then
-            name=$(node -p "require('./partykit.json').name")
-            url="${name}.${{ secrets.PARTYKIT_LOGIN }}.partykit.dev"
+            url="lernen-mit-spass.mikebarkmin.partykit.dev"
           fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
