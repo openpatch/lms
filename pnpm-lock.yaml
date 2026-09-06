@@ -36,6 +36,9 @@ importers:
         specifier: ^8.3.1
         version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
     devDependencies:
+      '@sctg/vite-plugin-github-pages-spa':
+        specifier: ^0.2.0
+        version: 0.2.0(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0))
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0))
@@ -491,6 +494,11 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
+
+  '@sctg/vite-plugin-github-pages-spa@0.2.0':
+    resolution: {integrity: sha512-a9rdTr1q7Fv5Mto2tyuBQ9GkoJZ4NEjWroD7P5FGwYNr0u7EzvyAf90sMJqkFv+k2OH1VmHOKd/iJLQcQ8p12w==}
+    peerDependencies:
+      vite: '>=6.3.0'
 
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
@@ -1433,6 +1441,10 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@sctg/vite-plugin-github-pages-spa@0.2.0(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0))':
+    dependencies:
+      vite: 8.2.2(@types/node@24.13.3)(jiti@2.7.0)
 
   '@tailwindcss/node@4.3.3':
     dependencies:
