@@ -153,6 +153,49 @@
         "getReady": "Mach dich bereit!",
         "hostInfo": "Erkläre die Regeln und klicke auf 'Los geht's!', um zu starten."
       }
+    },
+    "analysis": {
+      "title": "Analysis-Challenge",
+      "description": "Drei Runden Analysis: Ableitung wählen, Graph zeichnen und Ableitung aus Graph zeichnen.",
+      "round1": "Runde 1: Ableitung wählen",
+      "round2": "Runde 2: Graph zeichnen",
+      "round3": "Runde 3: Ableitung zeichnen",
+      "timeLeft": "Zeit: {{seconds}}s",
+      "progress": "Frage {{current}} / {{total}}",
+      "submit": "Bestätigen",
+      "findDerivative": "Finde die Ableitung von",
+      "whichIsDerivative": "Welches ist f'(x)?",
+      "drawGraphPrompt": "Zeichne den Graphen von",
+      "drawDerivativePrompt": "Zeichne die Ableitung f'(x)",
+      "dashedIsFunction": "Die gestrichelte Kurve zeigt f(x)",
+      "allAnswered": "Alle Fragen beantwortet! Warte auf die anderen...",
+      "hostView": "Schüler:innen antworten. Verfolge den Fortschritt:",
+      "streak": "Serie",
+      "bonus": "Bonus",
+      "pts": "Pkt",
+      "yourDrawing": "Deine Zeichnung",
+      "solution": "Lösung",
+      "next": "Weiter",
+      "settings": {
+        "questionsPerRound": "Fragen pro Runde",
+        "duration": "Zeit pro Runde (Sekunden)"
+      },
+      "explanation": {
+        "mc": {
+          "title": "Multiple-Choice-Runde",
+          "description": "Wähle aus {{count}} Funktionen jeweils die richtige Ableitung f'(x) aus 4 Optionen. Je schneller du richtig antwortest, desto mehr Punkte bekommst du. Du hast {{seconds}} Sekunden."
+        },
+        "drawGraph": {
+          "title": "Graph zeichnen",
+          "description": "Zeichne den Graphen von {{count}} Funktionen auf das Koordinatensystem. Je genauer deine Zeichnung ist, desto mehr Punkte bekommst du. Du hast {{seconds}} Sekunden."
+        },
+        "drawDerivative": {
+          "title": "Ableitung zeichnen",
+          "description": "Zeichne die Ableitung f'(x) für {{count}} gegebene Funktionen. Die gestrichelte Kurve zeigt f(x). Du hast {{seconds}} Sekunden."
+        },
+        "getReady": "Mach dich bereit!",
+        "hostInfo": "Erkläre die Regeln und klicke auf 'Los geht's!', um zu starten."
+      }
     }
   }
 }

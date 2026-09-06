@@ -1,6 +1,7 @@
 import type { GameHandler } from "../types";
 import exampleHandler from "./example";
 import squarerootHandler from "./squareroot";
+import analysisHandler from "./analysis";
 
 /**
  * Server-side game handler registry.
@@ -9,4 +10,5 @@ import squarerootHandler from "./squareroot";
 export const gameHandlers: Record<string, GameHandler> = {
   example: exampleHandler,
   squareroot: squarerootHandler,
+  analysis: analysisHandler,
 };

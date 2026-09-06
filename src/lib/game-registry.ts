@@ -30,10 +30,12 @@ export interface GameDefinition extends GameMeta {
  */
 import exampleGame from "../games/example";
 import squarerootGame from "../games/squareroot";
+import analysisGame from "../games/analysis";
 
 export const games: Record<string, GameDefinition> = {
   example: exampleGame,
   squareroot: squarerootGame,
+  analysis: analysisGame,
 };
 
 export function getGame(id: string): GameDefinition | undefined {

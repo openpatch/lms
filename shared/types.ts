@@ -120,3 +120,41 @@ export interface SquarerootGameData {
   duration: number;
   finished: boolean;
 }
+
+// Analysis (calculus) game types
+export type AnalysisRoundType = "multiple-choice" | "draw-graph" | "draw-derivative";
+
+export interface AnalysisSettings {
+  questionsPerRound: number; // 3, 5, 8
+  duration: number;           // seconds per round, 60-180
+}
+
+export const defaultAnalysisSettings: AnalysisSettings = {
+  questionsPerRound: 5,
+  duration: 120,
+};
+
+export interface AnalysisQuestion {
+  id: number;
+  functionId: number;        // index into ANALYSIS_FUNCTIONS
+  functionLatex: string;      // LaTeX for f(x)
+  // Multiple-choice round (round 1)
+  options?: string[];         // 4 LaTeX strings for f'(x)
+  correctOptionIndex?: number;
+  // Drawing rounds (rounds 2 & 3)
+  xMin?: number;
+  xMax?: number;
+  yMin?: number;
+  yMax?: number;
+}
+
+export interface AnalysisGameData {
+  currentRound: number;
+  totalRounds: number;
+  roundType: AnalysisRoundType;
+  questions: AnalysisQuestion[];
+  answers: Record<string, Record<number, PlayerAnswer>>;
+  startTime: number;
+  duration: number;
+  finished: boolean;
+}

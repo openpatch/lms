@@ -153,6 +153,49 @@
         "getReady": "Get ready!",
         "hostInfo": "Explain the rules, then click 'Let's go!' to start."
       }
+    },
+    "analysis": {
+      "title": "Analysis Challenge",
+      "description": "Three rounds of calculus: pick the derivative, draw the graph, and draw the derivative from a graph.",
+      "round1": "Round 1: Pick the Derivative",
+      "round2": "Round 2: Draw the Graph",
+      "round3": "Round 3: Draw the Derivative",
+      "timeLeft": "Time: {{seconds}}s",
+      "progress": "Question {{current}} / {{total}}",
+      "submit": "Submit",
+      "findDerivative": "Find the derivative of",
+      "whichIsDerivative": "Which is f'(x)?",
+      "drawGraphPrompt": "Draw the graph of",
+      "drawDerivativePrompt": "Draw the derivative f'(x)",
+      "dashedIsFunction": "The dashed curve shows f(x)",
+      "allAnswered": "All questions answered! Waiting for others...",
+      "hostView": "Players are answering. Watch their progress:",
+      "streak": "streak",
+      "bonus": "bonus",
+      "pts": "pts",
+      "yourDrawing": "Your drawing",
+      "solution": "Solution",
+      "next": "Next",
+      "settings": {
+        "questionsPerRound": "Questions per round",
+        "duration": "Time per round (seconds)"
+      },
+      "explanation": {
+        "mc": {
+          "title": "Multiple Choice Round",
+          "description": "Pick the correct derivative f'(x) from 4 options for {{count}} functions. The faster you answer correctly, the more points you get. You have {{seconds}} seconds."
+        },
+        "drawGraph": {
+          "title": "Draw the Graph",
+          "description": "Draw the graph of {{count}} functions on the coordinate grid. The more accurate your drawing, the more points you get. You have {{seconds}} seconds."
+        },
+        "drawDerivative": {
+          "title": "Draw the Derivative",
+          "description": "Draw the derivative f'(x) for {{count}} given functions. The dashed curve shows f(x). You have {{seconds}} seconds."
+        },
+        "getReady": "Get ready!",
+        "hostInfo": "Explain the rules, then click 'Let's go!' to start."
+      }
     }
   }
 }
