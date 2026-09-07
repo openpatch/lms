@@ -1,20 +1,18 @@
-import AnalysisGame from "./AnalysisGame";
-import AnalysisSettings from "./AnalysisSettings";
-import AnalysisExplanation from "./AnalysisExplanation";
-import type { GameDefinition } from "../../lib/game-registry";
+import { analysisSpec } from "../../../shared/games/analysis";
+import { defineGame } from "../../lib/game-registry";
+import MultipleChoiceStage, { MultipleChoiceRulesExample } from "./stages/MultipleChoice";
+import {
+  DrawDerivativeRulesExample,
+  DrawDerivativeStage,
+  DrawGraphRulesExample,
+  DrawGraphStage,
+} from "./stages/Draw";
 
-const analysisGame: GameDefinition = {
-  id: "analysis",
-  titleKey: "games.analysis.title",
-  descriptionKey: "games.analysis.description",
-  category: "math",
-  icon: "\u222B",
-  status: "live",
-  minPlayers: 1,
-  maxPlayers: 50,
-  Component: AnalysisGame,
-  SettingsComponent: AnalysisSettings,
-  ExplanationComponent: AnalysisExplanation,
-};
-
-export default analysisGame;
+export default defineGame(analysisSpec, {
+  "multiple-choice": {
+    Component: MultipleChoiceStage,
+    RulesExample: MultipleChoiceRulesExample,
+  },
+  "draw-graph": { Component: DrawGraphStage, RulesExample: DrawGraphRulesExample },
+  "draw-derivative": { Component: DrawDerivativeStage, RulesExample: DrawDerivativeRulesExample },
+});

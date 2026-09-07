@@ -5,6 +5,9 @@ import JoinCode from "../components/JoinCode";
 import PlayerList from "../components/PlayerList";
 import ResultsList from "../components/ResultsList";
 import Countdown from "../components/Countdown";
+import StageShell from "../components/StageShell";
+import StageRules from "../components/StageRules";
+import StageSettingsForm from "../components/StageSettingsForm";
 import { usePartyConnection } from "../lib/partykit";
 import { getGame } from "../lib/game-registry";
 import type { ServerMessage, GameResult } from "../../shared/types";
@@ -96,24 +99,11 @@ export default function HostLobby() {
   const players = lobbyState?.players ?? [];
   const phase = lobbyState?.phase ?? "lobby";
   const hostId = lobbyState?.hostId ?? "";
-  const SettingsComponent = game.SettingsComponent;
-  const ExplanationComponent = game.ExplanationComponent;
-
   // Explanation phase: show rules, host clicks "Let's go" to start countdown
   if (phase === "explanation" && lobbyState) {
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-8">
-        {ExplanationComponent ? (
-          <ExplanationComponent
-            state={lobbyState}
-            gameData={gameData}
-            isHost={true}
-            playerId={hostId}
-            sendMessage={conn.sendGameAction}
-          />
-        ) : (
-          <div className="text-center text-gray-500">{t("common.loading")}</div>
-        )}
+        <StageRules game={game} gameData={gameData} isHost={true} />
         <button
           onClick={() => conn.sendMessage({ type: "begin-countdown" })}
           className="px-8 py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-colors"
@@ -129,17 +119,7 @@ export default function HostLobby() {
     return (
       <div className="max-w-2xl mx-auto">
         <Countdown endsAt={countdownEndsAt}>
-          {ExplanationComponent ? (
-            <ExplanationComponent
-              state={lobbyState}
-              gameData={gameData}
-              isHost={true}
-              playerId={hostId}
-              sendMessage={conn.sendGameAction}
-            />
-          ) : (
-            <div className="text-center text-gray-500">{t("common.loading")}</div>
-          )}
+          <StageRules game={game} gameData={gameData} isHost={true} />
         </Countdown>
       </div>
     );
@@ -147,10 +127,10 @@ export default function HostLobby() {
 
   // Game phase: render the game component
   if (gameStarted && phase === "playing" && lobbyState) {
-    const GameComponent = game.Component;
     return (
       <div className="max-w-2xl mx-auto">
-        <GameComponent
+        <StageShell
+          game={game}
           state={lobbyState}
           gameData={gameData}
           isHost={true}
@@ -215,15 +195,14 @@ export default function HostLobby() {
         <JoinCode code={code ?? ""} />
       </div>
 
-      {SettingsComponent && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">{t("game.settings")}</h2>
-          <SettingsComponent
-            settings={lobbyState?.settings}
-            onChange={(settings) => conn.sendMessage({ type: "update-settings", settings })}
-          />
-        </div>
-      )}
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+        <h2 className="text-lg font-semibold mb-4">{t("game.settings")}</h2>
+        <StageSettingsForm
+          game={game}
+          settings={lobbyState?.settings}
+          onChange={(settings) => conn.sendMessage({ type: "update-settings", settings })}
+        />
+      </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">

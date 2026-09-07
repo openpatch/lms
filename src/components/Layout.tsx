@@ -4,6 +4,9 @@ import { Link, useLocation } from "react-router";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  // While a round is running the stage brings its own bars; the page must not
+  // scroll away from them, and nothing should invite a player to leave.
+  const playing = location.pathname.startsWith("/play/");
 
   const toggleLang = () => {
     i18n.changeLanguage(i18n.language === "de" ? "en" : "de");
@@ -11,8 +14,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto h-full px-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.svg" alt="" className="w-8 h-8" />
             <span className="text-xl font-bold text-brand-600">{t("common.appName")}</span>
@@ -24,7 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               {i18n.language === "de" ? "EN" : "DE"}
             </button>
-            {location.pathname !== "/arena" && (
+            {location.pathname !== "/arena" && !playing && (
               <Link
                 to="/arena"
                 className="text-sm text-gray-600 hover:text-brand-600 transition-colors"
@@ -32,17 +35,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {t("common.enterArena")}
               </Link>
             )}
-            <Link
-              to="/join"
-              className="text-sm text-gray-600 hover:text-brand-600 transition-colors"
-            >
-              {t("common.join")}
-            </Link>
+            {!playing && (
+              <Link
+                to="/join"
+                className="text-sm text-gray-600 hover:text-brand-600 transition-colors"
+              >
+                {t("common.join")}
+              </Link>
+            )}
           </div>
         </div>
       </header>
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">{children}</main>
-      <footer className="bg-white border-t border-gray-200">
+      <main className={`flex-1 max-w-6xl mx-auto w-full px-4 ${playing ? "py-4" : "py-8"}`}>
+        {children}
+      </main>
+      <footer className={`bg-white border-t border-gray-200 ${playing ? "hidden" : ""}`}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col items-center gap-2 text-sm text-gray-400">
           <div>
             {t("common.appName")} — {t("common.tagline")}

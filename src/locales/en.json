@@ -34,7 +34,8 @@
     "cs": "Computer Science",
     "live": "Live",
     "new": "New",
-    "soon": "Soon"
+    "soon": "Soon",
+    "grades": "Jg. {{grades}}"
   },
   "game": {
     "createLobby": "Create Lobby",
@@ -50,7 +51,17 @@
     "waitingNextRound": "Waiting for next round...",
     "letsGo": "Let's go!",
     "waitingForHost": "Waiting for the teacher...",
-    "go": "Go!"
+    "go": "Go!",
+    "timeLeft": "Time: {{seconds}}s",
+    "progress": "Question {{current}} / {{total}}",
+    "submit": "Submit",
+    "allAnswered": "All questions answered! Waiting for others...",
+    "hostView": "Players are answering. Watch their progress:",
+    "streak": "streak",
+    "bonus": "bonus",
+    "pts": "pts",
+    "getReady": "Get ready!",
+    "hostInfo": "Explain the rules, then click 'Let's go!' to start."
   },
   "lobby": {
     "title": "Lobby",
@@ -87,115 +98,271 @@
   "games": {
     "example": {
       "title": "Example Game",
-      "description": "An example game to test the framework.",
+      "description": "A one-stage example game to test the framework.",
       "click": "Click!",
       "score": "Score: {{count}}",
-      "timeLeft": "Time: {{seconds}}s",
-      "done": "Game over!",
-      "round": "Round {{current}} / {{total}}",
-      "roundResults": "Round Results",
-      "finalResults": "Final Results",
-      "nextRound": "Next Round",
-      "waitingNextRound": "Waiting for next round...",
-      "settings": {
-        "rounds": "Rounds",
-        "duration": "Round duration (seconds)",
-        "targetScore": "Target score"
-      },
-      "explanation": {
-        "title": "How to Play",
-        "description": "Click as many times as possible in {{seconds}} seconds. Target: {{target}} clicks!",
-        "getReady": "Get ready!",
-        "hostInfo": "Explain the rules, then click 'Let's go!' to start the game."
-      },
-      "letsGo": "Let's go!",
-      "waitingForHost": "Waiting for the teacher...",
-      "go": "Go!"
+      "stages": {
+        "tap": {
+          "name": "Tap Race",
+          "summary": "Click as often as you can",
+          "rules": "Click as many times as possible in {{duration}} seconds. Target: {{targetScore}} clicks!"
+        }
+      }
     },
     "squareroot": {
       "title": "Square Root Challenge",
-      "description": "Three rounds of square roots: speed, number line, and classification.",
-      "round1": "Round 1: Speed",
-      "round2": "Round 2: Number Line",
-      "round3": "Round 3: Classify",
-      "timeLeft": "Time: {{seconds}}s",
-      "progress": "Question {{current}} / {{total}}",
-      "submit": "Submit",
+      "description": "Square roots as a speed round, on the number line and by category.",
       "typeAnswer": "Your answer",
       "clickOnLine": "Click on the number line to estimate the value",
       "yourAnswer": "Your answer",
-      "allAnswered": "All questions answered! Waiting for others...",
       "natural": "Natural",
       "rational": "Rational",
       "irrational": "Irrational",
       "classifyPrompt": "is...",
-      "hostView": "Players are answering. Watch their progress:",
-      "streak": "streak",
-      "bonus": "bonus",
-      "pts": "pts",
-      "settings": {
-        "questionsPerRound": "Questions per round",
-        "duration": "Time per round (seconds)"
-      },
-      "explanation": {
+      "factor": "Factor",
+      "radicand": "Under the root",
+      "simplifyHint": "Leave the factor empty for 1, and the radicand empty for a whole number. Pull every square out of the root.",
+      "leftHalf": "Left half",
+      "rightHalf": "Right half",
+      "bisectPrompt": "Is √{{value}} smaller or larger than {{mid}}? Pick the half it lies in.",
+      "bisectDone": "The interval is narrow enough ({{target}}). Submit it!",
+      "bisectStatus_one": "Width {{width}} · target {{target}} · one halving",
+      "bisectStatus_other": "Width {{width}} · target {{target}} · {{count}} halvings",
+      "stages": {
         "speed": {
-          "title": "Speed Round",
-          "description": "Solve {{count}} square roots as fast as possible. All answers are natural numbers. The faster you answer correctly, the more points you get. You have {{seconds}} seconds."
+          "name": "Speed Round",
+          "summary": "Solve perfect square roots as fast as possible",
+          "rules": "Solve {{questionsPerRound}} square roots as fast as possible. All answers are natural numbers. The faster you answer correctly, the more points you get. You have {{duration}} seconds."
         },
         "numberline": {
-          "title": "Number Line Round",
-          "description": "Estimate {{count}} square roots by clicking on the number line. The closer you are to the real value, the more points you get. You have {{seconds}} seconds."
+          "name": "Number Line",
+          "summary": "Estimate irrational roots on the number line",
+          "rules": "Estimate {{questionsPerRound}} square roots by clicking on the number line. The closer you are to the real value, the more points you get. You have {{duration}} seconds."
         },
         "classify": {
-          "title": "Classification Round",
-          "description": "Classify {{count}} square roots as natural, rational, or irrational. Each correct answer is worth 100 points. You have {{seconds}} seconds."
+          "name": "Classify",
+          "summary": "Natural, rational or irrational?",
+          "rules": "Classify {{questionsPerRound}} square roots as natural, rational or irrational. Each correct answer is worth 100 points. You have {{duration}} seconds."
         },
-        "getReady": "Get ready!",
-        "hostInfo": "Explain the rules, then click 'Let's go!' to start."
+        "simplify": {
+          "name": "Root Laws",
+          "summary": "Write roots as simply as possible",
+          "rules": "Simplify {{questionsPerRound}} root terms — no calculator. Pull every square out of the root: √72 becomes 6√2. You have {{duration}} seconds."
+        },
+        "bisect": {
+          "name": "Interval Halving",
+          "summary": "Trap an irrational root step by step",
+          "rules": "Trap {{questionsPerRound}} roots between two numbers. Halve the interval again and again and always keep the root inside — the fewer halvings, the more points. You have {{duration}} seconds."
+        }
       }
     },
     "analysis": {
       "title": "Analysis Challenge",
-      "description": "Three rounds of calculus: pick the derivative, draw the graph, and draw the derivative from a graph.",
-      "round1": "Round 1: Pick the Derivative",
-      "round2": "Round 2: Draw the Graph",
-      "round3": "Round 3: Draw the Derivative",
-      "timeLeft": "Time: {{seconds}}s",
-      "progress": "Question {{current}} / {{total}}",
-      "submit": "Submit",
+      "description": "Calculus: pick the derivative, draw the graph, draw the derivative.",
       "findDerivative": "Find the derivative of",
       "whichIsDerivative": "Which is f'(x)?",
       "drawGraphPrompt": "Draw the graph of",
       "drawDerivativePrompt": "Draw the derivative f'(x)",
       "dashedIsFunction": "The dashed curve shows f(x)",
-      "allAnswered": "All questions answered! Waiting for others...",
-      "hostView": "Players are answering. Watch their progress:",
-      "streak": "streak",
-      "bonus": "bonus",
-      "pts": "pts",
       "yourDrawing": "Your drawing",
       "solution": "Solution",
       "next": "Next",
-      "settings": {
-        "questionsPerRound": "Questions per round",
-        "duration": "Time per round (seconds)"
+      "clear": "Clear",
+      "pointsHint": "Work out the y-intercept and the turning points first, then drag the {{count}} points there — the curve follows them.",
+      "pointsExtraHint_one": "Tap the grid for one more point, tap a point to take it away again.",
+      "pointsExtraHint_other": "Tap the grid for up to {{count}} more points, tap a point to take it away again.",
+      "stages": {
+        "multiple-choice": {
+          "name": "Pick the Derivative",
+          "summary": "Choose f'(x) from four options",
+          "rules": "Pick the correct derivative f'(x) from 4 options for {{questionsPerRound}} functions. The faster you answer correctly, the more points you get. You have {{duration}} seconds."
+        },
+        "draw-graph": {
+          "name": "Draw the Graph",
+          "summary": "Sketch f(x) on the coordinate grid",
+          "rules": "Draw the graph of {{questionsPerRound}} functions on the coordinate grid. The more accurate your drawing, the more points you get. You have {{duration}} seconds."
+        },
+        "draw-derivative": {
+          "name": "Draw the Derivative",
+          "summary": "Sketch f'(x) from the graph of f(x)",
+          "rules": "Draw the derivative f'(x) for {{questionsPerRound}} given functions. The dashed curve shows f(x). You have {{duration}} seconds."
+        }
+      }
+    },
+    "rational": {
+      "title": "Rational Numbers",
+      "description": "Place rational numbers on the number line and calculate with them.",
+      "arrangePrompt": "Pick a number, then click on the number line",
+      "arrangePromptSelected": "Click on the number line to place the selected number",
+      "numerator": "Numerator",
+      "denominator": "Denominator",
+      "result": "Result",
+      "answerHint": {
+        "fraction": "Leave the denominator empty for a whole number. Equivalent fractions count as correct.",
+        "decimal": "Enter the result as a decimal, e.g. 0.75.",
+        "both": "Enter the result as a fraction (3/4) or as a decimal (0.75)."
       },
-      "explanation": {
-        "mc": {
-          "title": "Multiple Choice Round",
-          "description": "Pick the correct derivative f'(x) from 4 options for {{count}} functions. The faster you answer correctly, the more points you get. You have {{seconds}} seconds."
+      "signPrompt": "Is the result positive or negative?",
+      "changeAskResult": "Click on the number line where you end up.",
+      "changeAskChange": "Which change leads from the start to the end state?",
+      "contexts": {
+        "temperature": "Temperature",
+        "account": "Account balance",
+        "altitude": "Depth and height",
+        "timezone": "Time zone (UTC offset)"
+      },
+      "stages": {
+        "arrange": {
+          "name": "Arrange on the Number Line",
+          "summary": "Place fractions and decimals at the right spot",
+          "rules": "Place {{questionsPerRound}} sets of rational numbers on the number line. The closer each number sits to its real position, the more points you get. You have {{duration}} seconds."
         },
-        "drawGraph": {
-          "title": "Draw the Graph",
-          "description": "Draw the graph of {{count}} functions on the coordinate grid. The more accurate your drawing, the more points you get. You have {{seconds}} seconds."
+        "calculate": {
+          "name": "Calculate",
+          "summary": "Add, subtract, multiply and divide fractions",
+          "rules": "Solve {{questionsPerRound}} calculations with rational numbers and enter the result. The faster you answer correctly, the more points you get. You have {{duration}} seconds."
         },
-        "drawDerivative": {
-          "title": "Draw the Derivative",
-          "description": "Draw the derivative f'(x) for {{count}} given functions. The dashed curve shows f(x). You have {{seconds}} seconds."
+        "signs": {
+          "name": "Sign Duel",
+          "summary": "Work out terms with positive and negative numbers",
+          "rules": "Solve {{questionsPerRound}} terms with positive and negative numbers — no calculator. The faster you answer correctly, the more points you get. You have {{duration}} seconds."
         },
-        "getReady": "Get ready!",
-        "hostInfo": "Explain the rules, then click 'Let's go!' to start."
+        "change": {
+          "name": "Changes",
+          "summary": "Follow a change on the number line",
+          "rules": "Follow {{questionsPerRound}} changes: place the end state on the number line, or name the change that leads there. You have {{duration}} seconds."
+        }
+      }
+    },
+    "chance": {
+      "title": "Chance",
+      "description": "Work out probabilities and fill in tree diagrams.",
+      "favourable": "favourable",
+      "possible": "possible",
+      "laplaceHint": {
+        "fraction": "Favourable outcomes over possible outcomes. Equivalent fractions count as correct.",
+        "decimal": "Enter the probability as a decimal, e.g. 0.25.",
+        "percent": "Enter the probability in percent, e.g. 25."
+      },
+      "treePrompt": "Drag the probabilities onto the second-stage branches — or tap a card and then a branch.",
+      "treeIncomplete": "Every branch of the second stage needs a probability.",
+      "setups": {
+        "die": "You roll a die once.",
+        "cards": "One card is drawn from a deck of 32 cards.",
+        "urn": "An urn holds {{red}} red and {{blue}} blue balls. You draw one ball.",
+        "wheel": "A wheel of fortune has {{sectors}} equal sectors, {{winning}} of them win.",
+        "urnTwiceWith": "An urn holds {{red}} red and {{blue}} blue balls. You draw one ball, put it back, and draw again.",
+        "urnTwiceWithout": "An urn holds {{red}} red and {{blue}} blue balls. You draw two balls without putting the first one back.",
+        "wheelTwice": "A wheel of fortune has {{sectors}} equal sectors, {{winning}} of them win. You spin it twice."
+      },
+      "events": {
+        "red": "a red ball",
+        "blue": "a blue ball",
+        "win": "a win",
+        "even": "an even number",
+        "prime": "a prime number",
+        "six": "a six",
+        "greaterThanFour": "a number greater than four",
+        "hearts": "a heart",
+        "ace": "an ace",
+        "redCard": "a red card"
+      },
+      "outcomes": {
+        "red": "red",
+        "blue": "blue",
+        "win": "win",
+        "lose": "no win"
+      },
+      "treeEvents": {
+        "both-first": "both times {{first}}",
+        "both-second": "both times {{second}}",
+        "exactly-one-first": "exactly once {{first}}",
+        "at-least-one-first": "at least once {{first}}"
+      },
+      "stages": {
+        "laplace": {
+          "name": "Laplace Sprint",
+          "summary": "Probabilities in one-stage experiments",
+          "rules": "Work out {{questionsPerRound}} probabilities: favourable outcomes over possible outcomes. The faster you answer correctly, the more points you get. You have {{duration}} seconds."
+        },
+        "tree": {
+          "name": "Tree Diagram",
+          "summary": "Fill in a two-stage tree and use the path rules",
+          "rules": "Complete {{questionsPerRound}} tree diagrams: place the probabilities on the branches of the second stage, then work out the probability of the event. Multiply along a path, add the paths. You have {{duration}} seconds."
+        }
+      }
+    },
+    "extremum": {
+      "title": "Extreme Values",
+      "description": "Differentiate without a calculator and solve extreme value problems.",
+      "derivePrompt": "What is the derivative?",
+      "deriveHint": "Type it like 3x^2-4x+1.",
+      "deriveUnreadable": "That cannot be read as a polynomial yet.",
+      "modelPrompt": "Which constraint and which target function belong to this situation?",
+      "modelIncomplete": "Pick a constraint and a target function first.",
+      "optimizePrompt": "Now move x until the quantity is as large as possible.",
+      "slots": {
+        "constraint": "Constraint",
+        "target": "Target function"
+      },
+      "quantities": {
+        "area": "Area",
+        "volume": "Volume"
+      },
+      "contexts": {
+        "fence": "A rectangular pasture lies along a straight river. {{length}} m of fence are available for the three sides that are not the river. How wide does it have to be to get the largest area?",
+        "box": "An open box is folded from a square sheet with side {{side}} cm by cutting squares of side x out of the corners. Which x gives the largest volume?",
+        "parabola": "A rectangle stands on the x-axis with its upper corners on the parabola y = {{height}} - x². Which x gives the largest area?"
+      },
+      "stages": {
+        "derive": {
+          "name": "Derivative Sprint",
+          "summary": "Differentiate polynomials without a calculator",
+          "rules": "Differentiate {{questionsPerRound}} polynomials — no calculator, as in the written exam. The faster you answer correctly, the more points you get. You have {{duration}} seconds."
+        },
+        "optimize": {
+          "name": "Extreme Value Problem",
+          "summary": "From the constraint to the target function to the maximum",
+          "rules": "Solve {{questionsPerRound}} extreme value problems: pick the constraint and the target function, then find the value of x that makes the quantity largest. Half the points come from the model, half from the maximum. You have {{duration}} seconds."
+        }
       }
     }
+  },
+  "settings": {
+    "stages": "Stages",
+    "stagesHint_one": "One round per active stage (1 round).",
+    "stagesHint_other": "One round per active stage ({{count}} rounds).",
+    "questionsPerRound": "Questions per round",
+    "duration": "Time per round",
+    "targetScore": "Target score",
+    "allowNegatives": "Include negative numbers",
+    "notation": "Number notation",
+    "notationFraction": "Fractions only",
+    "notationDecimal": "Decimals only",
+    "notationBoth": "Fractions and decimals",
+    "answerMode": "Answer",
+    "answerModeValue": "Type the value",
+    "answerModeSign": "Sign only",
+    "withBrackets": "Include terms with brackets",
+    "askMode": "Question type",
+    "askModeBoth": "Mixed",
+    "askModeResult": "Place the end state",
+    "askModeChange": "Name the change",
+    "twoChanges": "Sometimes two changes in a row",
+    "rootTasks": "Task types",
+    "rootTasksPartial": "Partial roots only",
+    "rootTasksMixed": "Roots, products, quotients, fractions",
+    "targetPrecision": "Required precision (hundredths)",
+    "notationPercent": "Percent",
+    "replacement": "Second draw",
+    "replacementMixed": "Mixed",
+    "replacementWith": "With replacement",
+    "replacementWithout": "Without replacement",
+    "degree": "Degree of the function",
+    "showTargetGraph": "Show the graph of the target function",
+    "inputMode": "How the graph is drawn",
+    "inputModePoints": "Place points (curve follows)",
+    "inputModeFreehand": "Freehand",
+    "extraPoints": "Students may add points"
   }
 }

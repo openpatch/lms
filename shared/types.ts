@@ -1,10 +1,22 @@
-// Shared types used by both client and server
+// Core types shared by client and server.
+// The mini-game contract (stages, settings, rounds) lives in framework.ts.
 
 export type GameCategory = "math" | "cs";
 
+/** Jahrgangsstufen a game is meant for; shown as a badge on the game card. */
+export type Grade = "5" | "6" | "7" | "8" | "9" | "10" | "EF" | "Q1" | "Q2";
+
+export const GRADES: Grade[] = ["5", "6", "7", "8", "9", "10", "EF", "Q1", "Q2"];
+
 export type GameStatus = "live" | "coming-soon";
 
-export type LobbyPhase = "lobby" | "explanation" | "countdown" | "playing" | "round-finished" | "finished";
+export type LobbyPhase =
+  | "lobby"
+  | "explanation"
+  | "countdown"
+  | "playing"
+  | "round-finished"
+  | "finished";
 
 export interface Player {
   id: string;
@@ -20,7 +32,9 @@ export interface LobbyState {
   hostId: string;
   players: Player[];
   phase: LobbyPhase;
+  /** The current round's data — a StageRoundData once a round has started. */
   gameData: unknown;
+  /** The host's stage selection and per-stage settings — a GameSettings. */
   settings: unknown;
   countdownEndsAt: number | null;
 }
@@ -54,107 +68,29 @@ export interface GameResult {
   score: number;
 }
 
-// Game metadata used by the client registry
+/** Metadata every mini game carries; GameSpec extends it with its stages. */
 export interface GameMeta {
   id: string;
   titleKey: string; // i18n key, e.g. "games.example.title"
   descriptionKey: string;
   category: GameCategory;
-  icon: string; // emoji
+  /** Jahrgangsstufen this game fits, in ascending order. Empty for demo games. */
+  grades: Grade[];
+  icon: string; // emoji or short symbol
   status: GameStatus;
   minPlayers: number;
   maxPlayers: number;
 }
 
-// Example game settings (shared between client and server)
-export interface ExampleSettings {
-  rounds: number;      // 1-10
-  duration: number;    // seconds per round, 5-30
-  targetScore: number; // clicks needed to "win" a round, 10-100
-}
-
-export const defaultExampleSettings: ExampleSettings = {
-  rounds: 3,
-  duration: 10,
-  targetScore: 50,
-};
-
-// Squareroot game types
-export type SquarerootRoundType = "speed" | "numberline" | "classify";
-export type ClassifyAnswer = "natural" | "rational" | "irrational";
-
-export interface SquarerootSettings {
-  questionsPerRound: number; // 5, 10, 15
-  duration: number;           // seconds per round, 30-120
-}
-
-export const defaultSquarerootSettings: SquarerootSettings = {
-  questionsPerRound: 10,
-  duration: 60,
-};
-
-export interface SquarerootQuestion {
-  id: number;
-  value: number;          // number under the radical
-  numericAnswer: number;  // sqrt(value) as a number
-  lineMin?: number;        // number line range (round 2)
-  lineMax?: number;
-  classifyAnswer?: ClassifyAnswer; // correct classification (round 3)
-}
-
+/** One player's answer to one question, as recorded by the framework. */
 export interface PlayerAnswer {
+  /** The raw answer string the client sent. */
   answer: string;
-  timeMs: number; // milliseconds since round start
-  correct?: boolean; // whether this answer was correct
-  points?: number;  // points awarded for this answer
-  streak?: number;  // streak count after this answer
-}
-
-export interface SquarerootGameData {
-  currentRound: number;
-  totalRounds: number;
-  roundType: SquarerootRoundType;
-  questions: SquarerootQuestion[];
-  answers: Record<string, Record<number, PlayerAnswer>>; // playerId -> questionId -> answer
-  startTime: number;
-  duration: number;
-  finished: boolean;
-}
-
-// Analysis (calculus) game types
-export type AnalysisRoundType = "multiple-choice" | "draw-graph" | "draw-derivative";
-
-export interface AnalysisSettings {
-  questionsPerRound: number; // 3, 5, 8
-  duration: number;           // seconds per round, 60-180
-}
-
-export const defaultAnalysisSettings: AnalysisSettings = {
-  questionsPerRound: 5,
-  duration: 120,
-};
-
-export interface AnalysisQuestion {
-  id: number;
-  functionId: number;        // index into ANALYSIS_FUNCTIONS
-  functionLatex: string;      // LaTeX for f(x)
-  // Multiple-choice round (round 1)
-  options?: string[];         // 4 LaTeX strings for f'(x)
-  correctOptionIndex?: number;
-  // Drawing rounds (rounds 2 & 3)
-  xMin?: number;
-  xMax?: number;
-  yMin?: number;
-  yMax?: number;
-}
-
-export interface AnalysisGameData {
-  currentRound: number;
-  totalRounds: number;
-  roundType: AnalysisRoundType;
-  questions: AnalysisQuestion[];
-  answers: Record<string, Record<number, PlayerAnswer>>;
-  startTime: number;
-  duration: number;
-  finished: boolean;
+  /** Milliseconds between the round start and this answer. */
+  timeMs: number;
+  correct?: boolean;
+  /** Points awarded, combo bonus included. */
+  points?: number;
+  /** The player's streak after this answer. */
+  streak?: number;
 }

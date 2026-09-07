@@ -1,20 +1,15 @@
-import SquarerootGame from "./SquarerootGame";
-import SquarerootSettings from "./SquarerootSettings";
-import SquarerootExplanation from "./SquarerootExplanation";
-import type { GameDefinition } from "../../lib/game-registry";
+import { squarerootSpec } from "../../../shared/games/squareroot";
+import { defineGame } from "../../lib/game-registry";
+import SpeedStage, { SpeedRulesExample } from "./stages/Speed";
+import NumberLineStage, { NumberLineRulesExample } from "./stages/NumberLine";
+import ClassifyStage, { ClassifyRulesExample } from "./stages/Classify";
+import SimplifyStage, { SimplifyRulesExample } from "./stages/Simplify";
+import BisectStage, { BisectRulesExample } from "./stages/Bisect";
 
-const squarerootGame: GameDefinition = {
-  id: "squareroot",
-  titleKey: "games.squareroot.title",
-  descriptionKey: "games.squareroot.description",
-  category: "math",
-  icon: "\u221A",
-  status: "live",
-  minPlayers: 1,
-  maxPlayers: 50,
-  Component: SquarerootGame,
-  SettingsComponent: SquarerootSettings,
-  ExplanationComponent: SquarerootExplanation,
-};
-
-export default squarerootGame;
+export default defineGame(squarerootSpec, {
+  speed: { Component: SpeedStage, RulesExample: SpeedRulesExample },
+  numberline: { Component: NumberLineStage, RulesExample: NumberLineRulesExample },
+  classify: { Component: ClassifyStage, RulesExample: ClassifyRulesExample },
+  simplify: { Component: SimplifyStage, RulesExample: SimplifyRulesExample },
+  bisect: { Component: BisectStage, RulesExample: BisectRulesExample },
+});

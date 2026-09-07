@@ -5,6 +5,8 @@ import { usePartyConnection } from "../lib/partykit";
 import { getGame } from "../lib/game-registry";
 import ResultsList from "../components/ResultsList";
 import Countdown from "../components/Countdown";
+import StageShell from "../components/StageShell";
+import StageRules from "../components/StageRules";
 import type { ServerMessage, GameResult } from "../../shared/types";
 
 export default function Play() {
@@ -115,23 +117,12 @@ export default function Play() {
     (p) => p.name === playerName && !p.isHost,
   );
   const myPlayerId = myPlayer?.id ?? "";
-  const ExplanationComponent = game.ExplanationComponent;
 
   // Explanation phase: show rules, waiting for host to start countdown
   if (lobbyState.phase === "explanation") {
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-8">
-        {ExplanationComponent ? (
-          <ExplanationComponent
-            state={lobbyState}
-            gameData={gameData}
-            isHost={false}
-            playerId={myPlayerId}
-            sendMessage={conn.sendGameAction}
-          />
-        ) : (
-          <div className="text-center text-gray-500">{t("common.loading")}</div>
-        )}
+        <StageRules game={game} gameData={gameData} isHost={false} />
         <p className="text-gray-500">{t("game.waitingForHost")}</p>
       </div>
     );
@@ -142,28 +133,19 @@ export default function Play() {
     return (
       <div className="max-w-2xl mx-auto">
         <Countdown endsAt={countdownEndsAt}>
-          {ExplanationComponent ? (
-            <ExplanationComponent
-              state={lobbyState}
-              gameData={gameData}
-              isHost={false}
-              playerId={myPlayerId}
-              sendMessage={conn.sendGameAction}
-            />
-          ) : (
-            <div className="text-center text-gray-500">{t("common.loading")}</div>
-          )}
+          <StageRules game={game} gameData={gameData} isHost={false} />
         </Countdown>
       </div>
     );
   }
 
-  // Game phase
+  // Game phase — wider than the other phases, because stages with a plot or a
+  // number line use the room (the stages themselves cap their text columns).
   if (gameStarted && lobbyState.phase === "playing") {
-    const GameComponent = game.Component;
     return (
-      <div className="max-w-2xl mx-auto">
-        <GameComponent
+      <div className="max-w-5xl mx-auto">
+        <StageShell
+          game={game}
           state={lobbyState}
           gameData={gameData}
           isHost={false}

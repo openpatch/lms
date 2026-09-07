@@ -1,27 +1,25 @@
-import type * as Party from "partykit/server";
-import type { GameHandler } from "../types";
+import { analysisSpec, readExtraPoints, readInputMode } from "../../shared/games/analysis";
 import type {
-  LobbyState,
-  GameResult,
-  AnalysisSettings,
-  AnalysisGameData,
-  AnalysisQuestion,
-  AnalysisRoundType,
-} from "../../shared/types";
-import { defaultAnalysisSettings } from "../../shared/types";
+  DrawnPoint,
+  DrawQuestion,
+  MultipleChoiceQuestion,
+} from "../../shared/games/analysis";
+import { closenessPoints, speedPoints } from "../../shared/framework";
 import {
   ANALYSIS_FUNCTIONS,
   DRAWABLE_FUNCTION_IDS,
   evaluateFunction,
   evaluateDerivative,
 } from "../../shared/analysis-functions";
+import { asFunctionPoints, oshimaCurve } from "../../shared/spline";
+import type { StageHandler } from "../framework";
+import { createStageGame } from "../framework";
 
-function getSettings(state: LobbyState): AnalysisSettings {
-  return {
-    ...defaultAnalysisSettings,
-    ...((state.settings ?? {}) as Partial<AnalysisSettings>),
-  };
-}
+/** A drawing counts as correct from this score upwards. */
+const DRAWING_PASS_MARK = 60;
+/** An average error of a quarter of the y range is worth no points — with a
+ *  full range as the yardstick even a flat line along the x-axis scored well. */
+const DRAWING_ZERO_AT = 0.25;
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -36,135 +34,82 @@ function pickN<T>(arr: T[], n: number): T[] {
   return shuffle(arr).slice(0, n);
 }
 
-// Round 1: Multiple choice — pick a function, show f(x), 4 options for f'(x)
-function generateMCQuestions(count: number): AnalysisQuestion[] {
-  const indices = pickN(
-    Array.from({ length: ANALYSIS_FUNCTIONS.length }, (_, i) => i),
-    count,
-  );
-  return indices.map((fnId, id) => {
-    const fn = ANALYSIS_FUNCTIONS[fnId];
-    const options = shuffle([fn.derivativeLatex, ...fn.distractors]);
-    const correctOptionIndex = options.indexOf(fn.derivativeLatex);
-    return {
-      id,
-      functionId: fnId,
-      functionLatex: fn.latex,
-      options,
-      correctOptionIndex,
-    };
-  });
+/** Points to place in "points" mode: one per turning point of the curve, plus
+ *  the two ends and the y-axis — the features a student works out first. */
+const MIN_HANDLES = 4;
+const MAX_HANDLES = 7;
+
+function handleCountFor(target: (x: number) => number, xMin: number, xMax: number): number {
+  // Turning points show up as sign changes of the slope
+  const samples = 200;
+  let turningPoints = 0;
+  let previous = 0;
+  for (let i = 0; i <= samples; i++) {
+    const x = xMin + ((xMax - xMin) * i) / samples;
+    const step = (xMax - xMin) / samples;
+    const slope = target(x + step / 2) - target(x - step / 2);
+    if (!isFinite(slope) || slope === 0) continue;
+    const sign = Math.sign(slope);
+    if (previous !== 0 && sign !== previous) turningPoints++;
+    previous = sign;
+  }
+  return Math.min(MAX_HANDLES, Math.max(MIN_HANDLES, turningPoints + 4));
 }
 
-// Round 2: Draw the graph of f(x) — show formula, student draws
-function generateDrawGraphQuestions(count: number): AnalysisQuestion[] {
-  const ids = pickN(DRAWABLE_FUNCTION_IDS, count);
-  return ids.map((fnId, id) => {
-    const fn = ANALYSIS_FUNCTIONS[fnId];
+function drawQuestions(count: number, target: (id: number, x: number) => number): DrawQuestion[] {
+  return pickN(DRAWABLE_FUNCTION_IDS, count).map((functionId, id) => {
+    const fn = ANALYSIS_FUNCTIONS[functionId];
     return {
       id,
-      functionId: fnId,
-      functionLatex: fn.latex,
-      xMin: fn.xMin,
-      xMax: fn.xMax,
-      yMin: fn.yMin,
-      yMax: fn.yMax,
-    };
-  });
-}
-
-// Round 3: Draw f'(x) — show the graph of f(x) as reference, student draws f'(x)
-function generateDrawDerivativeQuestions(count: number): AnalysisQuestion[] {
-  const ids = pickN(DRAWABLE_FUNCTION_IDS, count);
-  return ids.map((fnId, id) => {
-    const fn = ANALYSIS_FUNCTIONS[fnId];
-    return {
-      id,
-      functionId: fnId,
+      functionId,
       functionLatex: fn.latex,
       xMin: fn.xMin,
       xMax: fn.xMax,
       yMin: fn.yMin,
       yMax: fn.yMax,
+      handleCount: handleCountFor((x) => target(functionId, x), fn.xMin, fn.xMax),
     };
   });
 }
 
-function generateQuestions(
-  roundType: AnalysisRoundType,
-  count: number,
-): AnalysisQuestion[] {
-  switch (roundType) {
-    case "multiple-choice":
-      return generateMCQuestions(count);
-    case "draw-graph":
-      return generateDrawGraphQuestions(count);
-    case "draw-derivative":
-      return generateDrawDerivativeQuestions(count);
+function parsePoints(answer: string): DrawnPoint[] {
+  try {
+    const parsed = JSON.parse(answer);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (p): p is DrawnPoint =>
+        typeof p?.x === "number" && typeof p?.y === "number" && isFinite(p.x) && isFinite(p.y),
+    );
+  } catch {
+    return [];
   }
 }
 
-const ROUND_TYPES: AnalysisRoundType[] = [
-  "multiple-choice",
-  "draw-graph",
-  "draw-derivative",
-];
+/**
+ * Compares a drawn curve with the target function: samples the target at 30
+ * x values, interpolates the drawing at the same x, and turns the mean error
+ * into a 0-100 score (an average error of a full y range scores 0).
+ */
+function scoreDrawing(points: DrawnPoint[], question: DrawQuestion, target: (x: number) => number): number {
+  if (points.length < 2) return 0;
 
-function buildRoundData(state: LobbyState, round: number): AnalysisGameData {
-  const settings = getSettings(state);
-  const roundType = ROUND_TYPES[round - 1] ?? "multiple-choice";
-  return {
-    currentRound: round,
-    totalRounds: 3,
-    roundType,
-    questions: generateQuestions(roundType, settings.questionsPerRound),
-    answers: {},
-    startTime: Date.now(),
-    duration: settings.duration,
-    finished: false,
-  };
-}
-
-// Evaluate a drawn curve against a target function.
-// `drawnPoints` is an array of {x, y} in math coordinates.
-// `targetFn` is the function to compare against.
-// Returns a score 0-100 based on mean absolute error normalized by the y range.
-function evaluateDrawing(
-  drawnPoints: { x: number; y: number }[],
-  targetFn: (x: number) => number,
-  xMin: number,
-  xMax: number,
-  yMin: number,
-  yMax: number,
-): number {
-  if (drawnPoints.length < 2) return 0;
-
-  // Sort drawn points by x
-  const sorted = [...drawnPoints].sort((a, b) => a.x - b.x);
-
-  // Sample at ~30 evenly spaced x values
+  const sorted = [...points].sort((a, b) => a.x - b.x);
   const SAMPLES = 30;
-  const yRange = yMax - yMin;
+  const yRange = question.yMax - question.yMin;
   let totalError = 0;
   let validSamples = 0;
 
   for (let i = 0; i <= SAMPLES; i++) {
-    const x = xMin + ((xMax - xMin) * i) / SAMPLES;
-    const targetY = targetFn(x);
+    const x = question.xMin + ((question.xMax - question.xMin) * i) / SAMPLES;
+    const targetY = target(x);
+    if (isNaN(targetY)) continue; // e.g. 1/x at x = 0
 
-    // Skip if target is NaN (e.g., 1/x at x=0)
-    if (isNaN(targetY)) continue;
-
-    // Find the student's y at this x via linear interpolation
-    let drawnY: number | null = null;
-
-    // Clamp x to the drawn range
-    if (x < sorted[0].x) {
+    let drawnY: number;
+    if (x <= sorted[0].x) {
       drawnY = sorted[0].y;
-    } else if (x > sorted[sorted.length - 1].x) {
+    } else if (x >= sorted[sorted.length - 1].x) {
       drawnY = sorted[sorted.length - 1].y;
     } else {
-      // Binary search for the surrounding points
       let lo = 0;
       let hi = sorted.length - 1;
       while (lo < hi - 1) {
@@ -178,206 +123,91 @@ function evaluateDrawing(
       drawnY = p0.y + t * (p1.y - p0.y);
     }
 
-    if (drawnY == null) continue;
-
-    const error = Math.abs(drawnY - targetY);
-    totalError += error;
+    totalError += Math.abs(drawnY - targetY);
     validSamples++;
   }
 
   if (validSamples === 0) return 0;
-
-  const avgError = totalError / validSamples;
-  // Normalize: an average error equal to the full y range gives 0 points.
-  // An average error of 0 gives 100 points.
-  const normalizedError = avgError / yRange;
-  const score = Math.max(0, Math.min(100, Math.round(100 * (1 - normalizedError))));
-
-  return score;
+  return Math.round(closenessPoints(totalError / validSamples / yRange, DRAWING_ZERO_AT));
 }
 
-function getRoundResults(state: LobbyState): GameResult[] {
-  const data = state.gameData as AnalysisGameData;
-  const players = state.players.filter((p) => !p.isHost);
+const multipleChoiceStage: StageHandler<MultipleChoiceQuestion> = {
+  id: "multiple-choice",
 
-  return players
-    .map((p) => ({
-      playerId: p.id,
-      playerName: p.name,
-      score: calculatePlayerScore(data, p.id),
-    }))
-    .sort((a, b) => b.score - a.score);
-}
-
-function evaluateAnswer(
-  data: AnalysisGameData,
-  question: AnalysisQuestion,
-  answer: string,
-  timeMs: number,
-  currentStreak: number,
-): { correct: boolean; points: number; streak: number } {
-  let correct = false;
-  let basePoints = 0;
-
-  switch (data.roundType) {
-    case "multiple-choice": {
-      const selected = parseInt(answer, 10);
-      if (!isNaN(selected) && selected === question.correctOptionIndex) {
-        correct = true;
-        const seconds = timeMs / 1000;
-        basePoints = Math.max(20, 100 - Math.floor(seconds) * 3);
-      }
-      break;
-    }
-    case "draw-graph": {
-      let drawnPoints: { x: number; y: number }[] = [];
-      try {
-        drawnPoints = JSON.parse(answer);
-      } catch {
-        break;
-      }
-      const score = evaluateDrawing(
-        drawnPoints,
-        (x) => evaluateFunction(question.functionId, x),
-        question.xMin!,
-        question.xMax!,
-        question.yMin!,
-        question.yMax!,
-      );
-      basePoints = score;
-      // For drawing, "correct" means score >= 60
-      correct = score >= 60;
-      break;
-    }
-    case "draw-derivative": {
-      let drawnPoints: { x: number; y: number }[] = [];
-      try {
-        drawnPoints = JSON.parse(answer);
-      } catch {
-        break;
-      }
-      const score = evaluateDrawing(
-        drawnPoints,
-        (x) => evaluateDerivative(question.functionId, x),
-        question.xMin!,
-        question.xMax!,
-        question.yMin!,
-        question.yMax!,
-      );
-      basePoints = score;
-      correct = score >= 60;
-      break;
-    }
-  }
-
-  const streak = correct ? currentStreak + 1 : 0;
-  const comboMultiplier = correct ? 1 + Math.min(0.5, (streak - 1) * 0.1) : 1;
-  const points = Math.round(basePoints * comboMultiplier);
-
-  return { correct, points, streak };
-}
-
-function calculatePlayerScore(data: AnalysisGameData, playerId: string): number {
-  const playerAnswers = data.answers[playerId] ?? {};
-  let total = 0;
-  for (const q of data.questions) {
-    const ans = playerAnswers[q.id];
-    if (ans?.points != null) {
-      total += ans.points;
-    }
-  }
-  return total;
-}
-
-const analysisHandler: GameHandler = {
-  onStart(state: LobbyState): AnalysisGameData {
-    return buildRoundData(state, 1);
-  },
-
-  onRoundStart(state: LobbyState): AnalysisGameData {
-    const prev = state.gameData as AnalysisGameData;
-    return buildRoundData(state, (prev?.currentRound ?? 0) + 1);
-  },
-
-  onMessage(
-    state: LobbyState,
-    payload: unknown,
-    sender: Party.Connection,
-  ): AnalysisGameData | undefined {
-    const data = state.gameData as AnalysisGameData;
-    if (!data || data.finished) return undefined;
-
-    const action = payload as { action: string; questionId?: number; answer?: string };
-    if (action?.action !== "answer" || action.questionId == null || action.answer == null) {
-      return undefined;
-    }
-
-    // Don't allow re-answering
-    if (data.answers[sender.id]?.[action.questionId]) return undefined;
-
-    const question = data.questions.find((q) => q.id === action.questionId);
-    if (!question) return undefined;
-
-    if (!data.answers[sender.id]) {
-      data.answers[sender.id] = {};
-    }
-
-    // Calculate current streak
-    const playerAnswers = data.answers[sender.id];
-    let currentStreak = 0;
-    const sortedAnswered = Object.keys(playerAnswers)
-      .map(Number)
-      .sort((a, b) => a - b);
-    if (sortedAnswered.length > 0) {
-      const lastAnswer = playerAnswers[sortedAnswered[sortedAnswered.length - 1]];
-      currentStreak = lastAnswer?.streak ?? 0;
-    }
-
-    const timeMs = Date.now() - data.startTime;
-    const result = evaluateAnswer(data, question, action.answer, timeMs, currentStreak);
-
-    data.answers[sender.id][action.questionId] = {
-      answer: action.answer,
-      timeMs,
-      correct: result.correct,
-      points: result.points,
-      streak: result.streak,
-    };
-
-    return { ...data };
-  },
-
-  checkRoundFinished(state: LobbyState): GameResult[] | undefined {
-    const data = state.gameData as AnalysisGameData;
-    if (!data) return undefined;
-
-    const elapsed = (Date.now() - data.startTime) / 1000;
-    const timeExpired = elapsed >= data.duration;
-
-    const players = state.players.filter((p) => !p.isHost);
-    if (players.length === 0) return undefined;
-
-    const allAnswered = players.every((p) => {
-      const count = Object.keys(data.answers[p.id] ?? {}).length;
-      return count >= data.questions.length;
+  createQuestions({ settings }) {
+    const ids = pickN(
+      Array.from({ length: ANALYSIS_FUNCTIONS.length }, (_, i) => i),
+      Number(settings.questionsPerRound),
+    );
+    return ids.map((functionId, id) => {
+      const fn = ANALYSIS_FUNCTIONS[functionId];
+      const options = shuffle([fn.derivativeLatex, ...fn.distractors]);
+      return {
+        id,
+        functionId,
+        functionLatex: fn.latex,
+        options,
+        correctOptionIndex: options.indexOf(fn.derivativeLatex),
+      };
     });
+  },
 
-    if (allAnswered || timeExpired) {
-      return getRoundResults(state);
+  evaluate(question, answer, { questionMs }) {
+    const selected = parseInt(answer, 10);
+    if (isNaN(selected) || selected !== question.correctOptionIndex) {
+      return { correct: false, points: 0 };
     }
-
-    return undefined;
-  },
-
-  isLastRound(state: LobbyState): boolean {
-    const data = state.gameData as AnalysisGameData;
-    return (data?.currentRound ?? 1) >= (data?.totalRounds ?? 3);
-  },
-
-  getDurationMs(state: LobbyState): number {
-    const data = state.gameData as AnalysisGameData;
-    return (data?.duration ?? defaultAnalysisSettings.duration) * 1000;
+    return { correct: true, points: speedPoints(questionMs / 1000, 3, 20) };
   },
 };
 
-export default analysisHandler;
+/** The curve the player handed in: their strokes, or the spline through the
+ *  points they placed. Both end up as a polyline that the same scorer reads. */
+function submittedCurve(
+  answer: string,
+  question: DrawQuestion,
+  mode: "points" | "freehand",
+  extra: number,
+) {
+  const points = parsePoints(answer);
+  if (mode === "freehand") return points;
+  // In points mode the answer is the handles; the curve is rebuilt here instead
+  // of being taken from the client. The count has to be one the question allows.
+  if (points.length < question.handleCount) return [];
+  if (points.length > question.handleCount + extra) return [];
+  return oshimaCurve(asFunctionPoints(points));
+}
+
+/** One drawing stage: reproduce `target` freehand or by placing points. */
+function makeDrawStage(
+  id: string,
+  target: (functionId: number, x: number) => number,
+): StageHandler<DrawQuestion> {
+  return {
+    id,
+
+    createQuestions({ settings }) {
+      return drawQuestions(Number(settings.questionsPerRound), target);
+    },
+
+    evaluate(question, answer, _timing, { settings }) {
+      const curve = submittedCurve(
+        answer,
+        question,
+        readInputMode(settings),
+        readExtraPoints(settings),
+      );
+      const points = scoreDrawing(curve, question, (x) => target(question.functionId, x));
+      return { correct: points >= DRAWING_PASS_MARK, points };
+    },
+  };
+}
+
+const drawGraphStage = makeDrawStage("draw-graph", evaluateFunction);
+const drawDerivativeStage = makeDrawStage("draw-derivative", evaluateDerivative);
+
+export default createStageGame(analysisSpec, [
+  multipleChoiceStage,
+  drawGraphStage,
+  drawDerivativeStage,
+]);

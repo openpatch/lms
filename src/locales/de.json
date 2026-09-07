@@ -34,7 +34,8 @@
     "cs": "Informatik",
     "live": "Live",
     "new": "Neu",
-    "soon": "Bald"
+    "soon": "Bald",
+    "grades": "Jg. {{grades}}"
   },
   "game": {
     "createLobby": "Lobby erstellen",
@@ -50,7 +51,17 @@
     "waitingNextRound": "Warten auf nächste Runde...",
     "letsGo": "Los geht's!",
     "waitingForHost": "Warte auf die Lehrperson...",
-    "go": "Los!"
+    "go": "Los!",
+    "timeLeft": "Zeit: {{seconds}}s",
+    "progress": "Aufgabe {{current}} / {{total}}",
+    "submit": "Abschicken",
+    "allAnswered": "Alle Aufgaben beantwortet! Warten auf die anderen...",
+    "hostView": "Die Spieler antworten. Fortschritt beobachten:",
+    "streak": "Serie",
+    "bonus": "Bonus",
+    "pts": "Pkt",
+    "getReady": "Mach dich bereit!",
+    "hostInfo": "Erkläre die Regeln und klicke dann auf 'Los geht's!'."
   },
   "lobby": {
     "title": "Lobby",
@@ -87,115 +98,271 @@
   "games": {
     "example": {
       "title": "Beispielspiel",
-      "description": "Ein Beispielspiel zum Testen des Frameworks.",
-      "click": "Klicken!",
+      "description": "Ein Beispielspiel mit einer Station zum Testen des Frameworks.",
+      "click": "Klick!",
       "score": "Punkte: {{count}}",
-      "timeLeft": "Zeit: {{seconds}}s",
-      "done": "Spiel vorbei!",
-      "round": "Runde {{current}} / {{total}}",
-      "roundResults": "Rundenergebnisse",
-      "finalResults": "Endresultat",
-      "nextRound": "Nächste Runde",
-      "waitingNextRound": "Warten auf nächste Runde...",
-      "settings": {
-        "rounds": "Runden",
-        "duration": "Rundendauer (Sekunden)",
-        "targetScore": "Ziel-Punkte"
-      },
-      "explanation": {
-        "title": "Spielregeln",
-        "description": "Klicke so oft wie möglich in {{seconds}} Sekunden. Ziel: {{target}} Klicks!",
-        "getReady": "Mach dich bereit!",
-        "hostInfo": "Erkläre die Regeln und klicke auf 'Los geht's!', um das Spiel zu starten."
-      },
-      "letsGo": "Los geht's!",
-      "waitingForHost": "Warte auf die Lehrperson...",
-      "go": "Los!"
+      "stages": {
+        "tap": {
+          "name": "Klick-Rennen",
+          "summary": "So oft klicken wie möglich",
+          "rules": "Klicke in {{duration}} Sekunden so oft wie möglich. Ziel: {{targetScore}} Klicks!"
+        }
+      }
     },
     "squareroot": {
       "title": "Wurzel-Challenge",
-      "description": "Drei Runden mit Quadratwurzeln: Tempo, Zahlenstrahl und Klassifizierung.",
-      "round1": "Runde 1: Tempo",
-      "round2": "Runde 2: Zahlenstrahl",
-      "round3": "Runde 3: Klassifizieren",
-      "timeLeft": "Zeit: {{seconds}}s",
-      "progress": "Frage {{current}} / {{total}}",
-      "submit": "Bestätigen",
+      "description": "Quadratwurzeln auf Tempo, am Zahlenstrahl und nach Zahlbereich.",
       "typeAnswer": "Deine Antwort",
       "clickOnLine": "Klicke auf den Zahlenstrahl, um den Wert zu schätzen",
       "yourAnswer": "Deine Antwort",
-      "allAnswered": "Alle Fragen beantwortet! Warte auf die anderen...",
       "natural": "Natürlich",
       "rational": "Rational",
       "irrational": "Irrational",
       "classifyPrompt": "ist...",
-      "hostView": "Schüler:innen antworten. Verfolge den Fortschritt:",
-      "streak": "Serie",
-      "bonus": "Bonus",
-      "pts": "Pkt",
-      "settings": {
-        "questionsPerRound": "Fragen pro Runde",
-        "duration": "Zeit pro Runde (Sekunden)"
-      },
-      "explanation": {
+      "factor": "Faktor",
+      "radicand": "Unter der Wurzel",
+      "simplifyHint": "Faktor leer lassen bedeutet 1, Radikand leer bedeutet eine ganze Zahl. Ziehe jede Quadratzahl aus der Wurzel.",
+      "leftHalf": "Linke Hälfte",
+      "rightHalf": "Rechte Hälfte",
+      "bisectPrompt": "Ist √{{value}} kleiner oder größer als {{mid}}? Wähle die Hälfte, in der die Wurzel liegt.",
+      "bisectDone": "Das Intervall ist eng genug ({{target}}). Schick es ab!",
+      "bisectStatus_one": "Breite {{width}} · Ziel {{target}} · eine Halbierung",
+      "bisectStatus_other": "Breite {{width}} · Ziel {{target}} · {{count}} Halbierungen",
+      "stages": {
         "speed": {
-          "title": "Tempo-Runde",
-          "description": "Löse {{count}} Quadratwurzeln so schnell wie möglich. Alle Antworten sind natürliche Zahlen. Je schneller du richtig antwortest, desto mehr Punkte bekommst du. Du hast {{seconds}} Sekunden."
+          "name": "Temporunde",
+          "summary": "Quadratwurzeln so schnell wie möglich lösen",
+          "rules": "Löse {{questionsPerRound}} Quadratwurzeln so schnell wie möglich. Alle Ergebnisse sind natürliche Zahlen. Je schneller du richtig antwortest, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
         },
         "numberline": {
-          "title": "Zahlenstrahl-Runde",
-          "description": "Schätze {{count}} Quadratwurzeln, indem du auf den Zahlenstrahl klickst. Je näher du am echten Wert bist, desto mehr Punkte bekommst du. Du hast {{seconds}} Sekunden."
+          "name": "Zahlenstrahl",
+          "summary": "Irrationale Wurzeln am Zahlenstrahl schätzen",
+          "rules": "Schätze {{questionsPerRound}} Quadratwurzeln durch Klicken auf den Zahlenstrahl. Je näher du am echten Wert liegst, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
         },
         "classify": {
-          "title": "Klassifizierungs-Runde",
-          "description": "Klassifiziere {{count}} Quadratwurzeln als natürlich, rational oder irrational. Jede richtige Antwort gibt 100 Punkte. Du hast {{seconds}} Sekunden."
+          "name": "Klassifizieren",
+          "summary": "Natürlich, rational oder irrational?",
+          "rules": "Ordne {{questionsPerRound}} Quadratwurzeln als natürlich, rational oder irrational ein. Jede richtige Antwort zählt 100 Punkte. Du hast {{duration}} Sekunden."
         },
-        "getReady": "Mach dich bereit!",
-        "hostInfo": "Erkläre die Regeln und klicke auf 'Los geht's!', um zu starten."
+        "simplify": {
+          "name": "Wurzelgesetze",
+          "summary": "Wurzeln so einfach wie möglich schreiben",
+          "rules": "Vereinfache {{questionsPerRound}} Wurzelterme — ohne Taschenrechner. Ziehe jede Quadratzahl aus der Wurzel: √72 wird zu 6√2. Du hast {{duration}} Sekunden."
+        },
+        "bisect": {
+          "name": "Intervallhalbierung",
+          "summary": "Eine irrationale Wurzel Schritt für Schritt einschachteln",
+          "rules": "Schachtele {{questionsPerRound}} Wurzeln zwischen zwei Zahlen ein. Halbiere das Intervall immer weiter und behalte die Wurzel dabei stets darin — je weniger Halbierungen, desto mehr Punkte. Du hast {{duration}} Sekunden."
+        }
       }
     },
     "analysis": {
       "title": "Analysis-Challenge",
-      "description": "Drei Runden Analysis: Ableitung wählen, Graph zeichnen und Ableitung aus Graph zeichnen.",
-      "round1": "Runde 1: Ableitung wählen",
-      "round2": "Runde 2: Graph zeichnen",
-      "round3": "Runde 3: Ableitung zeichnen",
-      "timeLeft": "Zeit: {{seconds}}s",
-      "progress": "Frage {{current}} / {{total}}",
-      "submit": "Bestätigen",
-      "findDerivative": "Finde die Ableitung von",
-      "whichIsDerivative": "Welches ist f'(x)?",
+      "description": "Analysis: Ableitung wählen, Graph zeichnen, Ableitung zeichnen.",
+      "findDerivative": "Bestimme die Ableitung von",
+      "whichIsDerivative": "Welche Funktion ist f'(x)?",
       "drawGraphPrompt": "Zeichne den Graphen von",
       "drawDerivativePrompt": "Zeichne die Ableitung f'(x)",
       "dashedIsFunction": "Die gestrichelte Kurve zeigt f(x)",
-      "allAnswered": "Alle Fragen beantwortet! Warte auf die anderen...",
-      "hostView": "Schüler:innen antworten. Verfolge den Fortschritt:",
-      "streak": "Serie",
-      "bonus": "Bonus",
-      "pts": "Pkt",
       "yourDrawing": "Deine Zeichnung",
       "solution": "Lösung",
       "next": "Weiter",
-      "settings": {
-        "questionsPerRound": "Fragen pro Runde",
-        "duration": "Zeit pro Runde (Sekunden)"
+      "clear": "Löschen",
+      "pointsHint": "Bestimme zuerst den y-Achsenabschnitt und die Extrempunkte und ziehe die {{count}} Punkte dorthin — die Kurve folgt ihnen.",
+      "pointsExtraHint_one": "Tippe auf das Gitter für einen weiteren Punkt, tippe auf einen Punkt, um ihn wieder zu entfernen.",
+      "pointsExtraHint_other": "Tippe auf das Gitter für bis zu {{count}} weitere Punkte, tippe auf einen Punkt, um ihn wieder zu entfernen.",
+      "stages": {
+        "multiple-choice": {
+          "name": "Ableitung wählen",
+          "summary": "f'(x) aus vier Optionen auswählen",
+          "rules": "Wähle für {{questionsPerRound}} Funktionen die richtige Ableitung f'(x) aus 4 Optionen. Je schneller du richtig antwortest, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
+        },
+        "draw-graph": {
+          "name": "Graph zeichnen",
+          "summary": "f(x) im Koordinatensystem skizzieren",
+          "rules": "Zeichne die Graphen von {{questionsPerRound}} Funktionen ins Koordinatensystem. Je genauer deine Zeichnung, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
+        },
+        "draw-derivative": {
+          "name": "Ableitung zeichnen",
+          "summary": "f'(x) aus dem Graphen von f(x) skizzieren",
+          "rules": "Zeichne für {{questionsPerRound}} vorgegebene Funktionen die Ableitung f'(x). Die gestrichelte Kurve zeigt f(x). Du hast {{duration}} Sekunden."
+        }
+      }
+    },
+    "rational": {
+      "title": "Rationale Zahlen",
+      "description": "Rationale Zahlen am Zahlenstrahl einordnen und mit ihnen rechnen.",
+      "arrangePrompt": "Zahl auswählen und dann auf den Zahlenstrahl klicken",
+      "arrangePromptSelected": "Klicke auf den Zahlenstrahl, um die gewählte Zahl zu setzen",
+      "numerator": "Zähler",
+      "denominator": "Nenner",
+      "result": "Ergebnis",
+      "answerHint": {
+        "fraction": "Für eine ganze Zahl den Nenner leer lassen. Gleichwertige Brüche zählen als richtig.",
+        "decimal": "Gib das Ergebnis als Dezimalzahl ein, z. B. 0,75.",
+        "both": "Gib das Ergebnis als Bruch (3/4) oder als Dezimalzahl (0,75) ein."
       },
-      "explanation": {
-        "mc": {
-          "title": "Multiple-Choice-Runde",
-          "description": "Wähle aus {{count}} Funktionen jeweils die richtige Ableitung f'(x) aus 4 Optionen. Je schneller du richtig antwortest, desto mehr Punkte bekommst du. Du hast {{seconds}} Sekunden."
+      "signPrompt": "Ist das Ergebnis positiv oder negativ?",
+      "changeAskResult": "Klicke auf dem Zahlenstrahl an, wo du landest.",
+      "changeAskChange": "Welche Änderung führt vom Start zum Endzustand?",
+      "contexts": {
+        "temperature": "Temperatur",
+        "account": "Kontostand",
+        "altitude": "Tiefe und Höhe",
+        "timezone": "Zeitzone (Abweichung von UTC)"
+      },
+      "stages": {
+        "arrange": {
+          "name": "Am Zahlenstrahl einordnen",
+          "summary": "Brüche und Dezimalzahlen an die richtige Stelle setzen",
+          "rules": "Ordne {{questionsPerRound}} Zahlengruppen am Zahlenstrahl ein. Je näher jede Zahl an ihrer echten Position liegt, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
         },
-        "drawGraph": {
-          "title": "Graph zeichnen",
-          "description": "Zeichne den Graphen von {{count}} Funktionen auf das Koordinatensystem. Je genauer deine Zeichnung ist, desto mehr Punkte bekommst du. Du hast {{seconds}} Sekunden."
+        "calculate": {
+          "name": "Rechnen",
+          "summary": "Brüche addieren, subtrahieren, multiplizieren und dividieren",
+          "rules": "Löse {{questionsPerRound}} Rechnungen mit rationalen Zahlen und gib das Ergebnis ein. Je schneller du richtig antwortest, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
         },
-        "drawDerivative": {
-          "title": "Ableitung zeichnen",
-          "description": "Zeichne die Ableitung f'(x) für {{count}} gegebene Funktionen. Die gestrichelte Kurve zeigt f(x). Du hast {{seconds}} Sekunden."
+        "signs": {
+          "name": "Vorzeichen-Duell",
+          "summary": "Terme mit positiven und negativen Zahlen berechnen",
+          "rules": "Löse {{questionsPerRound}} Terme mit positiven und negativen Zahlen — ohne Taschenrechner. Je schneller du richtig antwortest, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
         },
-        "getReady": "Mach dich bereit!",
-        "hostInfo": "Erkläre die Regeln und klicke auf 'Los geht's!', um zu starten."
+        "change": {
+          "name": "Änderungen",
+          "summary": "Einer Änderung auf dem Zahlenstrahl folgen",
+          "rules": "Verfolge {{questionsPerRound}} Änderungen: Ordne den Endzustand auf dem Zahlenstrahl ein oder gib die Änderung an, die dorthin führt. Du hast {{duration}} Sekunden."
+        }
+      }
+    },
+    "chance": {
+      "title": "Zufall",
+      "description": "Wahrscheinlichkeiten berechnen und Baumdiagramme ausfüllen.",
+      "favourable": "günstige",
+      "possible": "mögliche",
+      "laplaceHint": {
+        "fraction": "Günstige Ergebnisse durch mögliche Ergebnisse. Gleichwertige Brüche zählen als richtig.",
+        "decimal": "Gib die Wahrscheinlichkeit als Dezimalzahl ein, z. B. 0,25.",
+        "percent": "Gib die Wahrscheinlichkeit in Prozent ein, z. B. 25."
+      },
+      "treePrompt": "Ziehe die Wahrscheinlichkeiten auf die Äste der zweiten Stufe — oder tippe erst eine Karte, dann einen Ast an.",
+      "treeIncomplete": "Jeder Ast der zweiten Stufe braucht eine Wahrscheinlichkeit.",
+      "setups": {
+        "die": "Du würfelst einmal mit einem Würfel.",
+        "cards": "Aus einem Skatblatt mit 32 Karten wird eine Karte gezogen.",
+        "urn": "In einer Urne liegen {{red}} rote und {{blue}} blaue Kugeln. Du ziehst eine Kugel.",
+        "wheel": "Ein Glücksrad hat {{sectors}} gleich große Felder, {{winning}} davon sind Gewinnfelder.",
+        "urnTwiceWith": "In einer Urne liegen {{red}} rote und {{blue}} blaue Kugeln. Du ziehst eine Kugel, legst sie zurück und ziehst noch einmal.",
+        "urnTwiceWithout": "In einer Urne liegen {{red}} rote und {{blue}} blaue Kugeln. Du ziehst zwei Kugeln, ohne die erste zurückzulegen.",
+        "wheelTwice": "Ein Glücksrad hat {{sectors}} gleich große Felder, {{winning}} davon sind Gewinnfelder. Du drehst zweimal."
+      },
+      "events": {
+        "red": "eine rote Kugel",
+        "blue": "eine blaue Kugel",
+        "win": "ein Gewinn",
+        "even": "eine gerade Zahl",
+        "prime": "eine Primzahl",
+        "six": "eine Sechs",
+        "greaterThanFour": "eine Zahl größer als vier",
+        "hearts": "eine Herz-Karte",
+        "ace": "ein Ass",
+        "redCard": "eine rote Karte"
+      },
+      "outcomes": {
+        "red": "rot",
+        "blue": "blau",
+        "win": "Gewinn",
+        "lose": "kein Gewinn"
+      },
+      "treeEvents": {
+        "both-first": "beide Male {{first}}",
+        "both-second": "beide Male {{second}}",
+        "exactly-one-first": "genau einmal {{first}}",
+        "at-least-one-first": "mindestens einmal {{first}}"
+      },
+      "stages": {
+        "laplace": {
+          "name": "Laplace-Sprint",
+          "summary": "Wahrscheinlichkeiten in einstufigen Zufallsversuchen",
+          "rules": "Berechne {{questionsPerRound}} Wahrscheinlichkeiten: günstige Ergebnisse durch mögliche Ergebnisse. Je schneller du richtig antwortest, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
+        },
+        "tree": {
+          "name": "Baumdiagramm",
+          "summary": "Ein zweistufiges Baumdiagramm ausfüllen und die Pfadregeln anwenden",
+          "rules": "Vervollständige {{questionsPerRound}} Baumdiagramme: Setze die Wahrscheinlichkeiten an die Äste der zweiten Stufe und berechne dann die Wahrscheinlichkeit des Ereignisses. Entlang eines Pfades multiplizieren, Pfade addieren. Du hast {{duration}} Sekunden."
+        }
+      }
+    },
+    "extremum": {
+      "title": "Extremwerte",
+      "description": "Hilfsmittelfrei ableiten und Extremwertprobleme lösen.",
+      "derivePrompt": "Wie lautet die Ableitung?",
+      "deriveHint": "Schreib sie z. B. als 3x^2-4x+1.",
+      "deriveUnreadable": "Das lässt sich noch nicht als ganzrationale Funktion lesen.",
+      "modelPrompt": "Welche Nebenbedingung und welche Zielfunktion gehören zu dieser Situation?",
+      "modelIncomplete": "Wähle zuerst eine Nebenbedingung und eine Zielfunktion.",
+      "optimizePrompt": "Verschiebe jetzt x, bis die Größe möglichst groß ist.",
+      "slots": {
+        "constraint": "Nebenbedingung",
+        "target": "Zielfunktion"
+      },
+      "quantities": {
+        "area": "Flächeninhalt",
+        "volume": "Volumen"
+      },
+      "contexts": {
+        "fence": "Eine rechteckige Weide liegt an einem geraden Fluss. Für die drei Seiten ohne Fluss stehen {{length}} m Zaun zur Verfügung. Wie breit muss sie sein, damit die Fläche am größten wird?",
+        "box": "Aus einem quadratischen Blech mit der Seitenlänge {{side}} cm wird eine offene Schachtel gefaltet: An den Ecken werden Quadrate mit der Seitenlänge x ausgeschnitten. Für welches x wird das Volumen am größten?",
+        "parabola": "Ein Rechteck steht auf der x-Achse, seine oberen Ecken liegen auf der Parabel y = {{height}} - x². Für welches x wird der Flächeninhalt am größten?"
+      },
+      "stages": {
+        "derive": {
+          "name": "Ableitungs-Sprint",
+          "summary": "Ganzrationale Funktionen hilfsmittelfrei ableiten",
+          "rules": "Leite {{questionsPerRound}} ganzrationale Funktionen ab — ohne Hilfsmittel, wie im hilfsmittelfreien Teil der Klausur. Je schneller du richtig antwortest, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
+        },
+        "optimize": {
+          "name": "Extremwertproblem",
+          "summary": "Von der Nebenbedingung über die Zielfunktion zum Maximum",
+          "rules": "Löse {{questionsPerRound}} Extremwertprobleme: Wähle Nebenbedingung und Zielfunktion und finde dann das x, für das die Größe am größten wird. Die Hälfte der Punkte gibt es für das Modell, die andere für das Maximum. Du hast {{duration}} Sekunden."
+        }
       }
     }
+  },
+  "settings": {
+    "stages": "Stationen",
+    "stagesHint_one": "Eine Runde pro aktiver Station (1 Runde).",
+    "stagesHint_other": "Eine Runde pro aktiver Station ({{count}} Runden).",
+    "questionsPerRound": "Aufgaben pro Runde",
+    "duration": "Zeit pro Runde",
+    "targetScore": "Zielpunktzahl",
+    "allowNegatives": "Negative Zahlen einbeziehen",
+    "notation": "Zahlendarstellung",
+    "notationFraction": "Nur Brüche",
+    "notationDecimal": "Nur Dezimalzahlen",
+    "notationBoth": "Brüche und Dezimalzahlen",
+    "answerMode": "Antwort",
+    "answerModeValue": "Ergebnis eingeben",
+    "answerModeSign": "Nur das Vorzeichen",
+    "withBrackets": "Terme mit Klammern einbeziehen",
+    "askMode": "Aufgabentyp",
+    "askModeBoth": "Gemischt",
+    "askModeResult": "Endzustand einordnen",
+    "askModeChange": "Änderung angeben",
+    "twoChanges": "Manchmal zwei Änderungen nacheinander",
+    "rootTasks": "Aufgabentypen",
+    "rootTasksPartial": "Nur teilweises Wurzelziehen",
+    "rootTasksMixed": "Wurzeln, Produkte, Quotienten, Brüche",
+    "targetPrecision": "Geforderte Genauigkeit (Hundertstel)",
+    "notationPercent": "Prozent",
+    "replacement": "Zweiter Zug",
+    "replacementMixed": "Gemischt",
+    "replacementWith": "Mit Zurücklegen",
+    "replacementWithout": "Ohne Zurücklegen",
+    "degree": "Grad der Funktion",
+    "showTargetGraph": "Graph der Zielfunktion anzeigen",
+    "inputMode": "Art des Zeichnens",
+    "inputModePoints": "Punkte setzen (Kurve folgt)",
+    "inputModeFreehand": "Freihand",
+    "extraPoints": "Schüler:innen dürfen Punkte hinzufügen"
   }
 }

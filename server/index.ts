@@ -1,6 +1,17 @@
 import type * as Party from "partykit/server";
 import type { LobbyState, ClientMessage, ServerMessage } from "../shared/types";
+import { getGameSpec, validateGameSpecs } from "../shared/games";
+import { defaultGameSettings, resolveGameSettings } from "../shared/framework";
 import { gameHandlers } from "./games";
+
+// Fail loudly at startup rather than when a class is already in the lobby.
+validateGameSpecs();
+for (const id of Object.keys(gameHandlers)) {
+  if (!getGameSpec(id)) throw new Error(`Game handler "${id}" has no game spec`);
+}
+
+/** Longest player name the server stores. */
+const MAX_NAME_LENGTH = 20;
 
 function send(connection: Party.Connection, msg: ServerMessage) {
   connection.send(JSON.stringify(msg));
@@ -183,6 +194,12 @@ export default class LmsServer implements Party.Server {
 
     switch (msg.type) {
       case "host": {
+        const spec = getGameSpec(msg.gameId);
+        if (!spec || !gameHandlers[msg.gameId]) {
+          send(sender, { type: "error", message: "Unknown game" });
+          return;
+        }
+
         // First connection creates the lobby, or host reconnects
         if (state && state.hostId && state.hostId !== sender.id) {
           send(sender, { type: "error", message: "Lobby already exists" });
@@ -213,7 +230,7 @@ export default class LmsServer implements Party.Server {
           ],
           phase: "lobby",
           gameData: null,
-          settings: null,
+          settings: defaultGameSettings(spec),
           countdownEndsAt: null,
         };
         await saveLobbyState(this.room, state);
@@ -227,10 +244,16 @@ export default class LmsServer implements Party.Server {
           return;
         }
 
+        const name = typeof msg.name === "string" ? msg.name.trim().slice(0, MAX_NAME_LENGTH) : "";
+        if (!name) {
+          send(sender, { type: "error", message: "A name is required" });
+          return;
+        }
+
         // Check if already in the player list (reconnect)
         const existing = state.players.find((p) => p.id === sender.id);
         if (existing) {
-          existing.name = msg.name;
+          existing.name = name;
           existing.connected = true;
           await saveLobbyState(this.room, state);
           broadcastLobbyState(this.room, state);
@@ -257,9 +280,16 @@ export default class LmsServer implements Party.Server {
           return;
         }
 
+        const spec = getGameSpec(state.gameId);
+        const playerCount = state.players.filter((p) => !p.isHost).length;
+        if (spec && playerCount >= spec.maxPlayers) {
+          send(sender, { type: "error", message: "Lobby is full" });
+          return;
+        }
+
         state.players.push({
           id: sender.id,
-          name: msg.name,
+          name,
           isHost: false,
           score: 0,
           connected: true,
@@ -274,6 +304,12 @@ export default class LmsServer implements Party.Server {
         if (!state) return;
         if (sender.id !== state.hostId) {
           send(sender, { type: "error", message: "Only host can start" });
+          return;
+        }
+        const spec = getGameSpec(state.gameId);
+        const playerCount = state.players.filter((p) => !p.isHost).length;
+        if (spec && playerCount < spec.minPlayers) {
+          send(sender, { type: "error", message: "Not enough players" });
           return;
         }
         await enterExplanation(this.room, true);
@@ -347,7 +383,10 @@ export default class LmsServer implements Party.Server {
         }
         if (state.phase !== "lobby") return;
 
-        state.settings = msg.settings;
+        const spec = getGameSpec(state.gameId);
+        if (!spec) return;
+        // Never trust the client: clamp to what the stage schemas allow.
+        state.settings = resolveGameSettings(spec, msg.settings);
         await saveLobbyState(this.room, state);
         broadcastLobbyState(this.room, state);
         break;

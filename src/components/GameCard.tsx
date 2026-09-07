@@ -26,8 +26,13 @@ export default function GameCard({ game }: { game: GameDefinition }) {
       </div>
       <h3 className="text-lg font-semibold text-gray-800 mb-1">{t(game.titleKey)}</h3>
       <p className="text-sm text-gray-500 mb-3">{t(game.descriptionKey)}</p>
-      <div className="text-xs text-gray-400 uppercase font-medium">
-        {t(`arena.${game.category}`)}
+      <div className="flex items-center gap-2 text-xs text-gray-400 uppercase font-medium">
+        <span>{t(`arena.${game.category}`)}</span>
+        {game.grades.length > 0 && (
+          <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 normal-case">
+            {t("arena.grades", { grades: game.grades.join(", ") })}
+          </span>
+        )}
       </div>
     </Link>
   );
