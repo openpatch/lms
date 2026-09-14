@@ -3,8 +3,8 @@
 One Node process and one SQLite file on one box. nginx serves the built client
 and proxies `/parties/*` to the server; pm2 keeps the process alive.
 
-Paths below assume `/home/openpatch/projects/lms`, which is what
-`.github/workflows/deploy.yml` deploys to.
+Paths below assume `~/projects/lms` (`/home/openpatch/projects/lms`), which is
+where `.github/workflows/deploy.yml` deploys, alongside your other apps.
 
 ## Provisioning
 
@@ -13,11 +13,15 @@ row per answer. Needs Node 24+ (`node:sqlite` is built in, so there is no
 native module to compile and no build toolchain on the server).
 
 ```sh
-mkdir -p /home/openpatch/projects/lms/data
-cd /home/openpatch/projects/lms
+mkdir -p ~/projects/lms/data
+```
 
-corepack enable                 # pnpm
-npm install -g pm2
+**Port 3100.** `json-store` already holds 3000, so the game server is on 3100.
+Check it is actually free before the first start, and keep the pm2 entry and
+`deploy/nginx.conf` agreeing:
+
+```sh
+ss -tlnp | grep -E '3000|3100'
 ```
 
 ### The secret
@@ -29,25 +33,65 @@ rejected.
 
 ```sh
 printf 'AUTH_SECRET=%s\nBASE_URL=https://lms.openpatch.org\n' "$(openssl rand -base64 32)" \
-  > /home/openpatch/projects/lms/.env
-chmod 600 /home/openpatch/projects/lms/.env
+  > ~/projects/lms/.env
+chmod 600 ~/projects/lms/.env
 ```
 
-`deploy/ecosystem.config.cjs` reads that file — pm2 does not pick up `.env` on
-its own. It is outside the repository and never deployed.
+The pm2 entry below points at that file. It is outside the repository, so the
+deploy never overwrites it — but note `.env` is also not created for you: a
+fresh box needs this step before the first start.
 
 ### pm2
 
-```sh
-pm2 start deploy/ecosystem.config.cjs
-pm2 save && pm2 startup          # come back after a reboot
-pm2 install pm2-logrotate        # otherwise logs grow without bound
+You already run everything from one shared `~/projects/ecosystem.config.js`, so
+lms is an entry in that file rather than a config of its own. Add:
+
+```js
+{
+  name: "lms",
+  cwd: "lms",
+  script: "./node_modules/.bin/tsx",
+  args: "server/index.ts",
+
+  // One process. Lobbies live in memory and own their timers, so a second
+  // worker would hold a different set of them and half a class would be told
+  // their code does not exist. Never raise instances above 1.
+  instances: 1,
+  exec_mode: "fork",
+
+  // AUTH_SECRET and BASE_URL, kept out of this file and out of git.
+  env_file: "lms/.env",
+  env: {
+    NODE_ENV: "production",
+    PORT: 3100,
+    DB_PATH: "data/lms.db",
+  },
+
+  // The server flushes live lobbies to SQLite on SIGTERM; pm2 kills after
+  // 1.6s by default, which is not always enough.
+  kill_timeout: 15000,
+  max_memory_restart: "512M",
+  time: true,
+}
 ```
 
-> **One process, fork mode.** Lobbies live in memory and each owns its timers.
-> In cluster mode a second worker would hold a different set of lobbies, and
-> half a class would get "no lobby with this code" depending on which worker
-> nginx handed them to. Never raise `instances` above 1.
+Then:
+
+```sh
+cd ~/projects
+pm2 start ecosystem.config.js --only lms
+pm2 save
+pm2 install pm2-logrotate      # otherwise logs grow without bound
+```
+
+`NODE_ENV` is set in `env` rather than `env_production` on purpose: the deploy
+workflow restarts with `--update-env` and no `--env` flag, which reads `env`.
+Putting it in `env_production` only would silently drop the app back to
+development settings on every deploy.
+
+If `env_file` turns out not to be supported by your pm2, the server refuses to
+start with `AUTH_SECRET must be set in production` — loud rather than silent.
+Either upgrade pm2 or inline the two values into `env`.
 
 ### nginx
 
@@ -75,7 +119,7 @@ Only teachers sign in; students join with a code and never have an account.
 There is no sign-up page — accounts are made on the server:
 
 ```sh
-cd /home/openpatch/projects/lms
+cd ~/projects/lms
 set -a; . ./.env; set +a          # the CLI needs the same environment
 
 pnpm teacher add anna@schule.de "Anna Klein"   # prints a password once
