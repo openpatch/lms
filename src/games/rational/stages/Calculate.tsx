@@ -65,8 +65,8 @@ export default function CalculateStage({
   };
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div key={question.id} className="animate-question-in">
+    <div className="flex flex-col items-center gap-6 w-full px-4">
+      <div key={question.id} className="animate-question-in w-full">
         <MathTex tex={termLatex(question)} display className="text-4xl" />
       </div>
 

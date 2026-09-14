@@ -211,6 +211,16 @@ Optional per stage:
 | `questionless` | `true` for stages without questions, so the component renders anyway |
 | `HostView` | Replaces the default progress list the host sees |
 | `scorePlayer` | Client-side mirror of the handler's `scorePlayer` |
+| `Review` | One row of the round review on the players' devices |
+
+Once a round is over, every player sees their own answers on their own device:
+each question of the round with a tick or a cross, what they answered and what it
+scored (`src/components/RoundReview.tsx`). Without a `Review` a row still shows the
+answer and the points; a `Review` adds the question itself and, when the answer was
+wrong, the right one. It receives `{ question, answer, data, playerId }` — `answer`
+is `undefined` for a question the round ran out on — and renders into a row the
+review draws the frame of, so keep it to a line or three and use `ReviewLine` for
+the "label: value" lines (`src/games/terme/stages/reviews.tsx` is the example).
 
 ### 4. Add the translations
 

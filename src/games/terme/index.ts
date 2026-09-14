@@ -10,16 +10,17 @@ import FractionStage, { FractionRulesExample } from "./stages/Fraction";
 import InequalityStage, { InequalityRulesExample } from "./stages/Inequality";
 import RearrangeStage, { RearrangeRulesExample } from "./stages/Rearrange";
 import ZeroStage, { ZeroRulesExample } from "./stages/Zero";
+import { BuildReview, EvaluateReview, TermReview, ZeroReview } from "./stages/reviews";
 
 export default defineGame(termeSpec, {
-  build: { Component: BuildStage, RulesExample: BuildRulesExample },
-  evaluate: { Component: EvaluateStage, RulesExample: EvaluateRulesExample },
-  collect: { Component: CollectStage, RulesExample: CollectRulesExample },
-  expand: { Component: ExpandStage, RulesExample: ExpandRulesExample },
-  factor: { Component: FactorStage, RulesExample: FactorRulesExample },
-  binomial: { Component: BinomialStage, RulesExample: BinomialRulesExample },
-  zero: { Component: ZeroStage, RulesExample: ZeroRulesExample },
-  fraction: { Component: FractionStage, RulesExample: FractionRulesExample },
-  rearrange: { Component: RearrangeStage, RulesExample: RearrangeRulesExample },
-  inequality: { Component: InequalityStage, RulesExample: InequalityRulesExample },
+  build: { Component: BuildStage, RulesExample: BuildRulesExample, Review: BuildReview },
+  evaluate: { Component: EvaluateStage, RulesExample: EvaluateRulesExample, Review: EvaluateReview },
+  collect: { Component: CollectStage, RulesExample: CollectRulesExample, Review: TermReview },
+  expand: { Component: ExpandStage, RulesExample: ExpandRulesExample, Review: TermReview },
+  factor: { Component: FactorStage, RulesExample: FactorRulesExample, Review: TermReview },
+  binomial: { Component: BinomialStage, RulesExample: BinomialRulesExample, Review: TermReview },
+  zero: { Component: ZeroStage, RulesExample: ZeroRulesExample, Review: ZeroReview },
+  fraction: { Component: FractionStage, RulesExample: FractionRulesExample, Review: TermReview },
+  rearrange: { Component: RearrangeStage, RulesExample: RearrangeRulesExample, Review: TermReview },
+  inequality: { Component: InequalityStage, RulesExample: InequalityRulesExample, Review: TermReview },
 });

@@ -75,7 +75,7 @@ export class Room {
   }
 
   broadcastLobbyState(): void {
-    this.broadcast({ type: "lobby-state", state: this.state });
+    this.broadcast({ type: "lobby-state", state: this.state, serverNow: Date.now() });
   }
 
   attach(connectionId: string, socket: WebSocket): void {
@@ -132,7 +132,12 @@ export class Room {
     this.state.countdownEndsAt = countdownEndsAt;
     this.save();
 
-    this.broadcast({ type: "countdown", gameData: this.state.gameData, countdownEndsAt });
+    this.broadcast({
+      type: "countdown",
+      gameData: this.state.gameData,
+      countdownEndsAt,
+      serverNow: Date.now(),
+    });
     this.broadcastLobbyState();
 
     clearTimeout(this.countdownTimer);
@@ -146,7 +151,7 @@ export class Room {
     this.state.countdownEndsAt = null;
     this.save();
 
-    this.broadcast({ type: "game-start", gameData: this.state.gameData });
+    this.broadcast({ type: "game-start", gameData: this.state.gameData, serverNow: Date.now() });
     this.broadcastLobbyState();
 
     const handler = gameHandlers[this.state.gameId];

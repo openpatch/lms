@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { serverTime } from "../lib/server-time";
+
+/** Seconds still to go, on the server's clock rather than this device's. */
+function remainingSeconds(endsAt: number): number {
+  return Math.max(0, Math.ceil((endsAt - serverTime()) / 1000));
+}
 
 export default function Countdown({
   endsAt,
@@ -9,13 +15,11 @@ export default function Countdown({
   children?: React.ReactNode;
 }) {
   const { t } = useTranslation();
-  const [secondsLeft, setSecondsLeft] = useState(0);
+  // Counted out before the first paint: starting at 0 showed "Los!" for a frame
+  const [secondsLeft, setSecondsLeft] = useState(() => remainingSeconds(endsAt));
 
   useEffect(() => {
-    const update = () => {
-      const remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-      setSecondsLeft(remaining);
-    };
+    const update = () => setSecondsLeft(remainingSeconds(endsAt));
     update();
     const interval = setInterval(update, 100);
     return () => clearInterval(interval);

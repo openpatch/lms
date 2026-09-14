@@ -10,6 +10,7 @@ import {
   playerRoundScore,
 } from "../../shared/framework";
 import { getStage, type GameDefinition, type StageProps } from "../lib/game-registry";
+import { serverTime } from "../lib/server-time";
 
 /** Where a stage's primary button goes: the bar pinned to the bottom edge. */
 const ActionBarContext = createContext<HTMLElement | null>(null);
@@ -31,7 +32,7 @@ function useTimer(startTime: number, duration: number, active: boolean) {
   useEffect(() => {
     if (!active) return;
     const update = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
+      const elapsed = (serverTime() - startTime) / 1000;
       setTimeLeft(Math.max(0, Math.ceil(duration - elapsed)));
     };
     update();

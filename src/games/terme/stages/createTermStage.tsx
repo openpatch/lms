@@ -61,7 +61,7 @@ export function createTermStage<Q extends TermQuestion>(options: TermStageOption
           </p>
         )}
 
-        <div key={question.id} className="animate-question-in">
+        <div key={question.id} className="animate-question-in w-full">
           <MathTex tex={question.termLatex} display className="text-4xl" />
         </div>
 

@@ -83,11 +83,14 @@ export type ClientMessage =
   | { type: "close-lobby" };
 
 // Messages: Server -> Client
+// Anything carrying a point in time also carries the server's own clock reading,
+// so a client can measure how far its clock is off and still count down right
+// (see src/lib/server-time.ts).
 export type ServerMessage =
-  | { type: "lobby-state"; state: LobbyState }
+  | { type: "lobby-state"; state: LobbyState; serverNow: number }
   | { type: "error"; message: string }
-  | { type: "countdown"; gameData: unknown; countdownEndsAt: number }
-  | { type: "game-start"; gameData: unknown }
+  | { type: "countdown"; gameData: unknown; countdownEndsAt: number; serverNow: number }
+  | { type: "game-start"; gameData: unknown; serverNow: number }
   | { type: "game-state"; gameData: unknown }
   | { type: "game-event"; event: unknown }
   | { type: "round-finished"; results: GameResult[]; isLastRound: boolean }

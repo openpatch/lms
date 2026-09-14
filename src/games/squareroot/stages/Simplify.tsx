@@ -45,7 +45,7 @@ export default function SimplifyStage({ question, submit }: StageProps<SimplifyQ
   const ready = current.factor.trim() !== "" || current.radicand.trim() !== "";
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="flex flex-col items-center gap-8 w-full px-4">
       <div key={question.id} className="animate-question-in">
         <MathTex tex={`${question.promptLatex} = \\; ?`} display className="text-4xl" />
       </div>

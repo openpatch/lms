@@ -149,7 +149,7 @@ function onConnect(room: Room, connectionId: string, ws: WebSocket) {
     resendPhase(room, connectionId);
   } else {
     // New connection — it must still send "host" or "join".
-    send(ws, { type: "lobby-state", state: room.state });
+    send(ws, { type: "lobby-state", state: room.state, serverNow: Date.now() });
   }
 
   ws.on("message", (data) => onMessage(room, connectionId, ws, data.toString()));
@@ -172,10 +172,15 @@ function resendPhase(room: Room, connectionId: string) {
       type: "countdown",
       gameData: room.state.gameData,
       countdownEndsAt: room.state.countdownEndsAt,
+      serverNow: Date.now(),
     });
   }
   if (room.state.phase === "playing") {
-    room.send(connectionId, { type: "game-start", gameData: room.state.gameData });
+    room.send(connectionId, {
+      type: "game-start",
+      gameData: room.state.gameData,
+      serverNow: Date.now(),
+    });
   }
 }
 

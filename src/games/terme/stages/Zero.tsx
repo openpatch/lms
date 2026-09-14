@@ -31,12 +31,12 @@ export default function ZeroStage({ question, submit }: StageProps<ZeroQuestion>
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 px-4">
+    <div className="flex flex-col items-center gap-6 w-full px-4">
       <p className="text-gray-500 text-center">
         {t(question.needsFactoring ? "games.terme.prompts.zeroFactor" : "games.terme.prompts.zero")}
       </p>
 
-      <div key={question.id} className="animate-question-in">
+      <div key={question.id} className="animate-question-in w-full">
         <MathTex tex={`${question.termLatex} = 0`} display className="text-4xl" />
       </div>
 

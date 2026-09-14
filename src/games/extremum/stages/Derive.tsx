@@ -30,7 +30,7 @@ export default function DeriveStage({ question, submit }: StageProps<DeriveQuest
   };
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-6 w-full px-4">
       <div key={question.id} className="animate-question-in text-center">
         <p className="text-gray-500 mb-2">{t("games.extremum.derivePrompt")}</p>
         <MathTex tex={`f(x) = ${question.functionLatex}`} display className="text-4xl" />

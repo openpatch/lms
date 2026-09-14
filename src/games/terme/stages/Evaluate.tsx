@@ -20,10 +20,10 @@ export default function EvaluateStage({ question, submit }: StageProps<EvaluateQ
 
   if (question.ask === "equivalent") {
     return (
-      <div key={question.id} className="animate-question-in flex flex-col items-center gap-6 px-4">
+      <div key={question.id} className="animate-question-in flex flex-col items-center gap-6 w-full px-4">
         <p className="text-gray-500 text-center">{t("games.terme.prompts.equivalent")}</p>
 
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-3 w-full">
           <MathTex tex={question.termLatex} display className="text-3xl" />
           <span className="text-gray-300 text-2xl">≟</span>
           <MathTex tex={question.otherLatex} display className="text-3xl" />
@@ -61,7 +61,7 @@ export default function EvaluateStage({ question, submit }: StageProps<EvaluateQ
     <div className="flex flex-col items-center gap-6 w-full px-4">
       <p className="text-gray-500 text-center">{t("games.terme.prompts.value")}</p>
 
-      <div key={question.id} className="animate-question-in flex flex-col items-center gap-3">
+      <div key={question.id} className="animate-question-in flex flex-col items-center gap-3 w-full">
         <MathTex tex={question.termLatex} display className="text-4xl" />
         <div className="flex flex-wrap justify-center gap-4 text-2xl text-game-ink">
           {question.assignments.map((assignment) => (

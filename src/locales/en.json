@@ -60,6 +60,16 @@
     "streak": "streak",
     "bonus": "bonus",
     "pts": "pts",
+    "yourAnswers": "Your answers",
+    "yourAnswer": "Your answer:",
+    "correctAnswer": "Correct:",
+    "noAnswer": "not answered",
+    "correctOfTotal": "{{correct}} of {{total}} correct",
+    "answer": {
+      "correct": "Correct",
+      "wrong": "Wrong",
+      "missing": "Not answered"
+    },
     "getReady": "Get ready!",
     "hostInfo": "Explain the rules, then click 'Let's go!' to start.",
     "creating": "Creating lobby…",

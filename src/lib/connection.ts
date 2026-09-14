@@ -6,6 +6,7 @@ import type {
   LobbyState,
   LobbyClosedReason,
 } from "../../shared/types";
+import { noteServerTime } from "./server-time";
 
 // The client talks to the host it was served from: Caddy proxies /parties to
 // the game server in production, and the Vite dev server does the same locally.
@@ -66,6 +67,8 @@ export function useGameConnection(
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
       const msg = JSON.parse(event.data) as ServerMessage;
+      // Every message that carries a time carries the server's clock with it
+      if ("serverNow" in msg) noteServerTime(msg.serverNow);
       switch (msg.type) {
         case "lobby-state":
           setLobbyState(msg.state);

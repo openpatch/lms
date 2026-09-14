@@ -7,7 +7,7 @@ import type {
   StageSpec,
 } from "../../shared/framework";
 import { gameSpecs } from "../../shared/games";
-import type { GameMeta } from "../../shared/types";
+import type { GameMeta, PlayerAnswer } from "../../shared/types";
 
 /**
  * Props every stage component receives. The shell (see StageShell) takes care of
@@ -31,6 +31,20 @@ export interface StageProps<Q extends StageQuestion = StageQuestion> {
   playerId: string;
 }
 
+/**
+ * What a stage shows in the round review on a player's device: the question as
+ * it was asked, what this player answered, and — when that was not right — what
+ * would have been. The frame around it (number, tick, points) is the review's
+ * own, see RoundReview.
+ */
+export interface StageReviewProps<Q extends StageQuestion = StageQuestion> {
+  question: Q;
+  /** What this player answered, or undefined when the round ran out first. */
+  answer: PlayerAnswer | undefined;
+  data: StageRoundData<Q>;
+  playerId: string;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type AnyStageComponent = ComponentType<StageProps<any>>;
 
@@ -47,6 +61,9 @@ export interface StageComponents {
   /** Live score of a player, when the stage does not score by answer points.
    *  Mirror of the server-side StageHandler.scorePlayer. */
   scorePlayer?: (data: StageRoundData<any>, playerId: string) => number;
+  /** One row of the round review. Without it the review still shows what the
+   *  player answered and what it scored, just not the question itself. */
+  Review?: ComponentType<StageReviewProps<any>>;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

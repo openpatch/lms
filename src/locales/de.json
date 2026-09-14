@@ -60,6 +60,16 @@
     "streak": "Serie",
     "bonus": "Bonus",
     "pts": "Pkt",
+    "yourAnswers": "Deine Antworten",
+    "yourAnswer": "Deine Antwort:",
+    "correctAnswer": "Richtig:",
+    "noAnswer": "nicht beantwortet",
+    "correctOfTotal": "{{correct}} von {{total}} richtig",
+    "answer": {
+      "correct": "Richtig",
+      "wrong": "Falsch",
+      "missing": "Nicht beantwortet"
+    },
     "getReady": "Mach dich bereit!",
     "hostInfo": "Erkläre die Regeln und klicke dann auf 'Los geht's!'.",
     "creating": "Lobby wird erstellt…",

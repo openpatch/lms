@@ -5,10 +5,12 @@ import { useGameConnection } from "../lib/connection";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import ResultsList from "../components/ResultsList";
+import RoundReview from "../components/RoundReview";
 import Countdown from "../components/Countdown";
 import StageShell from "../components/StageShell";
 import StageRules from "../components/StageRules";
 import type { ServerMessage, GameResult } from "../../shared/types";
+import type { StageRoundData } from "../../shared/framework";
 
 export default function Play() {
   const { t } = useTranslation();
@@ -176,25 +178,32 @@ export default function Play() {
     );
   }
 
+  // The round just played, still in the lobby state once it is over
+  const roundData = lobbyState.gameData as StageRoundData | null;
+
   // Round-finished phase
   if (lobbyState.phase === "round-finished") {
-    const data = lobbyState.gameData as { currentRound?: number; totalRounds?: number } | null;
     return (
-      <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
+      <div className="max-w-2xl mx-auto flex flex-col items-center gap-6 px-4">
         <div className="text-sm font-semibold uppercase text-game-ink">
-          {t("game.round", { current: data?.currentRound ?? 0, total: data?.totalRounds ?? 0 })}
+          {t("game.round", {
+            current: roundData?.currentRound ?? 0,
+            total: roundData?.totalRounds ?? 0,
+          })}
         </div>
         <ResultsList results={roundResults} title={t("game.roundResults")} />
+        {roundData && <RoundReview game={game} data={roundData} playerId={myPlayerId} />}
         <p className="text-gray-500">{t("game.waitingNextRound")}</p>
       </div>
     );
   }
 
-  // Finished phase
+  // Finished phase — the last round gets its review too
   if (lobbyState.phase === "finished") {
     return (
-      <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
+      <div className="max-w-2xl mx-auto flex flex-col items-center gap-6 px-4">
         <ResultsList results={finalResults} title={t("game.finalResults")} />
+        {roundData && <RoundReview game={game} data={roundData} playerId={myPlayerId} />}
         <p className="text-gray-500">{t("play.waitingHost")}</p>
       </div>
     );

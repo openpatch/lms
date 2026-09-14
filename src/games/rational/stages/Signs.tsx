@@ -30,8 +30,8 @@ export default function SignsStage({ question, submit, settings }: StageProps<Si
   };
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div key={question.id} className="animate-question-in">
+    <div className="flex flex-col items-center gap-8 w-full px-4">
+      <div key={question.id} className="animate-question-in w-full">
         <MathTex tex={`${question.termLatex} = \\; ?`} display className="text-4xl" />
       </div>
 

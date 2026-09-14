@@ -12,7 +12,7 @@ export default function MultipleChoiceStage({
   if (!question) return null;
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="flex flex-col items-center gap-8 w-full px-4">
       <div key={question.id} className="animate-question-in text-center">
         <p className="text-gray-500 mb-3">{t("games.analysis.findDerivative")}</p>
         <div className="text-4xl">
