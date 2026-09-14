@@ -80,6 +80,12 @@ Give it at least 15 seconds between `SIGTERM` and `SIGKILL`. The server flushes
 live lobbies to SQLite on `SIGTERM`, and some process managers kill much sooner
 than that by default.
 
+Raise the open-file limit if more than a few hundred students will be connected
+at once. Every player holds a socket, and the usual default of 1024 descriptors
+is reached long before the machine runs out of anything: new connections then
+fail with `EMFILE` while memory and CPU still look idle. Most process managers
+can set it per app, or raise it for the user that runs the server.
+
 Point the process manager at `node --import tsx server/index.ts` directly, not
 at `pnpm start` or the `tsx` binary. Both run the server in a child process, so
 the manager ends up supervising a wrapper: memory limits watch the wrong
