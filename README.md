@@ -110,6 +110,15 @@ matter:
 Serve `dist/` as the document root with a single-page fallback, so unknown paths
 reach the router instead of returning 404.
 
+The web server's own user has to be able to reach that directory. Deploying into
+a home directory usually means it cannot: those are created without access for
+other users on most current distributions, and the failure is confusing — the
+fallback file cannot be read either, so instead of a permission error you get a
+redirection cycle and a 500. `namei -l path/to/dist/index.html` shows which
+directory in the chain refuses, and traverse permission (`chmod o+x`) on that
+directory is enough; the alternative is to keep the built client somewhere the
+web server already serves.
+
 ### Continuous deployment
 
 `.github/workflows/deploy.yml` builds, runs both checks, copies the result over
