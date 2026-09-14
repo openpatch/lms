@@ -61,6 +61,7 @@ export const analysisSpec: GameSpec = {
   category: "math",
   grades: ["EF", "Q1"],
   icon: "∫",
+  color: "indigo",
   status: "live",
   minPlayers: 1,
   maxPlayers: 50,

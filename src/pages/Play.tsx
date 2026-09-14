@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router";
 import { usePartyConnection } from "../lib/partykit";
 import { getGame } from "../lib/game-registry";
+import { useActiveGame } from "../lib/game-theme";
 import ResultsList from "../components/ResultsList";
 import Countdown from "../components/Countdown";
 import StageShell from "../components/StageShell";
@@ -40,6 +41,10 @@ export default function Play() {
   };
 
   const conn = usePartyConnection(code ?? "", onMessage);
+  // Which game this lobby is playing only becomes known once the server answers;
+  // from then on the shell wears its colour, the same one the host sees.
+  const game = conn.lobbyState ? getGame(conn.lobbyState.gameId) : undefined;
+  useActiveGame(game);
 
   // Send "join" message on every connect (handles reconnect)
   useEffect(() => {
@@ -103,8 +108,6 @@ export default function Play() {
     );
   }
 
-  const game = getGame(lobbyState.gameId);
-
   if (!game) {
     return (
       <div className="text-center py-12">
@@ -161,7 +164,7 @@ export default function Play() {
     const data = lobbyState.gameData as { currentRound?: number; totalRounds?: number } | null;
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
-        <div className="text-sm font-semibold uppercase text-brand-500">
+        <div className="text-sm font-semibold uppercase text-game-ink">
           {t("game.round", { current: data?.currentRound ?? 0, total: data?.totalRounds ?? 0 })}
         </div>
         <ResultsList results={roundResults} title={t("game.roundResults")} />
@@ -180,12 +183,17 @@ export default function Play() {
     );
   }
 
-  // Lobby phase — waiting for host to start
+  // Lobby phase — waiting for host to start. The colour card is deliberately
+  // loud: it is how a player checks they are in the game the class is playing.
   return (
-    <div className="max-w-md mx-auto text-center py-12">
-      <span className="text-5xl mb-4 block">{game.icon}</span>
-      <h1 className="text-2xl font-bold mb-2">{t(game.titleKey)}</h1>
-      <p className="text-gray-500">{t("play.waitingHost")}</p>
+    <div className="max-w-md mx-auto text-center py-8">
+      <div className="rounded-3xl border-2 border-game-200 bg-linear-to-br from-game-100 to-game-50 px-6 py-8">
+        <span className="inline-grid place-items-center w-24 h-24 rounded-3xl bg-white/80 shadow-sm text-6xl mb-4">
+          {game.icon}
+        </span>
+        <h1 className="text-2xl font-bold text-game-ink mb-2">{t(game.titleKey)}</h1>
+        <p className="text-game-ink/70">{t("play.waitingHost")}</p>
+      </div>
       <div className="mt-8">
         <h2 className="text-lg font-semibold mb-3">
           {t("lobby.players")} ({lobbyState.players.filter((p) => !p.isHost).length})

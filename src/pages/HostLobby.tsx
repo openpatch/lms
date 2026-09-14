@@ -10,12 +10,14 @@ import StageRules from "../components/StageRules";
 import StageSettingsForm from "../components/StageSettingsForm";
 import { usePartyConnection } from "../lib/partykit";
 import { getGame } from "../lib/game-registry";
+import { useActiveGame } from "../lib/game-theme";
 import type { ServerMessage, GameResult } from "../../shared/types";
 
 export default function HostLobby() {
   const { t } = useTranslation();
   const { gameId, code } = useParams();
   const game = gameId ? getGame(gameId) : undefined;
+  useActiveGame(game);
   const [gameData, setGameData] = useState<unknown>(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [countdownEndsAt, setCountdownEndsAt] = useState<number | null>(null);
@@ -106,7 +108,7 @@ export default function HostLobby() {
         <StageRules game={game} gameData={gameData} isHost={true} />
         <button
           onClick={() => conn.sendMessage({ type: "begin-countdown" })}
-          className="px-8 py-3 bg-brand-500 text-white font-semibold rounded-lg hover:bg-brand-600 transition-colors"
+          className="px-8 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
         >
           {t("game.letsGo")}
         </button>
@@ -146,13 +148,13 @@ export default function HostLobby() {
     const data = lobbyState.gameData as { currentRound?: number; totalRounds?: number } | null;
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
-        <div className="text-sm font-semibold uppercase text-brand-500">
+        <div className="text-sm font-semibold uppercase text-game-ink">
           {t("game.round", { current: data?.currentRound ?? 0, total: data?.totalRounds ?? 0 })}
         </div>
         <ResultsList results={roundResults} title={t("game.roundResults")} />
         <button
           onClick={() => conn.sendMessage({ type: "next-round" })}
-          className="px-6 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+          className="px-6 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
         >
           {t("game.nextRound")}
         </button>
@@ -167,7 +169,7 @@ export default function HostLobby() {
         <ResultsList results={finalResults} title={t("game.finalResults")} />
         <button
           onClick={() => conn.sendMessage({ type: "restart" })}
-          className="px-6 py-3 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors"
+          className="px-6 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
         >
           {t("play.backToLobby")}
         </button>
@@ -178,20 +180,19 @@ export default function HostLobby() {
   // Lobby phase
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{game.icon}</span>
-          <h1 className="text-xl font-bold">{t(game.titleKey)}</h1>
+      <div className="flex items-center justify-between gap-3 mb-6 rounded-2xl border-2 border-game-200 bg-linear-to-br from-game-100 to-game-50 px-5 py-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="grid place-items-center w-12 h-12 rounded-xl bg-white/80 shadow-sm text-3xl">
+            {game.icon}
+          </span>
+          <h1 className="text-xl font-bold text-game-ink truncate">{t(game.titleKey)}</h1>
         </div>
-        <Link
-          to="/arena"
-          className="text-sm text-gray-500 hover:text-brand-600"
-        >
+        <Link to="/arena" className="shrink-0 text-sm font-medium text-game-ink/70 hover:text-game-ink">
           {t("common.back")}
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6">
+      <div className="bg-white rounded-2xl border-2 border-game-200 p-8 mb-6">
         <JoinCode code={code ?? ""} />
       </div>
 
@@ -219,9 +220,9 @@ export default function HostLobby() {
       <button
         onClick={() => conn.sendMessage({ type: "start" })}
         disabled={players.filter((p) => !p.isHost).length < game.minPlayers}
-        className={`w-full mt-6 py-3 rounded-lg font-semibold transition-colors ${
+        className={`w-full mt-6 py-3 rounded-xl font-semibold transition-colors ${
           players.filter((p) => !p.isHost).length >= game.minPlayers
-            ? "bg-brand-500 text-white hover:bg-brand-600"
+            ? "bg-game-solid text-white hover:bg-game-solid-hover"
             : "bg-gray-100 text-gray-400 cursor-not-allowed"
         }`}
       >

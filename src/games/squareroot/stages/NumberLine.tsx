@@ -37,7 +37,7 @@ export default function NumberLineStage({ question, submit }: StageProps<NumberL
       </div>
 
       {selected != null && (
-        <div className="text-lg font-medium text-brand-600">
+        <div className="text-lg font-medium text-game-ink">
           {t("games.squareroot.yourAnswer")}: {selected}
         </div>
       )}

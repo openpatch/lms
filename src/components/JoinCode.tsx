@@ -16,13 +16,13 @@ export default function JoinCode({ code }: { code: string }) {
       <p className="text-sm text-gray-500">{t("lobby.shareCode")}</p>
       <button
         onClick={copy}
-        className="text-5xl font-mono font-bold tracking-widest text-brand-600 bg-white border-2 border-brand-200 rounded-xl px-8 py-4 hover:border-brand-400 transition-colors"
+        className="text-5xl font-mono font-bold tracking-widest text-game-ink bg-game-50 border-2 border-game-300 rounded-xl px-8 py-4 hover:border-game-solid transition-colors"
       >
         {code}
       </button>
       <button
         onClick={copy}
-        className="text-sm text-gray-500 hover:text-brand-600 transition-colors"
+        className="text-sm text-gray-500 hover:text-game-ink transition-colors"
       >
         {copied ? t("lobby.copied") : t("lobby.copyCode")}
       </button>

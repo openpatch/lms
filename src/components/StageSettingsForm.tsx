@@ -25,7 +25,7 @@ function Field({ field, value, onChange }: FieldProps) {
           type="checkbox"
           checked={Boolean(value)}
           onChange={(e) => onChange(e.target.checked)}
-          className="accent-brand-500"
+          className="accent-game-solid"
         />
         <span className="text-sm font-medium text-gray-600">{t(field.labelKey)}</span>
       </label>
@@ -39,7 +39,7 @@ function Field({ field, value, onChange }: FieldProps) {
         <select
           value={String(value)}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-400 focus:outline-none"
+          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none"
         >
           {field.options.map((option) => (
             <option key={option.value} value={option.value}>
@@ -58,7 +58,7 @@ function Field({ field, value, onChange }: FieldProps) {
         <select
           value={Number(value)}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-brand-400 focus:outline-none"
+          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none"
         >
           {field.options.map((option) => (
             <option key={option} value={option}>
@@ -80,7 +80,7 @@ function Field({ field, value, onChange }: FieldProps) {
         step={field.step}
         value={Number(value)}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-brand-500"
+        className="w-full accent-game-solid"
       />
       <span className="text-sm text-gray-500">
         {Number(value)}
@@ -141,7 +141,7 @@ export default function StageSettingsForm({ game, settings, onChange }: StageSet
               <div
                 key={stage.id}
                 className={`border-2 rounded-lg transition-colors ${
-                  active ? "border-brand-400 bg-brand-50" : "border-gray-200"
+                  active ? "border-game-solid bg-game-50" : "border-gray-200"
                 }`}
               >
                 <label
@@ -154,7 +154,7 @@ export default function StageSettingsForm({ game, settings, onChange }: StageSet
                     checked={active}
                     disabled={isOnlyActive}
                     onChange={() => toggleStage(stage.id)}
-                    className="mt-1 accent-brand-500"
+                    className="mt-1 accent-game-solid"
                   />
                   <span>
                     <span className="block font-medium text-gray-700">{t(stage.nameKey)}</span>
@@ -163,7 +163,7 @@ export default function StageSettingsForm({ game, settings, onChange }: StageSet
                 </label>
 
                 {active && stage.settings.length > 0 && (
-                  <div className="px-4 pb-4 pt-1 space-y-3 border-t border-brand-200/60">
+                  <div className="px-4 pb-4 pt-1 space-y-3 border-t border-game-200/60">
                     {stage.settings.map((field) => (
                       <Field
                         key={field.key}

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link } from "react-router";
 import { getGame } from "../lib/game-registry";
+import { useActiveGame } from "../lib/game-theme";
 import { generateLobbyCode } from "../lib/utils";
 
 export default function GameLanding() {
@@ -8,6 +9,7 @@ export default function GameLanding() {
   const { gameId } = useParams();
   const navigate = useNavigate();
   const game = gameId ? getGame(gameId) : undefined;
+  useActiveGame(game);
 
   if (!game) {
     return (
@@ -29,35 +31,41 @@ export default function GameLanding() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Link to="/arena" className="text-sm text-gray-500 hover:text-brand-600 mb-4 inline-block">
+      <Link to="/arena" className="text-sm text-gray-500 hover:text-game-ink mb-4 inline-block">
         {t("common.back")}
       </Link>
-      <div className="bg-white rounded-2xl border border-gray-200 p-8">
-        <div className="flex items-center gap-4 mb-6">
-          <span className="text-5xl">{game.icon}</span>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">{t(game.titleKey)}</h1>
-            <span className="text-sm uppercase font-medium text-gray-400">
-              {t(`arena.${game.category}`)}
+      <div className="overflow-hidden bg-white rounded-2xl border-2 border-game-200">
+        <div className="bg-linear-to-br from-game-100 to-game-50 p-8">
+          <div className="flex items-center gap-4">
+            <span className="grid place-items-center w-20 h-20 rounded-2xl bg-white/80 shadow-sm text-5xl">
+              {game.icon}
             </span>
+            <div>
+              <h1 className="text-2xl font-bold text-game-ink">{t(game.titleKey)}</h1>
+              <span className="text-sm uppercase font-semibold text-game-ink/70">
+                {t(`arena.${game.category}`)}
+              </span>
+            </div>
           </div>
         </div>
-        <p className="text-gray-600 mb-6">{t(game.descriptionKey)}</p>
-        <div className="flex gap-6 text-sm text-gray-500 mb-8">
-          <span>{t("game.minPlayers", { count: game.minPlayers })}</span>
-          <span>{t("game.maxPlayers", { count: game.maxPlayers })}</span>
+        <div className="p-8">
+          <p className="text-gray-600 mb-6">{t(game.descriptionKey)}</p>
+          <div className="flex gap-6 text-sm text-gray-500 mb-8">
+            <span>{t("game.minPlayers", { count: game.minPlayers })}</span>
+            <span>{t("game.maxPlayers", { count: game.maxPlayers })}</span>
+          </div>
+          <button
+            onClick={handleCreateLobby}
+            disabled={!isLive}
+            className={`w-full py-3 rounded-xl font-semibold transition-colors ${
+              isLive
+                ? "bg-game-solid text-white hover:bg-game-solid-hover"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {isLive ? t("game.createLobby") : t("arena.soon")}
+          </button>
         </div>
-        <button
-          onClick={handleCreateLobby}
-          disabled={!isLive}
-          className={`w-full py-3 rounded-lg font-semibold transition-colors ${
-            isLive
-              ? "bg-brand-500 text-white hover:bg-brand-600"
-              : "bg-gray-100 text-gray-400 cursor-not-allowed"
-          }`}
-        >
-          {isLive ? t("game.createLobby") : t("arena.soon")}
-        </button>
       </div>
     </div>
   );

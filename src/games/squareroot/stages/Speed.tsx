@@ -39,7 +39,7 @@ export default function SpeedStage({ question, submit }: StageProps<SpeedQuestio
           onChange={(e) => setDraft({ questionId: question.id, value: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder={t("games.squareroot.typeAnswer")}
-          className="flex-1 px-4 py-3 text-2xl text-center border-2 border-gray-200 rounded-xl focus:border-brand-400 focus:outline-none"
+          className="flex-1 px-4 py-3 text-2xl text-center border-2 border-gray-200 rounded-xl focus:border-game-solid focus:outline-none"
         />
         <StageActionBar>
           <GameButton onClick={send} disabled={!value.trim()}>

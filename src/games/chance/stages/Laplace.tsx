@@ -7,7 +7,7 @@ import GameButton from "../../../components/GameButton";
 import { StageActionBar } from "../../../components/StageShell";
 
 const INPUT_CLASS =
-  "px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-brand-400 focus:outline-none";
+  "px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none";
 
 /** Work out the probability of an event in a one-stage Laplace experiment. */
 export default function LaplaceStage({ question, submit, settings }: StageProps<LaplaceQuestion>) {

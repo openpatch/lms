@@ -81,7 +81,7 @@ export default function BisectStage({ question, submit }: StageProps<BisectQuest
             ? "border-red-400 bg-red-50 text-red-600"
             : done
               ? "border-gray-200 bg-gray-50 text-gray-300"
-              : "border-gray-300 bg-white text-gray-700 hover:border-brand-400 hover:bg-brand-50 active:scale-95"
+              : "border-gray-300 bg-white text-gray-700 hover:border-game-solid hover:bg-game-50 active:scale-95"
         }`}
       >
         <div className="text-sm text-gray-400 mb-1">

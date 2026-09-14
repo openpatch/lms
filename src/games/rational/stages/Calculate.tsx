@@ -17,7 +17,7 @@ function termLatex(question: CalculateQuestion): string {
 }
 
 const INPUT_CLASS =
-  "px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-brand-400 focus:outline-none";
+  "px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none";
 
 /** Add, subtract, multiply or divide two rational numbers. */
 export default function CalculateStage({

@@ -62,7 +62,7 @@ export default function SignsStage({ question, submit, settings }: StageProps<Si
             onChange={(e) => setDraft({ questionId: question.id, value: e.target.value })}
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder={t("games.rational.result")}
-            className="w-44 px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-brand-400 focus:outline-none"
+            className="w-44 px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none"
           />
           <StageActionBar>
             <GameButton onClick={send} disabled={!current.value.trim()}>

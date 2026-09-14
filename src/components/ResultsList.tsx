@@ -11,7 +11,15 @@ const RANK_STYLES = [
 
 function Confetti() {
   const pieces = Array.from({ length: 40 }, (_, i) => i);
-  const colors = ["#007864", "#b5e3d8", "#004c45", "#fbbf24", "#4aa594", "#7fc7ba"];
+  // The active game's own shades, so even the confetti says which game this was.
+  const colors = [
+    "var(--game-500)",
+    "var(--game-300)",
+    "var(--game-700)",
+    "var(--game-200)",
+    "var(--game-solid)",
+    "#fbbf24",
+  ];
   return (
     <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
       {pieces.map((i) => {
@@ -75,7 +83,7 @@ export default function ResultsList({
                 )}
                 {r.playerName}
               </span>
-              <span className="text-brand-600 font-bold text-lg tabular-nums">{r.score}</span>
+              <span className="text-game-ink font-bold text-lg tabular-nums">{r.score}</span>
             </div>
           ))
         )}

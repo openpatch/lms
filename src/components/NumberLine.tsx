@@ -99,7 +99,7 @@ export default function NumberLine({
         onClick={handleClick}
         className={`relative ${heightClass} bg-gray-100 rounded-lg border-2 transition-colors ${
           pickable
-            ? "border-brand-400 cursor-crosshair hover:border-brand-500"
+            ? "border-game-300 cursor-crosshair hover:border-game-solid"
             : "border-gray-300 cursor-default"
         }`}
       >
@@ -127,7 +127,7 @@ export default function NumberLine({
           marker.latex == null ? (
             <div
               key={index}
-              className="absolute -top-3 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-brand-500 animate-marker-drop"
+              className="absolute -top-3 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-game-solid animate-marker-drop"
               style={{ left: `${percent(marker.value)}%`, transform: "translateX(-50%)" }}
             />
           ) : (
@@ -143,12 +143,12 @@ export default function NumberLine({
             >
               <span
                 className={`px-2 py-0.5 rounded-md text-white text-sm ${
-                  marker.active ? "bg-brand-600" : "bg-brand-500"
+                  marker.active ? "bg-game-solid-hover" : "bg-game-solid"
                 }`}
               >
                 <MathTex tex={marker.latex} />
               </span>
-              <span className="w-0.5 h-16 bg-brand-500" />
+              <span className="w-0.5 h-16 bg-game-solid" />
             </button>
           ),
         )}

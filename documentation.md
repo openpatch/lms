@@ -35,6 +35,7 @@ framework and is the same for every game.
 | `server/framework.ts` | `createStageGame()` — runs rounds, records answers, ends rounds |
 | `server/games/<game>.ts` | One stage handler per stage: generate questions, grade an answer |
 | `src/lib/game-registry.ts` | `defineGame()` — joins a spec with its React components |
+| `src/lib/game-theme.ts` | The colour palettes and the `--game-*` variables that paint a game's screens |
 | `src/games/<game>/stages/*.tsx` | One component per stage: render the current question |
 | `src/components/StageShell.tsx` | The bars around a stage: round, score and clock pinned under the app header, the stage's action pinned to the bottom edge (`StageActionBar`), plus host view and feedback |
 | `src/components/StageRules.tsx` | The rules screen before a round |
@@ -42,8 +43,9 @@ framework and is the same for every game.
 | `src/components/NumberLine.tsx` | Ticks, click-to-pick and markers on an axis |
 | `src/components/PlotCanvas.tsx` | Coordinate system: curves, markers, and a curve the player draws. It sizes itself from the viewport height minus `reserveRem` — the room the rest of the stage needs — so the whole stage stays on screen on a tablet |
 | `src/components/MatchBoard.tsx` | Cards dropped into slots (drag, or tap card then slot) |
+| `src/components/TermInput.tsx` | A MathLive math field: the player writes a term, the stage gets LaTeX |
 | `src/components/ParameterSliders.tsx` | One slider per parameter, for "tune it until it fits" stages |
-| `shared/<topic>-math.ts`, `shared/polynomial.ts`, `shared/matching.ts` | Topic logic both sides share: fractions, roots, probability trees, polynomials, card assignments |
+| `shared/<topic>-math.ts`, `shared/polynomial.ts`, `shared/matching.ts`, `shared/term-algebra.ts` | Topic logic both sides share: fractions, roots, probability trees, polynomials, card assignments, terms with several variables |
 | `scripts/check-games.ts` | `npm run check:games` — smoke test for every registered game |
 
 A game touches exactly three places: its spec (shared), its handlers (server), its
@@ -68,6 +70,7 @@ export const primesSpec: GameSpec = {
   category: "math",          // "math" | "cs"
   grades: ["7"],             // Jahrgangsstufen, shown as a badge on the card
   icon: "🔢",                // emoji or short symbol on the game card
+  color: "fuchsia",          // this game's colour — see "Colour", must be unused
   status: "live",            // "live" | "coming-soon"
   minPlayers: 1,
   maxPlayers: 50,
@@ -233,6 +236,32 @@ npm run dev           # client, plus `npm run dev:server` for the game server
 `check:games` builds a round of every stage, feeds it a nonsense answer and verifies
 that it is graded rather than crashing, and reports any missing translation.
 
+## Colour
+
+Every game owns one colour from `GameColor` (`shared/types.ts`), and no two games
+may share one — `validateGameSpecs()` rejects a duplicate. The point is practical:
+in a lesson the teacher and thirty students each hold their own screen, and the
+colour is how they check at a glance that they are all in the same game.
+
+The shades live in `src/lib/game-theme.ts`. A page announces its game with
+`useActiveGame(game)`; `Layout` then puts that palette's `--game-*` variables on
+the app shell and shows the colour strip and the game badge in the header. Every
+`game-*` utility reads those variables, so a stage that writes `bg-game-50` or
+`text-game-ink` is automatically painted in whatever game it is running inside.
+Outside a game the variables fall back to the brand palette.
+
+Which shade to reach for:
+
+| Utility | Use for |
+| --- | --- |
+| `bg-game-solid`, `hover:bg-game-solid-hover` | Filled buttons and anything else carrying white text |
+| `text-game-ink` | Coloured text and headings on white or a `50`/`100` tint |
+| `bg-game-50`, `bg-game-100` | Card and panel tints |
+| `border-game-200`, `border-game-300`, `border-game-solid` | Resting, hover and active borders |
+
+Do not use `bg-game-500` behind white text: the warm palettes are far too light
+at 500, which is exactly why `solid` exists.
+
 ## Settings schema
 
 Settings are declarative so that one schema drives both the host UI and the
@@ -313,6 +342,7 @@ serves in `grades`; this table says which vorhaben a stage was built for.
 | --- | --- | --- | --- |
 | `UV-MAT-SEK1-07-01` | Rationale Zahlen | `rational` | arrange (Anordnung), calculate (Grundrechenarten), signs (Vorzeichenregeln), change (Zustandsänderungen, Zeitzonen) |
 | `UV-MAT-SEK1-07-06` / `08-01` | Zufallsexperimente | `chance` | laplace (einstufig), tree (zweistufig, Pfadregeln) |
+| `UV-MAT-SEK1-08-02` | Terme mit mehreren Variablen | `terme` | build (Terme aufstellen), evaluate (Termwert, wertgleiche Terme), collect (Zusammenfassen), expand (Klammern auflösen), factor (Ausklammern), binomial (binomische Formeln), zero (Satz vom Nullprodukt), fraction (Bruchgleichungen), rearrange (Formeln umstellen), inequality (Ungleichungen) |
 | `UV-MAT-SEK1-09-01` | Quadratwurzeln und reelle Zahlen | `squareroot` | speed, numberline, classify (Zahlbereiche), simplify (Wurzelgesetze), bisect (Intervallhalbierung) |
 | `UV-MAT-Q1GK-01` / `Q1LK-01` | Extremwertprobleme | `extremum` | derive (hilfsmittelfrei ableiten), optimize (Nebenbedingung → Zielfunktion → Maximum) |
 | EF/Q1 Analysis | Ableitungsbegriff | `analysis` | multiple-choice, draw-graph, draw-derivative |
@@ -321,6 +351,77 @@ Two rules the SILP sets that the games keep to: every stage marked
 *hilfsmittelfrei* has to be solvable without a calculator (from year 7 every
 class test has such a part), and the Zufallsexperimente stay two-stage —
 conditional probabilities and the Vierfeldertafel belong to the EF.
+
+The `terme` stages follow the chapter order of EdM 8, Kapitel 2, so a stage can be
+played the week its lesson is taught: build and evaluate (2.1), collect (2.2/2.3),
+expand (2.4/2.5/2.7), factor (2.6), binomial (2.8), zero (2.9), fraction (2.10),
+rearrange (2.11), inequality (2.12). Its *binomische Formeln* are the verbindlich
+new content of the vorhaben, which is why that stage runs in both directions, and
+the Bruchgleichungen keep to the SILP's *ohne Doppelbrüche*.
+
+Together the ten stages cover every entry of *Das Wichtigste auf einen Blick*
+(EdM 8, S. 92–93), and the generators are built to reach that page's own examples:
+monomials carrying two variables and a power (`xy²`, `56x²y`), a common factor of
+`2xy` rather than only `2x`, a minus bracket of three terms, a product of two
+brackets over three variables (`(4x − 3y)(2x + 3z)`), and a Bruchgleichung with the
+variable in *both* denominators, cleared with the Hauptnenner. `scripts/` has no
+test for this; `check:games` only proves a stage runs. What keeps the coverage
+honest is sampling the generators and asserting each of those shapes actually
+turns up.
+
+Two things from those pages are deliberately left out: the Rechenbaum and the
+Termtyp of "Bist du fit?" Aufgabe 1, which need a tree editor rather than a term
+field. The `fraction` stage also only asks for a single excluded value, so the
+Hauptnenner shape — which excludes two — is always asked to be solved.
+
+## Writing a term
+
+Stages that ask for a term use `TermInput`, a [MathLive](https://mathlive.io)
+math field: the player writes `3x²` or `(x+3)(x−2)` as it looks on paper, with a
+virtual keyboard on a tablet, and the stage receives LaTeX. MathLive is loaded on
+demand, so only the games that ask for a term pay for the library; it renders with
+the KaTeX fonts the app already ships.
+
+`shared/term-algebra.ts` reads that LaTeX on the server. It keeps two
+representations, because for these tasks the *shape* of an answer is part of the
+answer:
+
+- a **Term** — the canonical value, a sorted list of monomials with rational
+  coefficients. Two terms are equivalent exactly when their canonical forms match.
+  `evaluateTermExact` substitutes fractions without going through a float, so
+  `(x² + x) : 2` at `x = ⅔` is exactly `5/9`.
+- a **Node** — the syntax tree of what was typed, which records where the brackets
+  were.
+
+That is what lets the stages grade what they actually asked for.
+`gradeSimplified()` demands a sum of monomials with nothing left to collect, so
+`3(2x−5)` and `6x−10−5` are both rejected for `6x−15`. `gradeFactored()` demands a
+product, and with a common monomial it demands the whole one, so `2(6x+9)` does not
+pass for `12x+18` where `6(2x+3)` does. Equivalent spellings stay equivalent
+throughout: `0,5x`, `x/2` and `\frac{x}{2}` are one and the same answer.
+
+The parser accepts only what a term can contain. Anything else — `\sqrt{x}`, an
+unfinished `\placeholder{}` — is unreadable rather than half-understood, and is
+graded as a wrong answer instead of crashing the round.
+
+### Quotients and relations
+
+Two stages need more than a polynomial, and `term-algebra.ts` grows exactly as far
+as they require:
+
+- **Rearranging a formula** produces answers a polynomial cannot express: solving
+  `A = a · b` for `b` gives `A/a`. `RationalTerm` is a quotient `num/den`, compared
+  by cross-multiplying, so `U/2 − b` and `(U − 2b)/2` are one answer and the player
+  is free to stop wherever the formula is solved. `parseTerm` still refuses to
+  divide by a variable — the polynomial stages ask for polynomials — while
+  `parseRational` allows it.
+- **Inequalities** are answered as a whole statement, `x < 4`, because deciding
+  whether the relation turns round is the exercise. `parseInequality` reads `<`,
+  `>`, `\le`, `\ge` and their unicode and `<=`/`>=` spellings (a math field turns
+  `<=` into `\le` as it is typed), and it reads `4 > x` as the same statement as
+  `x < 4`. Something still to be solved — `2x < 8` — is not a solution and is not
+  accepted as one. The relation is found with `splitRelation`, which knows that the
+  `\le` inside `\left` is not a relation.
 
 ## Conventions
 

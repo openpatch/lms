@@ -26,7 +26,7 @@ export default function StageRules({ game, gameData, isHost }: StageRulesProps) 
 
   return (
     <div className="text-center space-y-4">
-      <div className="text-sm font-semibold uppercase text-brand-500">
+      <div className="text-sm font-semibold uppercase text-game-ink">
         {t("game.round", { current: data.currentRound, total: data.totalRounds })}
       </div>
       <h2 className="text-2xl font-bold">{t(stage.nameKey)}</h2>
@@ -37,7 +37,7 @@ export default function StageRules({ game, gameData, isHost }: StageRulesProps) 
       {isHost ? (
         <p className="text-gray-500 text-sm">{t("game.hostInfo")}</p>
       ) : (
-        <p className="text-brand-600 font-medium">{t("game.getReady")}</p>
+        <p className="text-game-ink font-medium">{t("game.getReady")}</p>
       )}
     </div>
   );

@@ -49,9 +49,9 @@ export default function ParameterSliders({
               next[index] = Number(e.target.value);
               onChange(next);
             }}
-            className="flex-1 accent-brand-500"
+            className="flex-1 accent-game-solid"
           />
-          <span className="w-24 text-left text-lg font-medium text-brand-600 tabular-nums">
+          <span className="w-24 text-left text-lg font-medium text-game-ink tabular-nums">
             {show(values[index], parameter.step)}
             {parameter.unit ? ` ${parameter.unit}` : ""}
           </span>

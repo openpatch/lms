@@ -56,7 +56,7 @@ export default function ChangeStage({ question, submit }: StageProps<ChangeQuest
           </>
         ) : (
           question.changes.map((change, index) => (
-            <span key={index} className="px-3 py-2 rounded-lg bg-brand-50 text-brand-700 font-medium">
+            <span key={index} className="px-3 py-2 rounded-lg bg-game-50 text-game-ink font-medium">
               {signed(change, question.unit)}
             </span>
           ))
@@ -92,7 +92,7 @@ export default function ChangeStage({ question, submit }: StageProps<ChangeQuest
             onChange={(e) => setTyped({ questionId: question.id, value: e.target.value })}
             onKeyDown={(e) => e.key === "Enter" && sendTyped()}
             placeholder={question.unit}
-            className="w-44 px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-brand-400 focus:outline-none"
+            className="w-44 px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none"
           />
           <StageActionBar>
             <GameButton onClick={sendTyped} disabled={!draft.trim()}>
@@ -117,7 +117,7 @@ export function ChangeRulesExample() {
     <div className="flex flex-col items-center gap-3 text-gray-500">
       <div className="flex items-center gap-3 text-xl">
         <span className="px-3 py-1 rounded-lg bg-gray-100 text-gray-700">−3 °C</span>
-        <span className="px-3 py-1 rounded-lg bg-brand-50 text-brand-700 font-medium">+7 °C</span>
+        <span className="px-3 py-1 rounded-lg bg-game-50 text-game-ink font-medium">+7 °C</span>
         <span className="text-gray-400">&rarr;</span>
         <span className="font-bold text-gray-700">+4 °C</span>
       </div>

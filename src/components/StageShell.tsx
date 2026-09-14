@@ -123,9 +123,9 @@ function ProgressList({
             <span className="font-medium text-gray-700 flex-1">{player.name}</span>
             {total > 0 && (
               <>
-                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="w-32 h-2 bg-game-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-brand-500 transition-all duration-300"
+                    className="h-full bg-game-solid transition-all duration-300"
                     style={{ width: `${percent}%` }}
                   />
                 </div>
@@ -134,7 +134,7 @@ function ProgressList({
                 </span>
               </>
             )}
-            <span className="text-sm font-bold text-brand-600 tabular-nums min-w-12 text-right">
+            <span className="text-sm font-bold text-game-ink tabular-nums min-w-12 text-right">
               {score}
             </span>
           </div>
@@ -212,29 +212,31 @@ export default function StageShell({
       <FeedbackFlash feedback={feedback} />
 
       {/* Round, score and clock ride along under the app header … */}
-      <div className="fixed top-16 inset-x-0 z-20 h-12 bg-white/95 backdrop-blur border-b border-gray-200">
-        <div className="max-w-5xl mx-auto h-full px-4 flex items-center justify-between gap-4">
-          <div className="min-w-0 text-sm font-semibold uppercase text-brand-500 truncate">
+      <div className="fixed top-16 inset-x-0 z-20 h-12 bg-game-50/95 backdrop-blur border-b-2 border-game-200">
+        <div className="max-w-5xl mx-auto h-full px-4 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="min-w-0 text-sm font-semibold uppercase text-game-ink truncate">
             {t("game.round", { current: data.currentRound, total: data.totalRounds })}
             {" · "}
             {t(stage.nameKey)}
             {!isHost && showsQuestion && data.questions.length > 0 && (
-              <span className="hidden sm:inline font-normal normal-case text-gray-400">
+              <span className="hidden sm:inline font-normal normal-case text-game-ink/60">
                 {" · "}
                 {t("game.progress", { current: answered + 1, total: data.questions.length })}
               </span>
             )}
           </div>
           {!isHost && (
-            <div className="flex items-center gap-4">
+            <div className="shrink-0 flex items-center gap-2 sm:gap-4">
               <StreakBadge streak={streak} />
-              <div className="text-lg font-bold text-gray-700 tabular-nums">
+              <div className="text-lg font-bold text-gray-700 tabular-nums whitespace-nowrap">
                 {score} <span className="text-sm font-normal text-gray-400">{t("game.pts")}</span>
               </div>
             </div>
           )}
+          {/* Never let the clock wrap: on a phone it is the one thing that must
+              stay readable, so it shrinks instead. */}
           <div
-            className={`text-2xl font-semibold tabular-nums ${
+            className={`shrink-0 text-lg sm:text-2xl font-semibold tabular-nums whitespace-nowrap ${
               timeLeft <= 10 && timeLeft > 0 ? "text-red-500 animate-timer-pulse" : "text-gray-600"
             }`}
           >
@@ -266,7 +268,10 @@ export default function StageShell({
           shows once a stage has put something in it. */}
       <div
         ref={setActionBar}
-        className="fixed bottom-0 inset-x-0 z-20 empty:hidden bg-white/95 backdrop-blur border-t border-gray-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-center"
+        // A stage with a math field raises --virtual-keyboard-height while the
+        // virtual keyboard is up, so the bar stays above it instead of under it.
+        style={{ bottom: "var(--virtual-keyboard-height, 0px)" }}
+        className="fixed inset-x-0 z-20 empty:hidden bg-white/95 backdrop-blur border-t border-gray-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-center"
       />
     </div>
   );

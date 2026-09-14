@@ -5,6 +5,7 @@ import analysisHandler from "./analysis";
 import rationalHandler from "./rational";
 import chanceHandler from "./chance";
 import extremumHandler from "./extremum";
+import termeHandler from "./terme";
 
 /**
  * Server-side game handler registry.
@@ -17,4 +18,5 @@ export const gameHandlers: Record<string, GameHandler> = {
   rational: rationalHandler,
   chance: chanceHandler,
   extremum: extremumHandler,
+  terme: termeHandler,
 };

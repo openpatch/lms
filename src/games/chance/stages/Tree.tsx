@@ -17,7 +17,7 @@ interface Draft {
 }
 
 const INPUT_CLASS =
-  "w-32 px-2 py-1 text-xl text-center border-2 border-gray-200 rounded-lg focus:border-brand-400 focus:outline-none";
+  "w-32 px-2 py-1 text-xl text-center border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none";
 
 /** A thin line from a node down to its children. */
 function Connector() {

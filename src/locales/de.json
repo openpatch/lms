@@ -326,6 +326,130 @@
           "rules": "Löse {{questionsPerRound}} Extremwertprobleme: Wähle Nebenbedingung und Zielfunktion und finde dann das x, für das die Größe am größten wird. Die Hälfte der Punkte gibt es für das Modell, die andere für das Maximum. Du hast {{duration}} Sekunden."
         }
       }
+    },
+    "terme": {
+      "title": "Terme",
+      "description": "Terme aufstellen, zusammenfassen, ausmultiplizieren und faktorisieren.",
+      "prompts": {
+        "build": "Welcher Term passt zur Situation?",
+        "collect": "Fasse den Term so weit wie möglich zusammen.",
+        "expand": "Löse die Klammern auf und fasse zusammen.",
+        "factor": "Klammere so weit wie möglich aus.",
+        "binomialExpand": "Wende die passende binomische Formel an.",
+        "binomialFactor": "Schreibe den Term mit einer binomischen Formel als Produkt.",
+        "zero": "Ein Produkt ist genau dann null, wenn ein Faktor null ist.",
+        "zeroFactor": "Klammere zuerst aus — dann hilft der Satz vom Nullprodukt.",
+        "fraction": "Löse die Gleichung.",
+        "domain": "Welche Zahl muss ausgeschlossen werden?",
+        "rearrange": "Löse die Formel nach der gesuchten Größe auf.",
+        "inequality": "Löse die Ungleichung und gib die Lösungsmenge an.",
+        "value": "Berechne den Wert des Terms.",
+        "equivalent": "Sind die beiden Terme wertgleich?"
+      },
+      "hints": {
+        "collect": "Gleichartige Terme zusammenfassen: 3a + 4b - a + 2b wird zu 2a + 6b.",
+        "expand": "Erst ausmultiplizieren, dann gleichartige Terme zusammenfassen.",
+        "factor": "Der gemeinsame Faktor muss vollständig vor der Klammer stehen: 12x + 18 = 6(2x + 3), nicht 2(6x + 9).",
+        "binomialExpand": "Schreibe das Ergebnis als Summe, also ohne Klammern.",
+        "binomialFactor": "Schreibe das Ergebnis als Produkt, zum Beispiel (x + 3)² oder (x + 4)(x - 4).",
+        "zero": "Gib beide Lösungen an, zum Beispiel 3 und -5. Die Reihenfolge ist egal.",
+        "fraction": "Erweitere über Kreuz oder multipliziere mit dem Nenner. Brüche wie 3/2 sind erlaubt.",
+        "domain": "Der Nenner darf nicht null werden. Gib die Zahl an, die für die Variable verboten ist.",
+        "rearrange": "Nur die rechte Seite eingeben. Jede gleichwertige Form zählt: U/2 − b und (U − 2b)/2 sind beide richtig.",
+        "inequality": "Schreibe die ganze Lösung, zum Beispiel x < 4. Für ≤ tippe <=, für ≥ tippe >=. Denk daran: Mal oder geteilt durch eine negative Zahl dreht das Zeichen um.",
+        "value": "Erst die Klammern, dann Potenzen, dann Punkt vor Strich. Brüche wie 5/9 sind erlaubt.",
+        "equivalent": "Wertgleich heißt: Bei jeder Einsetzung kommt derselbe Wert heraus. Ein einziges Gegenbeispiel genügt, um das zu widerlegen."
+      },
+      "contexts": {
+        "taxi": "Ein Taxi verlangt {{a}} € Grundgebühr und {{b}} € für jeden gefahrenen Kilometer.",
+        "saving": "Mia hat {{a}} € gespart und legt jede Woche {{b}} € dazu.",
+        "cinema": "Im Kino kostet eine Karte {{a}} € und eine Tüte Popcorn {{b}} €. Jede Person bekommt beides.",
+        "fence": "Von einem Zaun sind {{a}} m übrig. Damit wird ein rechteckiges Beet in einer Hausecke abgesteckt, zwei Hauswände bilden die anderen Seiten.",
+        "rectangle": "Ein Rechteck ist x cm lang. Es ist {{a}} cm schmaler als lang.",
+        "age": "Lena ist {{a}} Jahre älter als Tom.",
+        "pool": "In einem Becken sind {{a}} Liter Wasser. Pro Minute laufen {{b}} Liter ab.",
+        "workshop": "Eine Werkstatt berechnet {{a}} € Anfahrt und {{b}} € je angefangene halbe Stunde."
+      },
+      "variables": {
+        "taxi": "x = gefahrene Kilometer. Gesucht: der Preis in €.",
+        "saving": "x = Anzahl der Wochen. Gesucht: Mias Erspartes in €.",
+        "cinema": "x = Anzahl der Personen. Gesucht: der Gesamtpreis in €.",
+        "fence": "x = eine Seitenlänge des Beetes in m. Gesucht: der Flächeninhalt in m².",
+        "rectangle": "x = Länge in cm. Gesucht: der Umfang in cm.",
+        "age": "x = Toms Alter in Jahren. Gesucht: das Alter beider zusammen.",
+        "pool": "x = Anzahl der Minuten. Gesucht: die Wassermenge in Litern.",
+        "workshop": "x = Dauer in Stunden. Gesucht: der Rechnungsbetrag in €."
+      },
+      "stages": {
+        "build": {
+          "name": "Terme aufstellen",
+          "summary": "Zu einer Situation den passenden Term finden",
+          "rules": "Lies {{questionsPerRound}} Situationen und wähle jeweils den Term, der dazu passt. Du hast {{duration}} Sekunden."
+        },
+        "collect": {
+          "name": "Zusammenfassen",
+          "summary": "Gleichartige Terme addieren, subtrahieren, multiplizieren",
+          "rules": "Fasse {{questionsPerRound}} Terme so weit wie möglich zusammen und tippe das Ergebnis ein. Je schneller du richtig antwortest, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
+        },
+        "expand": {
+          "name": "Klammern auflösen",
+          "summary": "Ausmultiplizieren — auch mit Minus vor der Klammer",
+          "rules": "Löse bei {{questionsPerRound}} Termen die Klammern auf und fasse zusammen. Achte besonders auf das Vorzeichen vor der Klammer. Du hast {{duration}} Sekunden."
+        },
+        "factor": {
+          "name": "Ausklammern",
+          "summary": "Das Distributivgesetz rückwärts anwenden",
+          "rules": "Klammere bei {{questionsPerRound}} Termen den größten gemeinsamen Faktor aus. Nur vollständig ausgeklammert zählt: 12x + 18 = 6(2x + 3). Du hast {{duration}} Sekunden."
+        },
+        "binomial": {
+          "name": "Binomische Formeln",
+          "summary": "Die drei Formeln in beide Richtungen nutzen",
+          "rules": "Bearbeite {{questionsPerRound}} Aufgaben zu den binomischen Formeln — mal ausmultiplizieren, mal als Produkt schreiben. Du hast {{duration}} Sekunden."
+        },
+        "zero": {
+          "name": "Satz vom Nullprodukt",
+          "summary": "Gleichungen der Form Produkt = 0 lösen",
+          "rules": "Löse {{questionsPerRound}} Gleichungen mit dem Satz vom Nullprodukt: Ein Produkt ist genau dann null, wenn einer der Faktoren null ist. Gib beide Lösungen an. Du hast {{duration}} Sekunden."
+        },
+        "fraction": {
+          "name": "Bruchgleichungen",
+          "summary": "Verhältnis- und Bruchgleichungen lösen, Definitionsmenge bestimmen",
+          "rules": "Löse {{questionsPerRound}} Gleichungen mit Brüchen. Steht die Variable im Nenner, ist manchmal nach der Zahl gefragt, die ausgeschlossen werden muss. Du hast {{duration}} Sekunden."
+        },
+        "rearrange": {
+          "name": "Formeln umstellen",
+          "summary": "Eine Formel nach einer anderen Größe auflösen",
+          "rules": "Stelle {{questionsPerRound}} Formeln nach der gesuchten Größe um und gib die rechte Seite ein. Jede gleichwertige Form zählt als richtig. Du hast {{duration}} Sekunden."
+        },
+        "inequality": {
+          "name": "Ungleichungen",
+          "summary": "Ungleichungen lösen — und wissen, wann sich das Zeichen dreht",
+          "rules": "Löse {{questionsPerRound}} Ungleichungen und gib die Lösung an, zum Beispiel x < 4. Achtung: Wer mit einer negativen Zahl multipliziert oder dividiert, muss das Relationszeichen umdrehen. Du hast {{duration}} Sekunden."
+        },
+        "evaluate": {
+          "name": "Terme berechnen",
+          "summary": "Werte einsetzen und prüfen, ob zwei Terme wertgleich sind",
+          "rules": "Bearbeite {{questionsPerRound}} Aufgaben: Setze Zahlen in einen Term ein und berechne seinen Wert — oder entscheide, ob zwei Terme wertgleich sind. Denk an die Vorrangregeln: erst die Klammern, dann Potenzen, dann Punkt vor Strich. Du hast {{duration}} Sekunden."
+        }
+      },
+      "formulas": {
+        "rectangleArea": "Flächeninhalt eines Rechtecks",
+        "rectanglePerimeter": "Umfang eines Rechtecks",
+        "triangleArea": "Flächeninhalt eines Dreiecks",
+        "trapezoid": "Flächeninhalt eines Trapezes",
+        "cuboid": "Volumen eines Quaders",
+        "speed": "Weg, Geschwindigkeit und Zeit",
+        "power": "Leistung, Arbeit und Zeit",
+        "percentage": "Prozentwert, Grundwert und Prozentsatz",
+        "density": "Dichte, Masse und Volumen",
+        "mean": "Mittelwert zweier Zahlen",
+        "linear": "Lineare Funktion",
+        "fahrenheit": "Grad Celsius aus Grad Fahrenheit"
+      },
+      "evaluate": {
+        "yes": "Wertgleich",
+        "no": "Nicht wertgleich"
+      }
     }
   },
   "settings": {
@@ -363,6 +487,33 @@
     "inputMode": "Art des Zeichnens",
     "inputModePoints": "Punkte setzen (Kurve folgt)",
     "inputModeFreehand": "Freihand",
-    "extraPoints": "Schüler:innen dürfen Punkte hinzufügen"
+    "extraPoints": "Schüler:innen dürfen Punkte hinzufügen",
+    "collectTask": "Aufgabentyp",
+    "collectTaskBoth": "Gemischt",
+    "collectTaskSum": "Nur Addieren und Subtrahieren",
+    "collectTaskProduct": "Nur Multiplizieren und Dividieren",
+    "bracketMode": "Klammern",
+    "bracketModeBoth": "Gemischt",
+    "bracketModeSingle": "Eine Klammer",
+    "bracketModeDouble": "Produkt aus zwei Klammern",
+    "withMinus": "Minuszeichen vor der Klammer einbeziehen",
+    "withVariables": "Auch Variablen ausklammern",
+    "binomialDirection": "Richtung",
+    "binomialDirectionBoth": "Gemischt",
+    "binomialDirectionExpand": "Nur ausmultiplizieren",
+    "binomialDirectionFactor": "Nur faktorisieren",
+    "withCoefficients": "Mit Vorfaktoren und zweiter Variable",
+    "factorFirst": "Manchmal erst ausklammern",
+    "fractionAsk": "Aufgabentyp",
+    "fractionAskBoth": "Gemischt",
+    "fractionAskSolve": "Nur Gleichungen lösen",
+    "fractionAskDomain": "Nur Definitionsmenge bestimmen",
+    "multiStep": "Auch Formeln mit mehreren Schritten",
+    "withSignFlip": "Auch Umformungen, die das Relationszeichen umdrehen",
+    "evaluateAsk": "Aufgabentyp",
+    "evaluateAskBoth": "Gemischt",
+    "evaluateAskValue": "Nur Termwert berechnen",
+    "evaluateAskEquivalent": "Nur wertgleich prüfen",
+    "withFractionValues": "Auch Brüche und Dezimalzahlen einsetzen"
   }
 }

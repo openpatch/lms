@@ -100,7 +100,7 @@ export default function OptimizeStage({
 
         <p className="text-lg text-gray-700">
           {t(question.quantityKey)} ={" "}
-          <span className="font-bold text-brand-600">{value.toFixed(2)}</span>
+          <span className="font-bold text-game-ink">{value.toFixed(2)}</span>
         </p>
 
         <StageActionBar>

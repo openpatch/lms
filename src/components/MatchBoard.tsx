@@ -78,8 +78,8 @@ export function MatchTray({ className = "" }: { className?: string }) {
           onClick={() => !disabled && setSelected(selected === index ? null : index)}
           className={`${CARD_CLASS} ${
             selected === index
-              ? "border-brand-500 bg-brand-50 scale-105"
-              : "border-gray-300 bg-white hover:border-brand-300"
+              ? "border-game-solid bg-game-50 scale-105"
+              : "border-gray-300 bg-white hover:border-game-300"
           }`}
         >
           <MathTex tex={card.latex} />
@@ -134,9 +134,9 @@ export function MatchSlot({ slot, placeholder, className = "" }: MatchSlotProps)
       }}
       className={`${CARD_CLASS} min-w-[4.5rem] ${
         over
-          ? "border-brand-500 bg-brand-50"
+          ? "border-game-solid bg-game-50"
           : card != null
-            ? "border-brand-400 bg-white"
+            ? "border-game-300 bg-white"
             : "border-dashed border-gray-300 bg-gray-50 text-gray-400"
       } ${className}`}
     >

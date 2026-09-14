@@ -24,7 +24,7 @@ export default function Countdown({
   return (
     <div className="flex flex-col items-center gap-8">
       <div className="w-full">{children}</div>
-      <div className="text-7xl font-bold text-brand-500 tabular-nums">
+      <div className="text-7xl font-bold text-game-ink tabular-nums">
         {secondsLeft > 0 ? secondsLeft : t("game.go")}
       </div>
     </div>

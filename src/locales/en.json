@@ -326,6 +326,130 @@
           "rules": "Solve {{questionsPerRound}} extreme value problems: pick the constraint and the target function, then find the value of x that makes the quantity largest. Half the points come from the model, half from the maximum. You have {{duration}} seconds."
         }
       }
+    },
+    "terme": {
+      "title": "Terms",
+      "description": "Build, collect, expand and factorise algebraic terms.",
+      "prompts": {
+        "build": "Which term fits the situation?",
+        "collect": "Collect the term as far as you can.",
+        "expand": "Remove the brackets and collect like terms.",
+        "factor": "Factor out as much as you can.",
+        "binomialExpand": "Apply the matching binomial formula.",
+        "binomialFactor": "Use a binomial formula to write the term as a product.",
+        "zero": "A product is zero exactly when one of its factors is zero.",
+        "zeroFactor": "Factorise first — then the zero product rule applies.",
+        "fraction": "Solve the equation.",
+        "domain": "Which number has to be excluded?",
+        "rearrange": "Solve the formula for the quantity asked for.",
+        "inequality": "Solve the inequality and state the solution.",
+        "value": "Work out the value of the term.",
+        "equivalent": "Are the two terms equivalent?"
+      },
+      "hints": {
+        "collect": "Collect like terms: 3a + 4b - a + 2b becomes 2a + 6b.",
+        "expand": "Multiply out first, then collect like terms.",
+        "factor": "The common factor has to come out in full: 12x + 18 = 6(2x + 3), not 2(6x + 9).",
+        "binomialExpand": "Write the result as a sum, without brackets.",
+        "binomialFactor": "Write the result as a product, for example (x + 3)² or (x + 4)(x - 4).",
+        "zero": "Give both solutions, for example 3 and -5. The order does not matter.",
+        "fraction": "Cross-multiply, or multiply by the denominator. Fractions such as 3/2 are allowed.",
+        "domain": "The denominator must not become zero. Give the value the variable may not take.",
+        "rearrange": "Enter the right-hand side only. Any equivalent form counts: U/2 − b and (U − 2b)/2 are both right.",
+        "inequality": "Write the whole solution, for example x < 4. Type <= for ≤ and >= for ≥. Remember: multiplying or dividing by a negative number turns the relation round.",
+        "value": "Brackets first, then powers, then multiplication before addition. Fractions such as 5/9 are allowed.",
+        "equivalent": "Equivalent means: every substitution gives the same value. A single counterexample is enough to disprove it."
+      },
+      "contexts": {
+        "taxi": "A taxi charges a base fare of {{a}} € plus {{b}} € for every kilometre driven.",
+        "saving": "Mia has saved {{a}} € and adds {{b}} € every week.",
+        "cinema": "A cinema ticket costs {{a}} € and a bag of popcorn {{b}} €. Everyone gets both.",
+        "fence": "{{a}} m of fence are left over. They mark out a rectangular bed in the corner of a house, with two house walls forming the other sides.",
+        "rectangle": "A rectangle is x cm long. It is {{a}} cm narrower than it is long.",
+        "age": "Lena is {{a}} years older than Tom.",
+        "pool": "A tank holds {{a}} litres of water. {{b}} litres drain off every minute.",
+        "workshop": "A workshop charges {{a}} € for the call-out plus {{b}} € for every half hour started."
+      },
+      "variables": {
+        "taxi": "x = kilometres driven. Wanted: the price in €.",
+        "saving": "x = number of weeks. Wanted: Mia's savings in €.",
+        "cinema": "x = number of people. Wanted: the total price in €.",
+        "fence": "x = one side of the bed in m. Wanted: its area in m².",
+        "rectangle": "x = the length in cm. Wanted: the perimeter in cm.",
+        "age": "x = Tom's age in years. Wanted: their combined age.",
+        "pool": "x = number of minutes. Wanted: the amount of water in litres.",
+        "workshop": "x = duration in hours. Wanted: the total on the bill in €."
+      },
+      "stages": {
+        "build": {
+          "name": "Building terms",
+          "summary": "Find the term that matches a situation",
+          "rules": "Read {{questionsPerRound}} situations and pick the term that fits each one. You have {{duration}} seconds."
+        },
+        "collect": {
+          "name": "Collecting terms",
+          "summary": "Add, subtract and multiply like terms",
+          "rules": "Collect {{questionsPerRound}} terms as far as you can and type the result. The faster you answer correctly, the more points you get. You have {{duration}} seconds."
+        },
+        "expand": {
+          "name": "Removing brackets",
+          "summary": "Expand — including a minus in front of the bracket",
+          "rules": "Remove the brackets in {{questionsPerRound}} terms and collect like terms. Watch the sign in front of the bracket. You have {{duration}} seconds."
+        },
+        "factor": {
+          "name": "Factoring out",
+          "summary": "The distributive law, backwards",
+          "rules": "Factor the greatest common factor out of {{questionsPerRound}} terms. Only a complete factorisation counts: 12x + 18 = 6(2x + 3). You have {{duration}} seconds."
+        },
+        "binomial": {
+          "name": "Binomial formulas",
+          "summary": "Use the three formulas in both directions",
+          "rules": "Work through {{questionsPerRound}} tasks on the binomial formulas — expanding some, writing others as a product. You have {{duration}} seconds."
+        },
+        "zero": {
+          "name": "Zero product rule",
+          "summary": "Solve equations of the form product = 0",
+          "rules": "Solve {{questionsPerRound}} equations with the zero product rule: a product is zero exactly when one of its factors is. Give both solutions. You have {{duration}} seconds."
+        },
+        "fraction": {
+          "name": "Fractional equations",
+          "summary": "Solve ratio and fractional equations, find the domain",
+          "rules": "Solve {{questionsPerRound}} equations with fractions. When the variable sits in a denominator you are sometimes asked for the value that has to be excluded. You have {{duration}} seconds."
+        },
+        "rearrange": {
+          "name": "Rearranging formulas",
+          "summary": "Solve a formula for one of its other quantities",
+          "rules": "Rearrange {{questionsPerRound}} formulas for the quantity asked for and enter the right-hand side. Any equivalent form counts as correct. You have {{duration}} seconds."
+        },
+        "inequality": {
+          "name": "Inequalities",
+          "summary": "Solve inequalities — and know when the relation turns round",
+          "rules": "Solve {{questionsPerRound}} inequalities and state the solution, for example x < 4. Careful: multiplying or dividing by a negative number turns the relation round. You have {{duration}} seconds."
+        },
+        "evaluate": {
+          "name": "Working out terms",
+          "summary": "Substitute values, and check whether two terms are equivalent",
+          "rules": "Work through {{questionsPerRound}} tasks: put numbers into a term and work out its value — or decide whether two terms are equivalent. Mind the order of operations: brackets first, then powers, then multiplication before addition. You have {{duration}} seconds."
+        }
+      },
+      "formulas": {
+        "rectangleArea": "Area of a rectangle",
+        "rectanglePerimeter": "Perimeter of a rectangle",
+        "triangleArea": "Area of a triangle",
+        "trapezoid": "Area of a trapezium",
+        "cuboid": "Volume of a cuboid",
+        "speed": "Distance, speed and time",
+        "power": "Power, work and time",
+        "percentage": "Percentage, base and rate",
+        "density": "Density, mass and volume",
+        "mean": "Mean of two numbers",
+        "linear": "Linear function",
+        "fahrenheit": "Celsius from Fahrenheit"
+      },
+      "evaluate": {
+        "yes": "Equivalent",
+        "no": "Not equivalent"
+      }
     }
   },
   "settings": {
@@ -363,6 +487,33 @@
     "inputMode": "How the graph is drawn",
     "inputModePoints": "Place points (curve follows)",
     "inputModeFreehand": "Freehand",
-    "extraPoints": "Students may add points"
+    "extraPoints": "Students may add points",
+    "collectTask": "Task type",
+    "collectTaskBoth": "Mixed",
+    "collectTaskSum": "Adding and subtracting only",
+    "collectTaskProduct": "Multiplying and dividing only",
+    "bracketMode": "Brackets",
+    "bracketModeBoth": "Mixed",
+    "bracketModeSingle": "A single bracket",
+    "bracketModeDouble": "Product of two brackets",
+    "withMinus": "Include a minus sign in front of the bracket",
+    "withVariables": "Factor out variables as well",
+    "binomialDirection": "Direction",
+    "binomialDirectionBoth": "Mixed",
+    "binomialDirectionExpand": "Expand only",
+    "binomialDirectionFactor": "Factorise only",
+    "withCoefficients": "With coefficients and a second variable",
+    "factorFirst": "Sometimes factor first",
+    "fractionAsk": "Task type",
+    "fractionAskBoth": "Mixed",
+    "fractionAskSolve": "Solving equations only",
+    "fractionAskDomain": "Finding the domain only",
+    "multiStep": "Include formulas that take several steps",
+    "withSignFlip": "Include steps that turn the relation round",
+    "evaluateAsk": "Task type",
+    "evaluateAskBoth": "Mixed",
+    "evaluateAskValue": "Working out values only",
+    "evaluateAskEquivalent": "Checking equivalence only",
+    "withFractionValues": "Also substitute fractions and decimals"
   }
 }

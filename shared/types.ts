@@ -10,6 +10,36 @@ export const GRADES: Grade[] = ["5", "6", "7", "8", "9", "10", "EF", "Q1", "Q2"]
 
 export type GameStatus = "live" | "coming-soon";
 
+/**
+ * The palette a game is painted in. Every game owns exactly one, so a glance at
+ * the screen says which game a class is in — the shades themselves live in
+ * src/lib/game-theme.ts.
+ */
+export type GameColor =
+  | "violet"
+  | "indigo"
+  | "sky"
+  | "cyan"
+  | "lime"
+  | "amber"
+  | "orange"
+  | "rose"
+  | "fuchsia"
+  | "teal";
+
+export const GAME_COLORS: GameColor[] = [
+  "violet",
+  "indigo",
+  "sky",
+  "cyan",
+  "lime",
+  "amber",
+  "orange",
+  "rose",
+  "fuchsia",
+  "teal",
+];
+
 export type LobbyPhase =
   | "lobby"
   | "explanation"
@@ -77,6 +107,8 @@ export interface GameMeta {
   /** Jahrgangsstufen this game fits, in ascending order. Empty for demo games. */
   grades: Grade[];
   icon: string; // emoji or short symbol
+  /** This game's colour, unique across the registry. */
+  color: GameColor;
   status: GameStatus;
   minPlayers: number;
   maxPlayers: number;

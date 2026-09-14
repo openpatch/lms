@@ -55,6 +55,7 @@ export const squarerootSpec: GameSpec = {
   category: "math",
   grades: ["9"],
   icon: "√",
+  color: "violet",
   status: "live",
   minPlayers: 1,
   maxPlayers: 50,

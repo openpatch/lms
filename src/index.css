@@ -13,6 +13,41 @@
   --color-brand-900: #003a32;
 }
 
+/* Every game owns a colour (shared/types.ts, src/lib/game-theme.ts). Layout puts
+   that game's shades on the app shell as --game-*, so the `game-*` utilities
+   below repaint the whole screen per game. Outside a game they read the brand. */
+:root {
+  --game-50: #e6f2ef;
+  --game-100: #cce4df;
+  --game-200: #b5e3d8;
+  --game-300: #7fc7ba;
+  --game-400: #4aa594;
+  --game-500: #1c8472;
+  --game-600: #007864;
+  --game-700: #006553;
+  --game-900: #003a32;
+  --game-solid: #007864;
+  --game-solid-hover: #006553;
+  --game-ink: #006553;
+}
+
+/* `inline` matters: it makes bg-game-500 compile to var(--game-500) itself
+   instead of a copy taken at :root, so the shades follow the active game. */
+@theme inline {
+  --color-game-50: var(--game-50);
+  --color-game-100: var(--game-100);
+  --color-game-200: var(--game-200);
+  --color-game-300: var(--game-300);
+  --color-game-400: var(--game-400);
+  --color-game-500: var(--game-500);
+  --color-game-600: var(--game-600);
+  --color-game-700: var(--game-700);
+  --color-game-900: var(--game-900);
+  --color-game-solid: var(--game-solid);
+  --color-game-solid-hover: var(--game-solid-hover);
+  --color-game-ink: var(--game-ink);
+}
+
 @keyframes feedback-flash {
   0%   { opacity: 0.7; }
   100% { opacity: 0; }
@@ -85,4 +120,23 @@
 }
 .animate-medal-glow {
   animation: medal-glow 2s ease-in-out infinite;
+}
+
+@keyframes game-chip-in {
+  0%   { opacity: 0; transform: translateY(-6px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-game-chip-in {
+  animation: game-chip-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* The icon on a game card leans in when the card is hovered. */
+@keyframes icon-wobble {
+  0%   { transform: rotate(0deg) scale(1); }
+  40%  { transform: rotate(-8deg) scale(1.12); }
+  70%  { transform: rotate(5deg) scale(1.08); }
+  100% { transform: rotate(0deg) scale(1.06); }
+}
+.group:hover .group-hover\:animate-icon-wobble {
+  animation: icon-wobble 0.5s ease-out forwards;
 }

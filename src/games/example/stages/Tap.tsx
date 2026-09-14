@@ -15,7 +15,7 @@ export default function TapStage({ data, playerId, settings, sendAction }: Stage
       </div>
       <button
         onClick={() => sendAction({ action: "click" })}
-        className="px-12 py-8 text-2xl font-bold text-white bg-brand-500 rounded-2xl shadow-lg hover:bg-brand-600 active:scale-95 transition-all"
+        className="px-12 py-8 text-2xl font-bold text-white bg-game-solid rounded-2xl shadow-lg hover:bg-game-solid-hover active:scale-95 transition-all"
       >
         {t("games.example.click")}
       </button>

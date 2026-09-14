@@ -103,6 +103,7 @@ export const rationalSpec: GameSpec = {
   category: "math",
   grades: ["7"],
   icon: "½",
+  color: "sky",
   status: "live",
   minPlayers: 1,
   maxPlayers: 50,

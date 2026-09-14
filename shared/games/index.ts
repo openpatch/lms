@@ -1,11 +1,12 @@
 import type { GameSpec } from "../framework";
-import { GRADES } from "../types";
+import { GAME_COLORS, GRADES } from "../types";
 import { exampleSpec } from "./example";
 import { squarerootSpec } from "./squareroot";
 import { analysisSpec } from "./analysis";
 import { rationalSpec } from "./rational";
 import { chanceSpec } from "./chance";
 import { extremumSpec } from "./extremum";
+import { termeSpec } from "./terme";
 
 /**
  * Every mini game known to client and server. Adding a game means adding its
@@ -19,6 +20,7 @@ export const gameSpecs: Record<string, GameSpec> = {
   rational: rationalSpec,
   chance: chanceSpec,
   extremum: extremumSpec,
+  terme: termeSpec,
 };
 
 export function getGameSpec(id: string): GameSpec | undefined {
@@ -31,10 +33,20 @@ export function getAllGameSpecs(): GameSpec[] {
 
 /** Sanity check for the registry; throws on a malformed spec. */
 export function validateGameSpecs(specs: Record<string, GameSpec> = gameSpecs): void {
+  // Two games in the same colour would defeat the point of colouring them.
+  const takenColors = new Map<string, string>();
   for (const [key, spec] of Object.entries(specs)) {
     if (key !== spec.id) {
       throw new Error(`Game spec "${spec.id}" is registered under the key "${key}"`);
     }
+    if (!GAME_COLORS.includes(spec.color)) {
+      throw new Error(`Game "${spec.id}" declares the unknown colour "${spec.color}"`);
+    }
+    const owner = takenColors.get(spec.color);
+    if (owner) {
+      throw new Error(`Games "${owner}" and "${spec.id}" both use the colour "${spec.color}"`);
+    }
+    takenColors.set(spec.color, spec.id);
     for (const grade of spec.grades) {
       if (!GRADES.includes(grade)) {
         throw new Error(`Game "${spec.id}" declares the unknown grade "${grade}"`);

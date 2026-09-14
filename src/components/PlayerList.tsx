@@ -26,7 +26,7 @@ export default function PlayerList({
               />
               <span className="font-medium text-gray-700">{player.name}</span>
               {player.isHost && (
-                <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">
+                <span className="text-xs font-semibold text-game-ink bg-game-50 px-2 py-0.5 rounded">
                   Host
                 </span>
               )}

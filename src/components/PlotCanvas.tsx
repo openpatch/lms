@@ -462,7 +462,7 @@ export default function PlotCanvas({
       {clearLabel && drawable && (
         <button
           onClick={handleClear}
-          className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:border-brand-400 hover:text-brand-600 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:border-game-solid hover:text-game-ink transition-colors"
         >
           {clearLabel}
         </button>

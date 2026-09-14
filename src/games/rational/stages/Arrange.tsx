@@ -59,10 +59,10 @@ export default function ArrangeStage({ question, submit }: StageProps<ArrangeQue
               onClick={() => setDraft({ ...current, selected: isSelected ? null : index })}
               className={`px-4 py-3 text-2xl rounded-xl border-2 transition-all ${
                 isSelected
-                  ? "border-brand-500 bg-brand-50 scale-105"
+                  ? "border-game-solid bg-game-50 scale-105"
                   : placed
                     ? "border-gray-200 bg-gray-50 text-gray-400"
-                    : "border-gray-300 bg-white hover:border-brand-300"
+                    : "border-gray-300 bg-white hover:border-game-300"
               }`}
             >
               <MathTex tex={item.latex} />
@@ -122,7 +122,7 @@ export function ArrangeRulesExample() {
             style={{ left: `${percent}%` }}
           />
         ))}
-        <div className="absolute -top-1 w-0.5 h-10 bg-brand-500" style={{ left: "62%" }} />
+        <div className="absolute -top-1 w-0.5 h-10 bg-game-solid" style={{ left: "62%" }} />
       </div>
       <p className="text-sm text-gray-400">{t("games.rational.stages.arrange.summary")}</p>
     </div>

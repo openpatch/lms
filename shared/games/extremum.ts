@@ -42,6 +42,7 @@ export const extremumSpec: GameSpec = {
   category: "math",
   grades: ["Q1"],
   icon: "⛰️",
+  color: "lime",
   status: "live",
   minPlayers: 1,
   maxPlayers: 50,

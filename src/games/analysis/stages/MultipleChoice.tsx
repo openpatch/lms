@@ -27,7 +27,7 @@ export default function MultipleChoiceStage({
           <button
             key={index}
             onClick={() => submit(String(index))}
-            className="py-6 px-6 text-xl font-bold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:border-brand-400 hover:bg-brand-50 transition-all active:scale-95"
+            className="py-6 px-6 text-xl font-bold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:border-game-solid hover:bg-game-50 transition-all active:scale-95"
           >
             <MathTex tex={`f'(x) = ${option}`} display />
           </button>

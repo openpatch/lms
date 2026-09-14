@@ -12,7 +12,7 @@ export default function GameButton({ onClick, disabled, children }: GameButtonPr
     <button
       onClick={onClick}
       disabled={disabled}
-      className="px-8 py-3 text-lg font-bold text-white bg-brand-500 rounded-xl hover:bg-brand-600 disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
+      className="px-8 py-3 text-lg font-bold text-white bg-game-solid rounded-xl hover:bg-game-solid-hover disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
     >
       {children}
     </button>

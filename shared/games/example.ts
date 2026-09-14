@@ -11,6 +11,7 @@ export const exampleSpec: GameSpec = {
   category: "math",
   grades: [],
   icon: "🎯",
+  color: "teal",
   status: "live",
   minPlayers: 1,
   maxPlayers: 50,

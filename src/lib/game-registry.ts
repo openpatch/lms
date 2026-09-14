@@ -93,6 +93,7 @@ import analysisGame from "../games/analysis";
 import rationalGame from "../games/rational";
 import chanceGame from "../games/chance";
 import extremumGame from "../games/extremum";
+import termeGame from "../games/terme";
 
 export const games: Record<string, GameDefinition> = {
   example: exampleGame,
@@ -101,6 +102,7 @@ export const games: Record<string, GameDefinition> = {
   rational: rationalGame,
   chance: chanceGame,
   extremum: extremumGame,
+  terme: termeGame,
 };
 
 // Every spec needs a client definition, and vice versa.
