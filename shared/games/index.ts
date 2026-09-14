@@ -7,6 +7,7 @@ import { rationalSpec } from "./rational";
 import { chanceSpec } from "./chance";
 import { extremumSpec } from "./extremum";
 import { termeSpec } from "./terme";
+import { pythonSpec } from "./python";
 
 /**
  * Every mini game known to client and server. Adding a game means adding its
@@ -21,6 +22,7 @@ export const gameSpecs: Record<string, GameSpec> = {
   chance: chanceSpec,
   extremum: extremumSpec,
   terme: termeSpec,
+  python: pythonSpec,
 };
 
 export function getGameSpec(id: string): GameSpec | undefined {
@@ -69,6 +71,20 @@ export function validateGameSpecs(specs: Record<string, GameSpec> = gameSpecs): 
           );
         }
         keys.add(field.key);
+        // A default the host cannot pick is a setting nobody can put back: the
+        // form shows the first option while the server keeps using the default.
+        const selectable =
+          field.type === "select"
+            ? field.options.includes(field.default)
+            : field.type === "choice"
+              ? field.options.some((option) => option.value === field.default)
+              : true;
+        if (!selectable) {
+          throw new Error(
+            `Setting "${spec.id}/${stage.id}/${field.key}" defaults to ` +
+              `"${field.default}", which is not one of its options`,
+          );
+        }
       }
     }
   }

@@ -458,6 +458,115 @@
         "yes": "Equivalent",
         "no": "Not equivalent"
       }
+    },
+    "python": {
+      "title": "Python Trail",
+      "description": "Read programs, predict their output and hunt down the broken line.",
+      "ask": {
+        "output": "What does the program print?",
+        "value": "What is the value of {{name}} at the end?",
+        "count": "How often does the innermost statement run?",
+        "call": "What does the call print?"
+      },
+      "note": {
+        "input": "Typed in: {{value}}"
+      },
+      "answerOne": "Your answer",
+      "answerSeveral": "Every line printed, separated by spaces",
+      "answerHint_one": "The program prints one line.",
+      "answerHint_other": "The program prints {{count}} lines — write them in the right order.",
+      "noOutput": "no output",
+      "readingPrompt": "How does Python bracket this?",
+      "turtlePrompt": "Which picture does this program draw?",
+      "bugsPrompt": "Tap the line that holds the mistake.",
+      "bugs": {
+        "wasLine": "Line {{line}}:",
+        "colon": "A condition or a loop header needs a colon at the end.",
+        "indent": "Whatever belongs to the loop has to be indented.",
+        "bracket": "A bracket was never closed.",
+        "case": "Python is case sensitive — the command is print.",
+        "boolean": "The truth values are True and False, capitalised and without quotes.",
+        "quotes": "Text needs quotes, or Python goes looking for a variable.",
+        "compare": "A condition compares with ==; a single = assigns.",
+        "name": "A variable name cannot contain a space.",
+        "call": "The arguments of a call belong inside brackets.",
+        "concat": "Text and number cannot be joined with + — the number needs str().",
+        "undefined": "The variable is used before it has been given a value.",
+        "endless": "The counter moves away from the condition — the loop never ends.",
+        "index": "Counting starts at 0: the last valid index is len(list) - 1.",
+        "range": "The loop runs one step too far and reaches past the list.",
+        "order": "A function has to be defined before it is called."
+      },
+      "parsons": {
+        "guess": "Guess the number",
+        "sum": "Sum of a list",
+        "square": "A square from a function",
+        "countdown": "Counting with while",
+        "age": "Of age?",
+        "dots": "A chain of dots",
+        "max": "The largest element",
+        "count": "Counting values",
+        "plain": "Put the lines back in the right order.",
+        "withIndent": "Set both the order and the indentation.",
+        "empty": "Tap a line below to put it into the program.",
+        "up": "move up",
+        "down": "move down",
+        "back": "put back",
+        "indent": "indent",
+        "outdent": "outdent"
+      },
+      "stages": {
+        "output": {
+          "name": "What comes out?",
+          "summary": "Predict what print writes",
+          "rules": "Predict the output of {{questionsPerRound}} short programs in your head, without a calculator. Watch out for /, // and %. You have {{duration}} seconds."
+        },
+        "variables": {
+          "name": "Follow the variable",
+          "summary": "What is in the variable at the end?",
+          "rules": "Follow what lands in the variables of {{questionsPerRound}} programs. Every assignment overwrites the old value. You have {{duration}} seconds."
+        },
+        "loops": {
+          "name": "Loops",
+          "summary": "Count the runs, predict the output",
+          "rules": "Read {{questionsPerRound}} loops: sometimes you count the runs, sometimes you write down every value printed. You have {{duration}} seconds."
+        },
+        "branch": {
+          "name": "Branches",
+          "summary": "Which branch runs?",
+          "rules": "Decide for {{questionsPerRound}} programs which line is printed. Python checks from top to bottom and takes the first branch that fits. You have {{duration}} seconds."
+        },
+        "logic": {
+          "name": "Logic duel",
+          "summary": "True or False — and, or and not against the clock",
+          "rules": "Decide for {{questionsPerRound}} expressions whether they are True or False. Remember what binds first: not before and before or. The faster you are right, the more points. You have {{duration}} seconds."
+        },
+        "functions": {
+          "name": "Functions",
+          "summary": "Parameters, arguments and return",
+          "rules": "Predict what the call prints in {{questionsPerRound}} programs. Watch the order of the arguments — and whether the function returns anything at all. You have {{duration}} seconds."
+        },
+        "lists": {
+          "name": "Lists",
+          "summary": "Index, len and the for-in loop",
+          "rules": "Answer {{questionsPerRound}} questions about lists. Remember: counting starts at 0. You have {{duration}} seconds."
+        },
+        "turtle": {
+          "name": "Turtle pictures",
+          "summary": "Match the program to its drawing",
+          "rules": "Match {{questionsPerRound}} programs to the picture they draw. Watch the number of runs and the angles. You have {{duration}} seconds."
+        },
+        "parsons": {
+          "name": "Sort the lines",
+          "summary": "Rebuild a program from its shuffled lines",
+          "rules": "Put the lines of {{questionsPerRound}} programs back in order. Partly right still scores. You have {{duration}} seconds."
+        },
+        "bugs": {
+          "name": "Bug hunt",
+          "summary": "Find the one broken line",
+          "rules": "Find the line that holds the mistake in {{questionsPerRound}} programs. The faster you find it, the more points. You have {{duration}} seconds."
+        }
+      }
     }
   },
   "settings": {
@@ -522,7 +631,36 @@
     "evaluateAskBoth": "Mixed",
     "evaluateAskValue": "Working out values only",
     "evaluateAskEquivalent": "Checking equivalence only",
-    "withFractionValues": "Also substitute fractions and decimals"
+    "withFractionValues": "Also substitute fractions and decimals",
+    "outputTasks": "Task types",
+    "outputTasksMixed": "Mixed",
+    "outputTasksArithmetic": "Only the four operations",
+    "outputTasksDivision": "Only division, // and %",
+    "withStrings": "Include text and input",
+    "loopTasks": "Kind of loop",
+    "loopTasksMixed": "Mixed",
+    "loopTasksFor": "Only for loops",
+    "loopTasksWhile": "Only while loops",
+    "withNested": "Include nested loops",
+    "branchCount": "Number of branches",
+    "withLogicConditions": "Include conditions with and and or",
+    "logicTasks": "Task types",
+    "logicTasksMixed": "Mixed",
+    "logicTasksValues": "Only True and False",
+    "logicTasksVariables": "Only expressions with variables",
+    "functionTasks": "Task types",
+    "functionTasksMixed": "Mixed",
+    "functionTasksValue": "Only return values",
+    "functionTasksOrder": "Only the order of arguments",
+    "listTasks": "Task types",
+    "listTasksMixed": "Mixed",
+    "listTasksIndex": "Only index and len",
+    "listTasksLoop": "Only loops over lists",
+    "withIndent": "Set the indentation too",
+    "bugTasks": "Kinds of mistake",
+    "bugTasksMixed": "Mixed",
+    "bugTasksSyntax": "Only syntax errors",
+    "bugTasksSemantic": "Only reasoning errors"
   },
   "auth": {
     "title": "Teacher sign-in",

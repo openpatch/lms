@@ -50,6 +50,8 @@ framework and is the same for every game.
 | `src/components/TermInput.tsx` | A MathLive math field: the player writes a term, the stage gets LaTeX |
 | `src/components/ParameterSliders.tsx` | One slider per parameter, for "tune it until it fits" stages |
 | `shared/<topic>-math.ts`, `shared/polynomial.ts`, `shared/matching.ts`, `shared/term-algebra.ts` | Topic logic both sides share: fractions, roots, probability trees, polynomials, card assignments, terms with several variables |
+| `shared/python-turtle.ts`, `shared/python-code.ts` | The turtle a program is written into and drawn from, and how a typed answer is read |
+| `src/games/python/components/CodeBlock.tsx` | A Python listing, coloured; optionally numbered and clickable line by line |
 | `scripts/check-games.ts` | `pnpm check:games` — smoke test for every registered game |
 | `src/lib/auth.ts`, `src/pages/Login.tsx`, `src/components/RequireTeacher.tsx` | Signing a teacher in, and the screens that need one |
 | `scripts/check-server.ts` | `pnpm check:server` — signs in, opens a lobby, plays a round, restarts the server |
@@ -354,11 +356,14 @@ serves in `grades`; this table says which vorhaben a stage was built for.
 | `UV-MAT-SEK1-09-01` | Quadratwurzeln und reelle Zahlen | `squareroot` | speed, numberline, classify (Zahlbereiche), simplify (Wurzelgesetze), bisect (Intervallhalbierung) |
 | `UV-MAT-Q1GK-01` / `Q1LK-01` | Extremwertprobleme | `extremum` | derive (hilfsmittelfrei ableiten), optimize (Nebenbedingung → Zielfunktion → Maximum) |
 | EF/Q1 Analysis | Ableitungsbegriff | `analysis` | multiple-choice, draw-graph, draw-derivative |
+| `UV-INF-SEK1-10-01` | Computerprogramme mit System entwickeln | `python` | output (Grundrechenarten), variables (Variablen, Eingaben), loops (for/while/verschachtelt), branch (if/elif/else), logic (and/or/not), functions (Parameter, return), lists (strukturierter Datentyp), turtle (Programm → Bild), parsons (Quelltexte erstellen), bugs (Quelltexte auf Korrektheit prüfen) |
 
 Two rules the SILP sets that the games keep to: every stage marked
 *hilfsmittelfrei* has to be solvable without a calculator (from year 7 every
 class test has such a part), and the Zufallsexperimente stay two-stage —
-conditional probabilities and the Vierfeldertafel belong to the EF.
+conditional probabilities and the Vierfeldertafel belong to the EF. A third
+holds for `python`: the fachkonferenz settled on **Python** for UV 10.1, so the
+game is Python and nothing else.
 
 The `terme` stages follow the chapter order of EdM 8, Kapitel 2, so a stage can be
 played the week its lesson is taught: build and evaluate (2.1), collect (2.2/2.3),
@@ -430,6 +435,35 @@ as they require:
   `x < 4`. Something still to be solved — `2x < 8` — is not a solution and is not
   accepted as one. The relation is found with `splitRelation`, which knows that the
   `\le` inside `\left` is not a relation.
+
+## Reading a program
+
+The `python` game asks the player to be the interpreter, so every stage shows a
+listing and takes back what the program does. Three things make that work.
+
+**The listing.** `CodeBlock` colours a line the way an editor would — keywords,
+the builtins and turtle commands of the Lernpfad, strings, numbers, comments —
+and knows nothing else, because nothing else is in the Python those lessons
+teach. With `numbered` and `onPickLine` the same component becomes the bug hunt:
+every line is a button, and tapping one is the answer.
+
+**The answer.** A value typed into a box is compared by `shared/python-code.ts`,
+which makes the obvious spellings equal: numbers as numbers, so `7`, `7.0` and
+`7,0` are one answer and the int/float distinction never costs a point it was
+not asked about; `wahr` for `True`; any of spaces, commas or newlines between
+the lines of a multi-line output. A program that prints several lines is scored
+line by line, so reading four of five loop passes correctly is worth something.
+
+**The picture.** A turtle program is a `TurtleCommand[]`, not Python text:
+`toPython()` writes the lines the player reads and `runTurtle()` walks the same
+tree into the drawing those lines make. That is what lets the "which picture"
+stage build its three wrong answers by mutating the program — one turn the other
+way, two turns too few — and then keep only the mutations that really do look
+different. Different is measured on the picture rather than the program:
+`drawingFingerprint()` inks a 24x24 grid fitted to the drawing's own bounding
+box, exactly as the SVG fits it to its card, so a square drawn twice as large
+has the same fingerprint and is thrown away. Without that check a "wrong" answer
+could be pixel-for-pixel the right one.
 
 ## Conventions
 
