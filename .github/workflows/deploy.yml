@@ -78,10 +78,19 @@ jobs:
 
           # Say which half is wrong, rather than letting ssh fall through to a
           # password prompt and report a generic "Permission denied".
-          if ! ssh-keygen -y -P "" -f ~/.ssh/deploy_key > /dev/null 2>&1; then
-            echo "::error::DEPLOY_SSH_KEY is not a usable private key. It must be the"
-            echo "::error::complete PRIVATE key including the BEGIN and END lines, and"
-            echo "::error::must not have a passphrase."
+          if ! why=$(ssh-keygen -y -P "" -f ~/.ssh/deploy_key 2>&1 >/dev/null); then
+            case "$why" in
+              *passphrase*)
+                echo "::error::DEPLOY_SSH_KEY has a passphrase, so it cannot be used"
+                echo "::error::unattended. Generate a deploy key with an empty one:"
+                echo "::error::  ssh-keygen -t ed25519 -N '' -C 'lms deploy' -f lms_deploy"
+                echo "::error::then put lms_deploy in this secret and lms_deploy.pub in"
+                echo "::error::the server's ~/.ssh/authorized_keys." ;;
+              *)
+                echo "::error::DEPLOY_SSH_KEY is not a readable private key ($why)."
+                echo "::error::It must be the whole PRIVATE key, BEGIN and END lines"
+                echo "::error::included — not the .pub half." ;;
+            esac
             exit 1
           fi
 

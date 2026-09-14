@@ -114,7 +114,7 @@ it reads:
 | --- | --- |
 | `DEPLOY_SSH_HOST` | hostname of the server |
 | `DEPLOY_SSH_USER` | user that owns the app directory and the process |
-| `DEPLOY_SSH_KEY` | that user's **private** key, whole, without a passphrase |
+| `DEPLOY_SSH_KEY` | a **private** key with no passphrase, whole. Generate one just for deploys: `ssh-keygen -t ed25519 -N '' -f lms_deploy` |
 
 | Variable | |
 | --- | --- |
