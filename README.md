@@ -149,3 +149,7 @@ at the right file.
 Everything durable is the one SQLite file: lobbies, results, teacher accounts
 and sessions. It is in WAL mode, so `sqlite3 lms.db ".backup ..."` can copy it
 without stopping the server.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).
