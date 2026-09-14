@@ -51,16 +51,18 @@ jobs:
       - name: Upload client and server
         run: |
           rsync -az --delete dist/ \
-            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/home/openpatch/projects/lms/"
+            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/home/openpatch/projects/lms/dist/"
           rsync -az --delete \
             --exclude node_modules --exclude dist --exclude data --exclude .git \
-            server shared scripts package.json pnpm-lock.yaml tsconfig*.json \
+            server shared scripts deploy package.json pnpm-lock.yaml tsconfig*.json \
             "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/home/openpatch/projects/lms/"
 
       - name: Install dependencies and restart
         run: |
           ssh "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}" \
-            'cd /srv/lms && pnpm install --prod --frozen-lockfile && sudo systemctl restart lms'
+            'cd /home/openpatch/projects/lms \
+               && pnpm install --prod --frozen-lockfile \
+               && pm2 restart lms --update-env'
 
       - name: Wait for health
         run: |

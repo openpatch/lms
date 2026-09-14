@@ -54,7 +54,7 @@ framework and is the same for every game.
 | `src/lib/auth.ts`, `src/pages/Login.tsx`, `src/components/RequireTeacher.tsx` | Signing a teacher in, and the screens that need one |
 | `scripts/check-server.ts` | `pnpm check:server` — signs in, opens a lobby, plays a round, restarts the server |
 | `scripts/teacher.ts` | `pnpm teacher add\|list\|password\|remove` — the only way accounts exist |
-| `deploy/` | Caddyfile and systemd unit for the server it runs on |
+| `deploy/` | nginx site, pm2 process definition, and how the server is set up |
 
 A game touches exactly three places: its spec (shared), its handlers (server), its
 components (client). The spec is the single source of truth both sides read.
