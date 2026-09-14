@@ -1,5 +1,12 @@
-import type * as Party from "partykit/server";
 import type { LobbyState, GameResult } from "../shared/types";
+
+/**
+ * The bit of a client connection a game handler is allowed to see.
+ * Games only ever need the id, so this is all the transport leaks into them.
+ */
+export interface Conn {
+  id: string;
+}
 
 /**
  * GameHandler defines the interface that each game's server-side logic must implement.
@@ -22,7 +29,7 @@ export interface GameHandler {
    * Called when a game-action message is received from a client during the playing phase.
    * Should return the updated game data if state changed, or undefined if no broadcast needed.
    */
-  onMessage?: (state: LobbyState, payload: unknown, sender: Party.Connection) => unknown;
+  onMessage?: (state: LobbyState, payload: unknown, sender: Conn) => unknown;
 
   /**
    * Called to determine if the current round is finished.

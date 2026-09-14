@@ -90,7 +90,11 @@ export type ServerMessage =
   | { type: "game-state"; gameData: unknown }
   | { type: "game-event"; event: unknown }
   | { type: "round-finished"; results: GameResult[]; isLastRound: boolean }
-  | { type: "finished"; results: GameResult[] };
+  | { type: "finished"; results: GameResult[] }
+  /** The lobby is gone: it expired, or the host closed it. Stop reconnecting. */
+  | { type: "lobby-closed"; reason: LobbyClosedReason };
+
+export type LobbyClosedReason = "expired" | "host-closed" | "not-found";
 
 export interface GameResult {
   playerId: string;

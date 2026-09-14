@@ -61,7 +61,13 @@
     "bonus": "bonus",
     "pts": "pts",
     "getReady": "Get ready!",
-    "hostInfo": "Explain the rules, then click 'Let's go!' to start."
+    "hostInfo": "Explain the rules, then click 'Let's go!' to start.",
+    "creating": "Creating lobby…",
+    "activeLobby": "You already have an open lobby: {{code}}. Close it before starting a new one.",
+    "serverUnreachable": "The game server cannot be reached.",
+    "lobbyClosed": "This lobby has been closed.",
+    "lobbyExpired": "This lobby has expired.",
+    "lobbyNotFound": "There is no lobby with this code."
   },
   "lobby": {
     "title": "Lobby",

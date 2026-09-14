@@ -8,7 +8,7 @@ import Countdown from "../components/Countdown";
 import StageShell from "../components/StageShell";
 import StageRules from "../components/StageRules";
 import StageSettingsForm from "../components/StageSettingsForm";
-import { usePartyConnection } from "../lib/partykit";
+import { getHostId, useGameConnection } from "../lib/connection";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import type { ServerMessage, GameResult } from "../../shared/types";
@@ -43,7 +43,7 @@ export default function HostLobby() {
     }
   };
 
-  const conn = usePartyConnection(code ?? "", onMessage);
+  const conn = useGameConnection(code ?? "", onMessage, getHostId());
 
   // Send "host" message on every connect (handles reconnect)
   useEffect(() => {
@@ -79,6 +79,23 @@ export default function HostLobby() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Game not found</p>
+        <Link to="/arena" className="text-brand-600 hover:underline">
+          {t("common.back")}
+        </Link>
+      </div>
+    );
+  }
+
+  if (conn.closed) {
+    const key =
+      conn.closed === "expired"
+        ? "game.lobbyExpired"
+        : conn.closed === "not-found"
+          ? "game.lobbyNotFound"
+          : "game.lobbyClosed";
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600 mb-4">{t(key)}</p>
         <Link to="/arena" className="text-brand-600 hover:underline">
           {t("common.back")}
         </Link>

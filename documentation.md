@@ -32,6 +32,9 @@ framework and is the same for every game.
 | `shared/framework.ts` | The contract: settings schema, `GameSpec`/`StageSpec`, round data, scoring helpers |
 | `shared/games/<game>.ts` | One game's spec (metadata + stages + settings) and its question types |
 | `shared/games/index.ts` | Registry of all specs, plus `validateGameSpecs()` |
+| `server/index.ts` | The Node process: HTTP for opening a lobby, one WebSocket per player |
+| `server/rooms.ts` | One lobby in memory — phases, timers, broadcast — and the registry of all of them |
+| `server/store.ts` | SQLite: lobbies mirrored for restart recovery, results written when a game ends |
 | `server/framework.ts` | `createStageGame()` — runs rounds, records answers, ends rounds |
 | `server/games/<game>.ts` | One stage handler per stage: generate questions, grade an answer |
 | `src/lib/game-registry.ts` | `defineGame()` — joins a spec with its React components |
@@ -46,7 +49,9 @@ framework and is the same for every game.
 | `src/components/TermInput.tsx` | A MathLive math field: the player writes a term, the stage gets LaTeX |
 | `src/components/ParameterSliders.tsx` | One slider per parameter, for "tune it until it fits" stages |
 | `shared/<topic>-math.ts`, `shared/polynomial.ts`, `shared/matching.ts`, `shared/term-algebra.ts` | Topic logic both sides share: fractions, roots, probability trees, polynomials, card assignments, terms with several variables |
-| `scripts/check-games.ts` | `npm run check:games` — smoke test for every registered game |
+| `scripts/check-games.ts` | `pnpm check:games` — smoke test for every registered game |
+| `scripts/check-server.ts` | `pnpm check:server` — opens a lobby, plays a round, restarts the server |
+| `deploy/` | Caddyfile and systemd unit for the server it runs on |
 
 A game touches exactly three places: its spec (shared), its handlers (server), its
 components (client). The spec is the single source of truth both sides read.

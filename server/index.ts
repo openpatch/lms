@@ -1,8 +1,18 @@
-import type * as Party from "partykit/server";
-import type { LobbyState, ClientMessage, ServerMessage } from "../shared/types";
+// The game server: one Node process, one box.
+//
+// Caddy serves the built client and proxies everything under /parties to here.
+// HTTP is used once, to open a lobby; the rest of a session is one WebSocket
+// per player, spoken in the ClientMessage/ServerMessage vocabulary.
+
+import { createServer } from "node:http";
+import { randomUUID } from "node:crypto";
+import { WebSocketServer, type WebSocket } from "ws";
+import type { ClientMessage, ServerMessage } from "../shared/types";
 import { getGameSpec, validateGameSpecs } from "../shared/games";
-import { defaultGameSettings, resolveGameSettings } from "../shared/framework";
+import { resolveGameSettings } from "../shared/framework";
 import { gameHandlers } from "./games";
+import { createRoom, getRoom, rehydrate, flushAll, type Room } from "./rooms";
+import * as store from "./store";
 
 // Fail loudly at startup rather than when a class is already in the lobby.
 validateGameSpecs();
@@ -10,428 +20,332 @@ for (const id of Object.keys(gameHandlers)) {
   if (!getGameSpec(id)) throw new Error(`Game handler "${id}" has no game spec`);
 }
 
+const PORT = Number(process.env.PORT ?? 3000);
+
 /** Longest player name the server stores. */
 const MAX_NAME_LENGTH = 20;
 
-function send(connection: Party.Connection, msg: ServerMessage) {
-  connection.send(JSON.stringify(msg));
+function send(socket: WebSocket, msg: ServerMessage) {
+  if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg));
 }
 
-function broadcast(room: Party.Room, msg: ServerMessage, exclude?: string[]) {
-  room.broadcast(JSON.stringify(msg), exclude);
+/**
+ * Who is asking. Today a lobby is owned by the host's stable client id, which
+ * means one lobby per browser. When teacher accounts land this is the single
+ * place that changes: verify a token, return the account id instead.
+ */
+function identify(clientId: string | null): string | null {
+  return clientId && clientId.length >= 8 ? clientId : null;
 }
 
-async function saveLobbyState(room: Party.Room, state: LobbyState) {
-  await room.storage.put("lobbyState", state);
-}
+// --- HTTP ------------------------------------------------------------------
 
-function broadcastLobbyState(room: Party.Room, state: LobbyState) {
-  broadcast(room, { type: "lobby-state", state });
-}
+const httpServer = createServer((req, res) => {
+  const url = new URL(req.url ?? "/", "http://localhost");
 
-async function endRound(room: Party.Room): Promise<boolean> {
-  const state = await room.storage.get<LobbyState>("lobbyState");
-  if (!state || state.phase !== "playing") return false;
-
-  const handler = gameHandlers[state.gameId];
-  const results = handler?.checkRoundFinished?.(state);
-  if (!results) return false;
-
-  // Add round scores to each player's cumulative total
-  for (const result of results) {
-    const player = state.players.find((p) => p.id === result.playerId);
-    if (player) player.score += result.score;
+  if (req.method === "GET" && url.pathname === "/parties/health") {
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ ok: true }));
+    return;
   }
 
-  const isLastRound = handler?.isLastRound?.(state) ?? true;
+  // Open a lobby. The server picks the code so two teachers can never collide.
+  if (req.method === "POST" && url.pathname === "/parties/lobbies") {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 4096) req.destroy();
+    });
+    req.on("end", () => {
+      let payload: { gameId?: string; clientId?: string };
+      try {
+        payload = JSON.parse(body || "{}") as typeof payload;
+      } catch {
+        res.writeHead(400, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid body" }));
+        return;
+      }
 
-  if (isLastRound) {
-    state.phase = "finished";
-    await saveLobbyState(room, state);
-    const finalResults = state.players
-      .filter((p) => !p.isHost)
-      .map((p) => ({ playerId: p.id, playerName: p.name, score: p.score }))
-      .sort((a, b) => b.score - a.score);
-    broadcast(room, { type: "finished", results: finalResults });
-    broadcastLobbyState(room, state);
-  } else {
-    state.phase = "round-finished";
-    await saveLobbyState(room, state);
-    broadcast(room, { type: "round-finished", results, isLastRound: false });
-    broadcastLobbyState(room, state);
+      const teacherId = identify(payload.clientId ?? null);
+      if (!teacherId) {
+        res.writeHead(401, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "Not authorised" }));
+        return;
+      }
+
+      if (!payload.gameId || !getGameSpec(payload.gameId) || !gameHandlers[payload.gameId]) {
+        res.writeHead(400, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "Unknown game" }));
+        return;
+      }
+
+      const result = createRoom(teacherId, payload.gameId);
+      if (!result.ok) {
+        res.writeHead(409, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "active-lobby", code: result.code }));
+        return;
+      }
+
+      res.writeHead(201, { "content-type": "application/json" });
+      res.end(JSON.stringify({ code: result.room.state.code }));
+    });
+    return;
   }
 
-  return true;
-}
+  res.writeHead(404);
+  res.end();
+});
 
-const COUNTDOWN_MS = 3000;
+// --- WebSocket -------------------------------------------------------------
 
-async function enterExplanation(room: Party.Room, isFirstRound: boolean): Promise<void> {
-  const state = await room.storage.get<LobbyState>("lobbyState");
-  if (!state) return;
-  if (isFirstRound && state.phase !== "lobby") return;
-  if (!isFirstRound && state.phase !== "round-finished") return;
+const wss = new WebSocketServer({ noServer: true });
 
-  const handler = gameHandlers[state.gameId];
-  if (isFirstRound) {
-    state.gameData = handler?.onStart ? handler.onStart(state) : {};
-  } else {
-    state.gameData = handler?.onRoundStart
-      ? handler.onRoundStart(state)
-      : handler?.onStart
-        ? handler.onStart(state)
-        : {};
+httpServer.on("upgrade", (req, socket, head) => {
+  const url = new URL(req.url ?? "/", "http://localhost");
+  // partysocket dials /parties/:party/:room — keep that shape so the client
+  // keeps its reconnect-with-backoff for free.
+  const match = url.pathname.match(/^\/parties\/main\/([A-Z0-9]{4,12})$/);
+  if (!match) {
+    socket.destroy();
+    return;
   }
 
-  state.phase = "explanation";
-  state.countdownEndsAt = null;
-  await saveLobbyState(room, state);
-  broadcastLobbyState(room, state);
-}
+  const code = match[1];
+  const connectionId = url.searchParams.get("_pk") ?? randomUUID();
 
-async function beginCountdown(room: Party.Room): Promise<void> {
-  const state = await room.storage.get<LobbyState>("lobbyState");
-  if (!state || state.phase !== "explanation") return;
-
-  state.phase = "countdown";
-  const countdownEndsAt = Date.now() + COUNTDOWN_MS;
-  state.countdownEndsAt = countdownEndsAt;
-  await saveLobbyState(room, state);
-
-  broadcast(room, { type: "countdown", gameData: state.gameData, countdownEndsAt });
-  broadcastLobbyState(room, state);
-
-  await room.storage.setAlarm(countdownEndsAt);
-}
-
-async function startPlaying(room: Party.Room): Promise<void> {
-  const state = await room.storage.get<LobbyState>("lobbyState");
-  if (!state || state.phase !== "countdown") return;
-
-  state.phase = "playing";
-  state.countdownEndsAt = null;
-  await saveLobbyState(room, state);
-
-  broadcast(room, { type: "game-start", gameData: state.gameData });
-  broadcastLobbyState(room, state);
-
-  const handler = gameHandlers[state.gameId];
-  if (handler?.getDurationMs) {
-    await room.storage.setAlarm(Date.now() + handler.getDurationMs(state));
-  }
-}
-
-export default class LmsServer implements Party.Server {
-  constructor(readonly room: Party.Room) {}
-
-  async onStart() {
-    // Initialize lobby state if it doesn't exist
-    const state = await this.room.storage.get<LobbyState>("lobbyState");
-    if (!state) {
-      // Room created but no host yet — wait for host message
-    }
-  }
-
-  async onConnect(connection: Party.Connection, ctx: Party.ConnectionContext) {
-    const state = await this.room.storage.get<LobbyState>("lobbyState");
-
-    if (!state) {
-      // No lobby yet — this connection needs to send a "host" message
-      send(connection, {
-        type: "lobby-state",
-        state: {
-          code: this.room.id,
-          gameId: "",
-          hostId: "",
-          players: [],
-          phase: "lobby",
-          gameData: null,
-          settings: null,
-          countdownEndsAt: null,
-        },
-      });
+  wss.handleUpgrade(req, socket, head, (ws) => {
+    const room = getRoom(code);
+    if (!room) {
+      send(ws, { type: "lobby-closed", reason: "not-found" });
+      ws.close(1000, "not-found");
       return;
     }
+    onConnect(room, connectionId, ws);
+  });
+});
 
-    // Check if this connection is a reconnecting player or host
-    const existingPlayer = state.players.find((p) => p.id === connection.id);
-    if (existingPlayer) {
-      existingPlayer.connected = true;
-      await saveLobbyState(this.room, state);
-      broadcastLobbyState(this.room, state);
+function onConnect(room: Room, connectionId: string, ws: WebSocket) {
+  room.attach(connectionId, ws);
 
-      // If reconnecting during countdown, re-send countdown message
-      if (state.phase === "countdown" && state.countdownEndsAt) {
-        send(connection, {
-          type: "countdown",
-          gameData: state.gameData,
-          countdownEndsAt: state.countdownEndsAt,
-        });
-      }
-
-      // If reconnecting during playing, re-send game-start
-      if (state.phase === "playing") {
-        send(connection, { type: "game-start", gameData: state.gameData });
-      }
-    } else {
-      // New connection — send current state, they must send "join" or "host" message
-      send(connection, { type: "lobby-state", state });
-    }
+  const existing = room.state.players.find((p) => p.id === connectionId);
+  if (existing) {
+    existing.connected = true;
+    room.save();
+    room.broadcastLobbyState();
+    resendPhase(room, connectionId);
+  } else {
+    // New connection — it must still send "host" or "join".
+    send(ws, { type: "lobby-state", state: room.state });
   }
 
-  async onMessage(message: string | ArrayBuffer, sender: Party.Connection) {
-    if (typeof message !== "string") return;
-
-    let msg: ClientMessage;
-    try {
-      msg = JSON.parse(message) as ClientMessage;
-    } catch {
-      send(sender, { type: "error", message: "Invalid message format" });
-      return;
+  ws.on("message", (data) => onMessage(room, connectionId, ws, data.toString()));
+  ws.on("close", () => {
+    room.detach(connectionId);
+    const player = room.state.players.find((p) => p.id === connectionId);
+    if (player) {
+      player.connected = false;
+      room.save();
+      room.broadcastLobbyState();
     }
+  });
+  ws.on("error", (error) => console.error(`Connection ${connectionId} error:`, error));
+}
 
-    let state = await this.room.storage.get<LobbyState>("lobbyState");
+/** Catch a reconnecting client up on a round that is already under way. */
+function resendPhase(room: Room, connectionId: string) {
+  if (room.state.phase === "countdown" && room.state.countdownEndsAt) {
+    room.send(connectionId, {
+      type: "countdown",
+      gameData: room.state.gameData,
+      countdownEndsAt: room.state.countdownEndsAt,
+    });
+  }
+  if (room.state.phase === "playing") {
+    room.send(connectionId, { type: "game-start", gameData: room.state.gameData });
+  }
+}
 
-    switch (msg.type) {
-      case "host": {
-        const spec = getGameSpec(msg.gameId);
-        if (!spec || !gameHandlers[msg.gameId]) {
-          send(sender, { type: "error", message: "Unknown game" });
-          return;
-        }
+function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string) {
+  let msg: ClientMessage;
+  try {
+    msg = JSON.parse(raw) as ClientMessage;
+  } catch {
+    send(ws, { type: "error", message: "Invalid message format" });
+    return;
+  }
 
-        // First connection creates the lobby, or host reconnects
-        if (state && state.hostId && state.hostId !== sender.id) {
-          send(sender, { type: "error", message: "Lobby already exists" });
-          return;
-        }
+  const state = room.state;
+  const isHost = connectionId === state.hostId;
 
-        if (state && state.hostId === sender.id) {
-          // Host reconnecting — just mark as connected
-          const host = state.players.find((p) => p.id === sender.id);
-          if (host) host.connected = true;
-          await saveLobbyState(this.room, state);
-          broadcastLobbyState(this.room, state);
-          break;
-        }
-
-        state = {
-          code: this.room.id,
-          gameId: msg.gameId,
-          hostId: sender.id,
-          players: [
-            {
-              id: sender.id,
-              name: "Host",
-              isHost: true,
-              score: 0,
-              connected: true,
-            },
-          ],
-          phase: "lobby",
-          gameData: null,
-          settings: defaultGameSettings(spec),
-          countdownEndsAt: null,
-        };
-        await saveLobbyState(this.room, state);
-        broadcastLobbyState(this.room, state);
-        break;
+  switch (msg.type) {
+    case "host": {
+      // The lobby already exists — this only claims or re-claims the host seat.
+      if (!isHost) {
+        send(ws, { type: "error", message: "Not the host of this lobby" });
+        return;
       }
-
-      case "join": {
-        if (!state) {
-          send(sender, { type: "error", message: "Lobby does not exist" });
-          return;
-        }
-
-        const name = typeof msg.name === "string" ? msg.name.trim().slice(0, MAX_NAME_LENGTH) : "";
-        if (!name) {
-          send(sender, { type: "error", message: "A name is required" });
-          return;
-        }
-
-        // Check if already in the player list (reconnect)
-        const existing = state.players.find((p) => p.id === sender.id);
-        if (existing) {
-          existing.name = name;
-          existing.connected = true;
-          await saveLobbyState(this.room, state);
-          broadcastLobbyState(this.room, state);
-
-          // If reconnecting during countdown, re-send countdown message
-          if (state.phase === "countdown" && state.countdownEndsAt) {
-            send(sender, {
-              type: "countdown",
-              gameData: state.gameData,
-              countdownEndsAt: state.countdownEndsAt,
-            });
-          }
-
-          // If reconnecting during playing, re-send game-start
-          if (state.phase === "playing") {
-            send(sender, { type: "game-start", gameData: state.gameData });
-          }
-          break;
-        }
-
-        // New player — can only join during lobby
-        if (state.phase !== "lobby") {
-          send(sender, { type: "error", message: "Game already in progress" });
-          return;
-        }
-
-        const spec = getGameSpec(state.gameId);
-        const playerCount = state.players.filter((p) => !p.isHost).length;
-        if (spec && playerCount >= spec.maxPlayers) {
-          send(sender, { type: "error", message: "Lobby is full" });
-          return;
-        }
-
+      const host = state.players.find((p) => p.id === connectionId);
+      if (host) {
+        host.connected = true;
+      } else {
         state.players.push({
-          id: sender.id,
-          name,
-          isHost: false,
+          id: connectionId,
+          name: "Host",
+          isHost: true,
           score: 0,
           connected: true,
         });
-
-        await saveLobbyState(this.room, state);
-        broadcastLobbyState(this.room, state);
-        break;
       }
-
-      case "start": {
-        if (!state) return;
-        if (sender.id !== state.hostId) {
-          send(sender, { type: "error", message: "Only host can start" });
-          return;
-        }
-        const spec = getGameSpec(state.gameId);
-        const playerCount = state.players.filter((p) => !p.isHost).length;
-        if (spec && playerCount < spec.minPlayers) {
-          send(sender, { type: "error", message: "Not enough players" });
-          return;
-        }
-        await enterExplanation(this.room, true);
-        break;
-      }
-
-      case "begin-countdown": {
-        if (!state) return;
-        if (sender.id !== state.hostId) {
-          send(sender, { type: "error", message: "Only host can start the countdown" });
-          return;
-        }
-        await beginCountdown(this.room);
-        break;
-      }
-
-      case "restart": {
-        if (!state) return;
-        if (sender.id !== state.hostId) {
-          send(sender, { type: "error", message: "Only host can restart" });
-          return;
-        }
-
-        state.phase = "lobby";
-        state.gameData = null;
-        state.players.forEach((p) => (p.score = 0));
-        await saveLobbyState(this.room, state);
-        broadcastLobbyState(this.room, state);
-
-        // Cancel any pending alarm
-        await this.room.storage.deleteAlarm();
-        break;
-      }
-
-      case "kick": {
-        if (!state) return;
-        if (sender.id !== state.hostId) {
-          send(sender, { type: "error", message: "Only host can kick" });
-          return;
-        }
-
-        state.players = state.players.filter((p) => p.id !== msg.playerId);
-        await saveLobbyState(this.room, state);
-        broadcastLobbyState(this.room, state);
-        break;
-      }
-
-      case "game-action": {
-        if (!state || state.phase !== "playing") return;
-
-        const handler = gameHandlers[state.gameId];
-        if (handler?.onMessage) {
-          const result = handler.onMessage(state, msg.payload, sender);
-          if (result) {
-            state.gameData = result;
-            await saveLobbyState(this.room, state);
-            broadcast(this.room, { type: "game-state", gameData: state.gameData });
-          }
-        }
-
-        // Check if the round should end after this action
-        await endRound(this.room);
-        break;
-      }
-
-      case "update-settings": {
-        if (!state) return;
-        if (sender.id !== state.hostId) {
-          send(sender, { type: "error", message: "Only host can change settings" });
-          return;
-        }
-        if (state.phase !== "lobby") return;
-
-        const spec = getGameSpec(state.gameId);
-        if (!spec) return;
-        // Never trust the client: clamp to what the stage schemas allow.
-        state.settings = resolveGameSettings(spec, msg.settings);
-        await saveLobbyState(this.room, state);
-        broadcastLobbyState(this.room, state);
-        break;
-      }
-
-      case "next-round": {
-        if (!state) return;
-        if (sender.id !== state.hostId) {
-          send(sender, { type: "error", message: "Only host can start next round" });
-          return;
-        }
-        if (state.phase !== "round-finished") return;
-
-        await enterExplanation(this.room, false);
-        break;
-      }
+      room.save();
+      room.broadcastLobbyState();
+      break;
     }
-  }
 
-  async onClose(connection: Party.Connection) {
-    const state = await this.room.storage.get<LobbyState>("lobbyState");
-    if (!state) return;
+    case "join": {
+      const name = typeof msg.name === "string" ? msg.name.trim().slice(0, MAX_NAME_LENGTH) : "";
+      if (!name) {
+        send(ws, { type: "error", message: "A name is required" });
+        return;
+      }
 
-    const player = state.players.find((p) => p.id === connection.id);
-    if (player) {
-      player.connected = false;
-      await saveLobbyState(this.room, state);
-      broadcastLobbyState(this.room, state);
+      const existing = state.players.find((p) => p.id === connectionId);
+      if (existing) {
+        existing.name = name;
+        existing.connected = true;
+        room.save();
+        room.broadcastLobbyState();
+        resendPhase(room, connectionId);
+        break;
+      }
+
+      // New player — can only join during lobby
+      if (state.phase !== "lobby") {
+        send(ws, { type: "error", message: "Game already in progress" });
+        return;
+      }
+
+      const spec = getGameSpec(state.gameId);
+      const playerCount = state.players.filter((p) => !p.isHost).length;
+      if (spec && playerCount >= spec.maxPlayers) {
+        send(ws, { type: "error", message: "Lobby is full" });
+        return;
+      }
+
+      state.players.push({
+        id: connectionId,
+        name,
+        isHost: false,
+        score: 0,
+        connected: true,
+      });
+      room.save();
+      room.broadcastLobbyState();
+      break;
     }
-  }
 
-  async onError(connection: Party.Connection, error: Error) {
-    console.error(`Connection ${connection.id} error:`, error);
-  }
+    case "start": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can start" });
+        return;
+      }
+      const spec = getGameSpec(state.gameId);
+      const playerCount = state.players.filter((p) => !p.isHost).length;
+      if (spec && playerCount < spec.minPlayers) {
+        send(ws, { type: "error", message: "Not enough players" });
+        return;
+      }
+      room.enterExplanation(true);
+      break;
+    }
 
-  async onAlarm() {
-    const state = await this.room.storage.get<LobbyState>("lobbyState");
-    if (!state) return;
+    case "begin-countdown": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can start the countdown" });
+        return;
+      }
+      room.beginCountdown();
+      break;
+    }
 
-    if (state.phase === "countdown") {
-      // Countdown finished — start the actual round
-      await startPlaying(this.room);
-    } else if (state.phase === "playing") {
-      // Round timer expired — end the round
-      await endRound(this.room);
+    case "next-round": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can start next round" });
+        return;
+      }
+      room.enterExplanation(false);
+      break;
+    }
+
+    case "restart": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can restart" });
+        return;
+      }
+      room.restart();
+      break;
+    }
+
+    case "kick": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can kick" });
+        return;
+      }
+      state.players = state.players.filter((p) => p.id !== msg.playerId);
+      room.save();
+      room.broadcastLobbyState();
+      break;
+    }
+
+    case "update-settings": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can change settings" });
+        return;
+      }
+      if (state.phase !== "lobby") return;
+
+      const spec = getGameSpec(state.gameId);
+      if (!spec) return;
+      // Never trust the client: clamp to what the stage schemas allow.
+      state.settings = resolveGameSettings(spec, msg.settings);
+      room.save();
+      room.broadcastLobbyState();
+      break;
+    }
+
+    case "game-action": {
+      if (state.phase !== "playing") return;
+
+      const handler = gameHandlers[state.gameId];
+      if (handler?.onMessage) {
+        const result = handler.onMessage(state, msg.payload, { id: connectionId });
+        if (result) {
+          state.gameData = result;
+          room.save();
+          room.broadcast({ type: "game-state", gameData: state.gameData });
+        }
+      }
+
+      // Check if the round should end after this action
+      room.endRound();
+      break;
     }
   }
 }
+
+// --- lifecycle -------------------------------------------------------------
+
+const restored = rehydrate();
+httpServer.listen(PORT, () => {
+  console.log(`lms server listening on :${PORT}` + (restored ? ` (${restored} lobbies restored)` : ""));
+});
+
+function shutdown() {
+  flushAll();
+  store.close();
+  httpServer.close(() => process.exit(0));
+  // Don't let a hung socket hold the restart open.
+  setTimeout(() => process.exit(0), 5_000).unref();
+}
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

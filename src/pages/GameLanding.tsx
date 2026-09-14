@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link } from "react-router";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
-import { generateLobbyCode } from "../lib/utils";
+import { getHostId, serverUrl } from "../lib/connection";
 
 export default function GameLanding() {
   const { t } = useTranslation();
   const { gameId } = useParams();
   const navigate = useNavigate();
+  const [pending, setPending] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const game = gameId ? getGame(gameId) : undefined;
   useActiveGame(game);
 
@@ -22,9 +25,33 @@ export default function GameLanding() {
     );
   }
 
-  const handleCreateLobby = () => {
-    const code = generateLobbyCode();
-    navigate(`/arena/${game.id}/host/${code}`);
+  // The server hands out the code, so two teachers can never land on the same
+  // one and a teacher can only have one lobby open at a time.
+  const handleCreateLobby = async () => {
+    setPending(true);
+    setNotice(null);
+    try {
+      const response = await fetch(serverUrl("/parties/lobbies"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ gameId: game.id, clientId: getHostId() }),
+      });
+      const data = (await response.json()) as { code?: string; error?: string };
+
+      if (response.status === 409 && data.code) {
+        setNotice(t("game.activeLobby", { code: data.code }));
+        return;
+      }
+      if (!response.ok || !data.code) {
+        setNotice(t("common.error"));
+        return;
+      }
+      navigate(`/arena/${game.id}/host/${data.code}`);
+    } catch {
+      setNotice(t("game.serverUnreachable"));
+    } finally {
+      setPending(false);
+    }
   };
 
   const isLive = game.status === "live";
@@ -56,15 +83,16 @@ export default function GameLanding() {
           </div>
           <button
             onClick={handleCreateLobby}
-            disabled={!isLive}
+            disabled={!isLive || pending}
             className={`w-full py-3 rounded-xl font-semibold transition-colors ${
-              isLive
+              isLive && !pending
                 ? "bg-game-solid text-white hover:bg-game-solid-hover"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
-            {isLive ? t("game.createLobby") : t("arena.soon")}
+            {!isLive ? t("arena.soon") : pending ? t("game.creating") : t("game.createLobby")}
           </button>
+          {notice && <p className="mt-4 text-sm text-center text-amber-700">{notice}</p>}
         </div>
       </div>
     </div>

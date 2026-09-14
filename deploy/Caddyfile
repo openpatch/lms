@@ -1,0 +1,22 @@
+# /etc/caddy/Caddyfile
+#
+# Caddy serves the built client straight from disk and proxies only the game
+# server's endpoints to Node. TLS certificates are obtained and renewed
+# automatically.
+
+lms.openpatch.org {
+	encode zstd gzip
+
+	# The game server: lobby creation over HTTP, gameplay over WebSockets.
+	handle /parties/* {
+		reverse_proxy localhost:3000
+	}
+
+	# The single-page app. try_files sends unknown paths to index.html so the
+	# router can handle them — this is what lets the app use real URLs.
+	handle {
+		root * /srv/lms/dist
+		try_files {path} /index.html
+		file_server
+	}
+}

@@ -61,7 +61,13 @@
     "bonus": "Bonus",
     "pts": "Pkt",
     "getReady": "Mach dich bereit!",
-    "hostInfo": "Erkläre die Regeln und klicke dann auf 'Los geht's!'."
+    "hostInfo": "Erkläre die Regeln und klicke dann auf 'Los geht's!'.",
+    "creating": "Lobby wird erstellt…",
+    "activeLobby": "Du hast bereits eine offene Lobby: {{code}}. Schließe sie, bevor du eine neue startest.",
+    "serverUnreachable": "Der Spielserver ist nicht erreichbar.",
+    "lobbyClosed": "Diese Lobby wurde geschlossen.",
+    "lobbyExpired": "Diese Lobby ist abgelaufen.",
+    "lobbyNotFound": "Es gibt keine Lobby mit diesem Code."
   },
   "lobby": {
     "title": "Lobby",

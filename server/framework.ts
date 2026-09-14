@@ -5,8 +5,7 @@
 // timing, streaks and combo bonus, ending a round, and reporting results.
 // A stage handler only has to generate questions and grade one answer.
 
-import type * as Party from "partykit/server";
-import type { GameHandler } from "./types";
+import type { Conn, GameHandler } from "./types";
 import type { LobbyState, GameResult, Player } from "../shared/types";
 import type {
   GameSpec,
@@ -174,7 +173,7 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
       return buildRound(state, (previous?.currentRound ?? 0) + 1);
     },
 
-    onMessage(state: LobbyState, payload: unknown, sender: Party.Connection) {
+    onMessage(state: LobbyState, payload: unknown, sender: Conn) {
       const data = state.gameData as StageRoundData | null;
       const handler = handlerFor(data);
       const stage = spec.stages.find((s) => s.id === data?.stageId);

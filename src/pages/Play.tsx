@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router";
-import { usePartyConnection } from "../lib/partykit";
+import { useGameConnection } from "../lib/connection";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import ResultsList from "../components/ResultsList";
@@ -40,7 +40,7 @@ export default function Play() {
     }
   };
 
-  const conn = usePartyConnection(code ?? "", onMessage);
+  const conn = useGameConnection(code ?? "", onMessage);
   // Which game this lobby is playing only becomes known once the server answers;
   // from then on the shell wears its colour, the same one the host sees.
   const game = conn.lobbyState ? getGame(conn.lobbyState.gameId) : undefined;
@@ -82,6 +82,23 @@ export default function Play() {
         <p className="text-gray-500 mb-4">{t("join.emptyName")}</p>
         <Link to="/join" className="text-brand-600 hover:underline">
           {t("common.join")}
+        </Link>
+      </div>
+    );
+  }
+
+  if (conn.closed) {
+    const key =
+      conn.closed === "expired"
+        ? "game.lobbyExpired"
+        : conn.closed === "not-found"
+          ? "game.lobbyNotFound"
+          : "game.lobbyClosed";
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600 mb-4">{t(key)}</p>
+        <Link to="/join" className="text-brand-600 hover:underline">
+          {t("common.back")}
         </Link>
       </div>
     );
