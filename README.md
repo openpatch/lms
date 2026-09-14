@@ -104,6 +104,26 @@ matter:
 Serve `dist/` as the document root with a single-page fallback, so unknown paths
 reach the router instead of returning 404.
 
+### Continuous deployment
+
+`.github/workflows/deploy.yml` builds, runs both checks, copies the result over
+ssh and restarts the process. Nothing about the target lives in the repository;
+it reads:
+
+| Secret | |
+| --- | --- |
+| `DEPLOY_SSH_HOST` | hostname of the server |
+| `DEPLOY_SSH_USER` | user that owns the app directory and the process |
+| `DEPLOY_SSH_KEY` | that user's **private** key, whole, without a passphrase |
+
+| Variable | |
+| --- | --- |
+| `DEPLOY_PATH` | absolute path to deploy into |
+| `DEPLOY_HOST` | public hostname, for the post-deploy health check |
+
+The workflow refuses to start if any of these is missing, since `rsync --delete`
+against an empty path would empty the wrong directory.
+
 ### Teacher accounts
 
 There is no sign-up page. Accounts exist because someone made one on the server:

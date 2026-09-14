@@ -19,7 +19,33 @@ jobs:
     environment:
       name: production
       url: https://${{ vars.DEPLOY_HOST }}
+    env:
+      # BatchMode stops ssh dropping to an interactive password prompt, which
+      # turns a rejected key into a clear failure instead of "please try again".
+      SSH_OPTS: -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes
+      TARGET: ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+
     steps:
+      # rsync --delete against an empty path would wipe the wrong directory, so
+      # refuse to start without one.
+      - name: Check configuration
+        run: |
+          missing=""
+          [ -n "$DEPLOY_PATH" ] || missing="$missing DEPLOY_PATH(variable)"
+          [ -n "${{ secrets.DEPLOY_SSH_HOST }}" ] || missing="$missing DEPLOY_SSH_HOST(secret)"
+          [ -n "${{ secrets.DEPLOY_SSH_USER }}" ] || missing="$missing DEPLOY_SSH_USER(secret)"
+          [ -n "${{ secrets.DEPLOY_SSH_KEY }}" ] || missing="$missing DEPLOY_SSH_KEY(secret)"
+          [ -n "${{ vars.DEPLOY_HOST }}" ] || missing="$missing DEPLOY_HOST(variable)"
+          if [ -n "$missing" ]; then
+            echo "::error::Not configured. Missing:$missing"
+            exit 1
+          fi
+          case "$DEPLOY_PATH" in
+            /*/?*) ;;
+            *) echo "::error::DEPLOY_PATH must be an absolute path, got '$DEPLOY_PATH'"; exit 1 ;;
+          esac
+
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
@@ -43,26 +69,53 @@ jobs:
 
       - name: Add deploy key
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.DEPLOY_SSH_HOST }}" >> ~/.ssh/known_hosts
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
+          # printf, not echo: OpenSSH rejects a key whose final line has no
+          # newline, which is the usual way this secret goes wrong.
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Say which half is wrong, rather than letting ssh fall through to a
+          # password prompt and report a generic "Permission denied".
+          if ! ssh-keygen -y -P "" -f ~/.ssh/deploy_key > /dev/null 2>&1; then
+            echo "::error::DEPLOY_SSH_KEY is not a usable private key. It must be the"
+            echo "::error::complete PRIVATE key including the BEGIN and END lines, and"
+            echo "::error::must not have a passphrase."
+            exit 1
+          fi
+
+          ssh-keyscan -H "${{ secrets.DEPLOY_SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          if [ ! -s ~/.ssh/known_hosts ]; then
+            echo "::error::Could not reach ${{ secrets.DEPLOY_SSH_HOST }} to read its host key."
+            exit 1
+          fi
+
+      - name: Check the server accepts the key
+        run: |
+          if ! ssh $SSH_OPTS "$TARGET" true; then
+            echo "::error::The key is valid but the server rejected it. Add its public"
+            echo "::error::half to ~/.ssh/authorized_keys of ${{ secrets.DEPLOY_SSH_USER }}"
+            echo "::error::on ${{ secrets.DEPLOY_SSH_HOST }}:"
+            ssh-keygen -y -P "" -f ~/.ssh/deploy_key
+            exit 1
+          fi
 
       - name: Upload client and server
         run: |
-          rsync -az --delete dist/ \
-            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/home/openpatch/projects/lms/dist/"
-          rsync -az --delete \
+          rsync -az --delete -e "ssh $SSH_OPTS" dist/ \
+            "$TARGET:$DEPLOY_PATH/dist/"
+          rsync -az --delete -e "ssh $SSH_OPTS" \
             --exclude node_modules --exclude dist --exclude data --exclude .git \
             server shared scripts deploy package.json pnpm-lock.yaml tsconfig*.json \
-            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/home/openpatch/projects/lms/"
+            "$TARGET:$DEPLOY_PATH/"
 
       - name: Install dependencies and restart
         run: |
-          ssh "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}" \
-            'cd /home/openpatch/projects/lms \
+          ssh $SSH_OPTS "$TARGET" \
+            "cd $DEPLOY_PATH \
                && pnpm install --prod --frozen-lockfile \
-               && pm2 restart lms --update-env'
+               && pm2 restart lms --update-env"
 
       - name: Wait for health
         run: |
