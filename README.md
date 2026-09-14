@@ -54,8 +54,8 @@ are on the same origin.
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm build          # writes dist/
-pnpm start          # serves /parties on $PORT
+pnpm build                              # writes dist/
+node --import tsx server/index.ts       # serves /parties on $PORT
 ```
 
 ### Environment
@@ -79,6 +79,12 @@ Whatever runs it, do not cluster it.
 Give it at least 15 seconds between `SIGTERM` and `SIGKILL`. The server flushes
 live lobbies to SQLite on `SIGTERM`, and some process managers kill much sooner
 than that by default.
+
+Point the process manager at `node --import tsx server/index.ts` directly, not
+at `pnpm start` or the `tsx` binary. Both run the server in a child process, so
+the manager ends up supervising a wrapper: memory limits watch the wrong
+process, and anything in between that does not forward signals swallows the
+shutdown.
 
 ### Reverse proxy
 

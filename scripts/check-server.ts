@@ -6,6 +6,7 @@
 // Runs against a throwaway database in a temp directory, on a free port.
 
 import { spawn, type ChildProcess } from "node:child_process";
+import { createServer } from "node:net";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -26,7 +27,10 @@ function check(label: string, ok: boolean, detail = "") {
 }
 
 function start(): Promise<ChildProcess> {
-  const child = spawn("npx", ["tsx", "server/index.ts"], {
+  // node --import tsx, not the tsx CLI: the tsx binary runs the script in a
+  // *child* process, so SIGTERM would reach the wrapper while the server kept
+  // the port. This way the process we spawn is the server.
+  const child = spawn(process.execPath, ["--import", "tsx", "server/index.ts"], {
     env: { ...process.env, PORT: String(PORT), DB_PATH, BASE_URL: BASE },
     stdio: ["ignore", "pipe", "inherit"],
   });
@@ -41,9 +45,27 @@ function start(): Promise<ChildProcess> {
   });
 }
 
+/** Resolves once nothing holds the port, so the next start cannot race it. */
+function waitForPortFree(port: number, timeoutMs = 10_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  return new Promise((resolve, reject) => {
+    const attempt = () => {
+      const probe = createServer();
+      probe.once("error", () => {
+        if (Date.now() > deadline) reject(new Error(`port ${port} never freed`));
+        else setTimeout(attempt, 100);
+      });
+      probe.once("listening", () => probe.close(() => resolve()));
+      probe.listen(port);
+    };
+    attempt();
+  });
+}
+
 async function stop(child: ChildProcess): Promise<void> {
   child.kill("SIGTERM");
   await new Promise((resolve) => child.once("exit", resolve));
+  await waitForPortFree(PORT);
 }
 
 /** A client that records everything the server says to it. */

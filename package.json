@@ -6,12 +6,12 @@
   "packageManager": "pnpm@11.3.0",
   "scripts": {
     "dev": "vite",
-    "dev:server": "tsx watch server/index.ts",
+    "dev:server": "node --import tsx --watch server/index.ts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "check:games": "tsx scripts/check-games.ts",
     "preview": "vite preview",
-    "start": "tsx server/index.ts",
+    "start": "node --import tsx server/index.ts",
     "check:server": "tsx scripts/check-server.ts",
     "teacher": "tsx scripts/teacher.ts"
   },
