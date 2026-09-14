@@ -79,7 +79,8 @@ export type ClientMessage =
   | { type: "next-round" }
   | { type: "update-settings"; settings: unknown }
   | { type: "game-action"; payload: unknown }
-  | { type: "kick"; playerId: string };
+  | { type: "kick"; playerId: string }
+  | { type: "close-lobby" };
 
 // Messages: Server -> Client
 export type ServerMessage =

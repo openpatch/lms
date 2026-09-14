@@ -67,7 +67,9 @@
     "serverUnreachable": "The game server cannot be reached.",
     "lobbyClosed": "This lobby has been closed.",
     "lobbyExpired": "This lobby has expired.",
-    "lobbyNotFound": "There is no lobby with this code."
+    "lobbyNotFound": "There is no lobby with this code.",
+    "toLobby": "Go to that lobby",
+    "closeLobby": "Close lobby"
   },
   "lobby": {
     "title": "Lobby",
@@ -521,5 +523,16 @@
     "evaluateAskValue": "Working out values only",
     "evaluateAskEquivalent": "Checking equivalence only",
     "withFractionValues": "Also substitute fractions and decimals"
+  },
+  "auth": {
+    "title": "Teacher sign-in",
+    "teachersOnly": "Only teachers need an account. Students join with a code.",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "signingIn": "Signing in…",
+    "failed": "Wrong email or password.",
+    "noSignUp": "Accounts are created by the administrator."
   }
 }

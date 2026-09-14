@@ -4,14 +4,16 @@
 // HTTP is used once, to open a lobby; the rest of a session is one WebSocket
 // per player, spoken in the ClientMessage/ServerMessage vocabulary.
 
-import { createServer } from "node:http";
+import { createServer, type ServerResponse } from "node:http";
 import { randomUUID } from "node:crypto";
 import { WebSocketServer, type WebSocket } from "ws";
+import { toNodeHandler } from "better-auth/node";
 import type { ClientMessage, ServerMessage } from "../shared/types";
 import { getGameSpec, validateGameSpecs } from "../shared/games";
 import { resolveGameSettings } from "../shared/framework";
 import { gameHandlers } from "./games";
 import { createRoom, getRoom, rehydrate, flushAll, type Room } from "./rooms";
+import { AUTH_BASE_PATH, auth, teacherFrom } from "./auth";
 import * as store from "./store";
 
 // Fail loudly at startup rather than when a class is already in the lobby.
@@ -29,23 +31,26 @@ function send(socket: WebSocket, msg: ServerMessage) {
   if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg));
 }
 
-/**
- * Who is asking. Today a lobby is owned by the host's stable client id, which
- * means one lobby per browser. When teacher accounts land this is the single
- * place that changes: verify a token, return the account id instead.
- */
-function identify(clientId: string | null): string | null {
-  return clientId && clientId.length >= 8 ? clientId : null;
-}
-
 // --- HTTP ------------------------------------------------------------------
+
+const authHandler = toNodeHandler(auth);
+
+function json(res: ServerResponse, status: number, body: unknown) {
+  res.writeHead(status, { "content-type": "application/json" });
+  res.end(JSON.stringify(body));
+}
 
 const httpServer = createServer((req, res) => {
   const url = new URL(req.url ?? "/", "http://localhost");
 
+  // Sign in, sign out, session — better-auth owns everything under here.
+  if (url.pathname.startsWith(AUTH_BASE_PATH)) {
+    void authHandler(req, res);
+    return;
+  }
+
   if (req.method === "GET" && url.pathname === "/parties/health") {
-    res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ ok: true }));
+    json(res, 200, { ok: true });
     return;
   }
 
@@ -57,37 +62,35 @@ const httpServer = createServer((req, res) => {
       if (body.length > 4096) req.destroy();
     });
     req.on("end", () => {
-      let payload: { gameId?: string; clientId?: string };
-      try {
-        payload = JSON.parse(body || "{}") as typeof payload;
-      } catch {
-        res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "Invalid body" }));
-        return;
-      }
+      void (async () => {
+        let payload: { gameId?: string };
+        try {
+          payload = JSON.parse(body || "{}") as typeof payload;
+        } catch {
+          json(res, 400, { error: "Invalid body" });
+          return;
+        }
 
-      const teacherId = identify(payload.clientId ?? null);
-      if (!teacherId) {
-        res.writeHead(401, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "Not authorised" }));
-        return;
-      }
+        // The one gate: no teacher account, no lobby.
+        const teacher = await teacherFrom(req.headers);
+        if (!teacher) {
+          json(res, 401, { error: "Not authorised" });
+          return;
+        }
 
-      if (!payload.gameId || !getGameSpec(payload.gameId) || !gameHandlers[payload.gameId]) {
-        res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "Unknown game" }));
-        return;
-      }
+        if (!payload.gameId || !getGameSpec(payload.gameId) || !gameHandlers[payload.gameId]) {
+          json(res, 400, { error: "Unknown game" });
+          return;
+        }
 
-      const result = createRoom(teacherId, payload.gameId);
-      if (!result.ok) {
-        res.writeHead(409, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "active-lobby", code: result.code }));
-        return;
-      }
+        const result = createRoom(teacher.id, payload.gameId, teacher.name);
+        if (!result.ok) {
+          json(res, 409, { error: "active-lobby", code: result.code });
+          return;
+        }
 
-      res.writeHead(201, { "content-type": "application/json" });
-      res.end(JSON.stringify({ code: result.room.state.code }));
+        json(res, 201, { code: result.room.state.code });
+      })();
     });
     return;
   }
@@ -111,17 +114,28 @@ httpServer.on("upgrade", (req, socket, head) => {
   }
 
   const code = match[1];
-  const connectionId = url.searchParams.get("_pk") ?? randomUUID();
-
-  wss.handleUpgrade(req, socket, head, (ws) => {
-    const room = getRoom(code);
-    if (!room) {
+  const room = getRoom(code);
+  if (!room) {
+    wss.handleUpgrade(req, socket, head, (ws) => {
       send(ws, { type: "lobby-closed", reason: "not-found" });
       ws.close(1000, "not-found");
-      return;
-    }
-    onConnect(room, connectionId, ws);
-  });
+    });
+    return;
+  }
+
+  void (async () => {
+    // The host seat goes to a signed-in teacher on the host screen, whatever id
+    // the client sends. Everyone else — including that same teacher opening the
+    // play page for their own lobby — keeps their own per-lobby id.
+    const teacher =
+      url.searchParams.get("role") === "host" ? await teacherFrom(req.headers) : null;
+    const connectionId =
+      teacher && teacher.id === room.state.hostId
+        ? teacher.id
+        : (url.searchParams.get("_pk") ?? randomUUID());
+
+    wss.handleUpgrade(req, socket, head, (ws) => onConnect(room, connectionId, ws));
+  })();
 });
 
 function onConnect(room: Room, connectionId: string, ws: WebSocket) {
@@ -185,23 +199,17 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
         return;
       }
       const host = state.players.find((p) => p.id === connectionId);
-      if (host) {
-        host.connected = true;
-      } else {
-        state.players.push({
-          id: connectionId,
-          name: "Host",
-          isHost: true,
-          score: 0,
-          connected: true,
-        });
-      }
+      if (host) host.connected = true;
       room.save();
       room.broadcastLobbyState();
       break;
     }
 
     case "join": {
+      if (isHost) {
+        send(ws, { type: "error", message: "The host cannot join as a player" });
+        return;
+      }
       const name = typeof msg.name === "string" ? msg.name.trim().slice(0, MAX_NAME_LENGTH) : "";
       if (!name) {
         send(ws, { type: "error", message: "A name is required" });
@@ -285,6 +293,15 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
       break;
     }
 
+    case "close-lobby": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can close the lobby" });
+        return;
+      }
+      room.close("host-closed");
+      break;
+    }
+
     case "kick": {
       if (!isHost) {
         send(ws, { type: "error", message: "Only host can kick" });
@@ -334,10 +351,16 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
 
 // --- lifecycle -------------------------------------------------------------
 
-const restored = rehydrate();
-httpServer.listen(PORT, () => {
-  console.log(`lms server listening on :${PORT}` + (restored ? ` (${restored} lobbies restored)` : ""));
-});
+async function startup() {
+  const restored = rehydrate();
+  httpServer.listen(PORT, () => {
+    console.log(
+      `lms server listening on :${PORT}` + (restored ? ` (${restored} lobbies restored)` : ""),
+    );
+  });
+}
+
+void startup();
 
 function shutdown() {
   flushAll();

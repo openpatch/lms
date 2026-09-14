@@ -13,7 +13,8 @@ const DB_PATH = process.env.DB_PATH ?? "./data/lms.db";
 
 mkdirSync(dirname(DB_PATH), { recursive: true });
 
-const db = new DatabaseSync(DB_PATH);
+/** The one connection. better-auth keeps its tables in the same file. */
+export const db = new DatabaseSync(DB_PATH);
 
 db.exec(`
   pragma journal_mode = WAL;

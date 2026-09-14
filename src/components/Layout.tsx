@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router";
 import type { GameMeta } from "../../shared/types";
 import { ActiveGameContext, gameThemeVars } from "../lib/game-theme";
+import { signOut, useSession } from "../lib/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const { data: session } = useSession();
   // The game the current page is about, announced with useActiveGame. Its colour
   // paints the whole shell, so host and players can see at a glance that they
   // are looking at the same game.
@@ -70,6 +72,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   {t("common.join")}
                 </Link>
               )}
+              {!playing &&
+                (session ? (
+                  <button
+                    onClick={() => void signOut()}
+                    title={session.user.email}
+                    className="text-sm text-gray-600 hover:text-game-ink transition-colors"
+                  >
+                    {t("auth.signOut")}
+                  </button>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="text-sm text-gray-600 hover:text-game-ink transition-colors"
+                  >
+                    {t("auth.signIn")}
+                  </Link>
+                ))}
             </div>
           </div>
         </header>

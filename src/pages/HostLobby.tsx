@@ -8,7 +8,7 @@ import Countdown from "../components/Countdown";
 import StageShell from "../components/StageShell";
 import StageRules from "../components/StageRules";
 import StageSettingsForm from "../components/StageSettingsForm";
-import { getHostId, useGameConnection } from "../lib/connection";
+import { useGameConnection } from "../lib/connection";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import type { ServerMessage, GameResult } from "../../shared/types";
@@ -43,7 +43,7 @@ export default function HostLobby() {
     }
   };
 
-  const conn = useGameConnection(code ?? "", onMessage, getHostId());
+  const conn = useGameConnection(code ?? "", onMessage, "host");
 
   // Send "host" message on every connect (handles reconnect)
   useEffect(() => {
@@ -204,9 +204,17 @@ export default function HostLobby() {
           </span>
           <h1 className="text-xl font-bold text-game-ink truncate">{t(game.titleKey)}</h1>
         </div>
-        <Link to="/arena" className="shrink-0 text-sm font-medium text-game-ink/70 hover:text-game-ink">
-          {t("common.back")}
-        </Link>
+        <div className="shrink-0 flex items-center gap-3">
+          <button
+            onClick={() => conn.sendMessage({ type: "close-lobby" })}
+            className="text-sm font-medium text-game-ink/70 hover:text-red-600 transition-colors"
+          >
+            {t("game.closeLobby")}
+          </button>
+          <Link to="/arena" className="text-sm font-medium text-game-ink/70 hover:text-game-ink">
+            {t("common.back")}
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border-2 border-game-200 p-8 mb-6">

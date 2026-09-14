@@ -67,9 +67,23 @@ Lobbies close themselves two hours after they are opened
 (`LOBBY_TTL_MS` in `server/rooms.ts`), so a forgotten browser tab cannot keep
 one alive indefinitely.
 
-## Still to come
+## Teacher accounts
 
-Lobby creation is `POST /parties/lobbies` and is currently gated only by a
-random id the browser keeps in `localStorage` — enough to give one lobby per
-browser, not enough to mean "teacher". The `identify()` function in
-`server/index.ts` is the single place that changes when accounts land.
+Only teachers sign in; students join with a code and never have an account.
+There is no sign-up page — accounts are made on the server:
+
+```sh
+cd /srv/lms
+sudo -u lms pnpm teacher add anna@schule.de "Anna Klein"   # prints a password once
+sudo -u lms pnpm teacher list
+sudo -u lms pnpm teacher password anna@schule.de           # new password
+sudo -u lms pnpm teacher remove anna@schule.de
+```
+
+`AUTH_SECRET` must be set before the first start, and must not change
+afterwards — every session is signed with it, so replacing it signs everyone
+out. `BASE_URL` must be the public URL, because sign-in requests from another
+origin are rejected.
+
+Accounts, sessions and password hashes live in the same `lms.db` as everything
+else, so they are covered by the same backup.

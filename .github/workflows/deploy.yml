@@ -51,11 +51,11 @@ jobs:
       - name: Upload client and server
         run: |
           rsync -az --delete dist/ \
-            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/srv/lms/dist/"
+            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/home/openpatch/projects/lms/"
           rsync -az --delete \
             --exclude node_modules --exclude dist --exclude data --exclude .git \
             server shared scripts package.json pnpm-lock.yaml tsconfig*.json \
-            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/srv/lms/"
+            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:/home/openpatch/projects/lms/"
 
       - name: Install dependencies and restart
         run: |

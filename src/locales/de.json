@@ -67,7 +67,9 @@
     "serverUnreachable": "Der Spielserver ist nicht erreichbar.",
     "lobbyClosed": "Diese Lobby wurde geschlossen.",
     "lobbyExpired": "Diese Lobby ist abgelaufen.",
-    "lobbyNotFound": "Es gibt keine Lobby mit diesem Code."
+    "lobbyNotFound": "Es gibt keine Lobby mit diesem Code.",
+    "toLobby": "Zu dieser Lobby",
+    "closeLobby": "Lobby schließen"
   },
   "lobby": {
     "title": "Lobby",
@@ -521,5 +523,16 @@
     "evaluateAskValue": "Nur Termwert berechnen",
     "evaluateAskEquivalent": "Nur wertgleich prüfen",
     "withFractionValues": "Auch Brüche und Dezimalzahlen einsetzen"
+  },
+  "auth": {
+    "title": "Anmeldung für Lehrkräfte",
+    "teachersOnly": "Nur Lehrkräfte brauchen ein Konto. Schülerinnen und Schüler treten mit einem Code bei.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "signIn": "Anmelden",
+    "signOut": "Abmelden",
+    "signingIn": "Anmeldung läuft…",
+    "failed": "E-Mail oder Passwort ist falsch.",
+    "noSignUp": "Konten werden von der Administration angelegt."
   }
 }

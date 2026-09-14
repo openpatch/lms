@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link } from "react-router";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
-import { getHostId, serverUrl } from "../lib/connection";
+import { serverUrl } from "../lib/connection";
 
 export default function GameLanding() {
   const { t } = useTranslation();
@@ -11,6 +11,7 @@ export default function GameLanding() {
   const navigate = useNavigate();
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [existingCode, setExistingCode] = useState<string | null>(null);
   const game = gameId ? getGame(gameId) : undefined;
   useActiveGame(game);
 
@@ -30,16 +31,24 @@ export default function GameLanding() {
   const handleCreateLobby = async () => {
     setPending(true);
     setNotice(null);
+    setExistingCode(null);
     try {
       const response = await fetch(serverUrl("/parties/lobbies"), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ gameId: game.id, clientId: getHostId() }),
+        body: JSON.stringify({ gameId: game.id }),
       });
+
+      if (response.status === 401) {
+        void navigate("/login", { state: { next: `/arena/${game.id}` } });
+        return;
+      }
+
       const data = (await response.json()) as { code?: string; error?: string };
 
       if (response.status === 409 && data.code) {
         setNotice(t("game.activeLobby", { code: data.code }));
+        setExistingCode(data.code);
         return;
       }
       if (!response.ok || !data.code) {
@@ -92,7 +101,19 @@ export default function GameLanding() {
           >
             {!isLive ? t("arena.soon") : pending ? t("game.creating") : t("game.createLobby")}
           </button>
-          {notice && <p className="mt-4 text-sm text-center text-amber-700">{notice}</p>}
+          {notice && (
+            <div className="mt-4 text-sm text-center text-amber-700">
+              <p>{notice}</p>
+              {existingCode && (
+                <Link
+                  to={`/arena/${game.id}/host/${existingCode}`}
+                  className="inline-block mt-2 font-semibold underline"
+                >
+                  {t("game.toLobby")}
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

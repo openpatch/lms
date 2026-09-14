@@ -27,7 +27,7 @@ function check(label: string, ok: boolean, detail = "") {
 
 function start(): Promise<ChildProcess> {
   const child = spawn("npx", ["tsx", "server/index.ts"], {
-    env: { ...process.env, PORT: String(PORT), DB_PATH },
+    env: { ...process.env, PORT: String(PORT), DB_PATH, BASE_URL: BASE },
     stdio: ["ignore", "pipe", "inherit"],
   });
   return new Promise((resolve, reject) => {
@@ -51,8 +51,11 @@ class TestClient {
   readonly received: ServerMessage[] = [];
   private readonly socket: WebSocket;
 
-  constructor(code: string, id: string) {
-    this.socket = new WebSocket(`ws://localhost:${PORT}/parties/main/${code}?_pk=${id}`);
+  constructor(code: string, id: string, cookie?: string, role: "host" | "player" = "player") {
+    this.socket = new WebSocket(
+      `ws://localhost:${PORT}/parties/main/${code}?_pk=${id}&role=${role}`,
+      { headers: cookie ? { cookie } : {} },
+    );
     this.socket.on("message", (data) => this.received.push(JSON.parse(data.toString())));
   }
 
@@ -103,49 +106,88 @@ class TestClient {
   }
 }
 
-async function createLobby(clientId: string, gameId = "example") {
+async function createLobby(cookie: string | undefined, gameId = "example") {
   const response = await fetch(`${BASE}/parties/lobbies`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ gameId, clientId }),
+    headers: { "content-type": "application/json", origin: BASE, ...(cookie ? { cookie } : {}) },
+    body: JSON.stringify({ gameId }),
   });
   return { status: response.status, body: (await response.json()) as { code?: string; error?: string } };
 }
 
+/** Make a teacher account the way an administrator would, then sign in as them. */
+async function addTeacher(email: string, name: string, password: string): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn("npx", ["tsx", "scripts/teacher.ts", "add", email, name, password], {
+      env: { ...process.env, DB_PATH },
+      stdio: ["ignore", "ignore", "inherit"],
+    });
+    child.on("exit", (code) => (code === 0 ? resolve() : reject(new Error("teacher add failed"))));
+  });
+}
+
+async function signIn(email: string, password: string): Promise<string | undefined> {
+  const response = await fetch(`${BASE}/parties/auth/sign-in/email`, {
+    method: "POST",
+    // better-auth rejects state-changing requests without an Origin; browsers
+    // always send one.
+    headers: { "content-type": "application/json", origin: BASE },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    if (process.env.DEBUG_AUTH) console.log("  sign-in failed:", response.status, await response.text());
+    return undefined;
+  }
+  const setCookie = response.headers.getSetCookie?.() ?? [];
+  return setCookie.map((c) => c.split(";")[0]).join("; ") || undefined;
+}
+
 async function main() {
+  await addTeacher("teacher@example.org", "Test Teacher", "smoke-test-password");
+  await addTeacher("other@example.org", "Other Teacher", "smoke-test-password");
   let server = await start();
-  const hostId = randomUUID();
 
   try {
-    console.log("lobby creation");
+    console.log("authentication");
     const health = await fetch(`${BASE}/parties/health`);
     check("health endpoint responds", health.ok);
 
-    const created = await createLobby(hostId);
+    const anonymous = await createLobby(undefined);
+    check("a stranger cannot open a lobby", anonymous.status === 401, `got ${anonymous.status}`);
+
+    const wrongPassword = await signIn("teacher@example.org", "not-the-password");
+    check("a wrong password gets no session", wrongPassword === undefined);
+
+    const cookie = await signIn("teacher@example.org", "smoke-test-password");
+    check("a teacher can sign in", !!cookie);
+
+    console.log("lobby creation");
+    const created = await createLobby(cookie);
     const code = created.body.code ?? "";
     check("server allocates a code", created.status === 201 && /^[A-Z0-9]{6}$/.test(code), code);
 
-    const second = await createLobby(hostId);
+    const second = await createLobby(cookie);
     check(
       "a teacher cannot open a second lobby",
       second.status === 409 && second.body.code === code,
       `got ${second.status}`,
     );
 
-    const other = await createLobby(randomUUID());
+    const otherCookie = await signIn("other@example.org", "smoke-test-password");
+    const other = await createLobby(otherCookie);
     check("a different teacher can", other.status === 201 && other.body.code !== code);
 
-    const unknown = await createLobby(randomUUID(), "nope");
+    const unknown = await createLobby(cookie, "nope");
     check("unknown games are rejected", unknown.status === 400);
 
     console.log("playing a round");
-    const host = new TestClient(code, hostId);
+    const host = new TestClient(code, randomUUID(), cookie, "host");
     await host.ready();
     host.send({ type: "host", gameId: "example" });
     check(
-      "host is recognised as host",
+      "the session identifies the host, whatever id the client sends",
       await host.waitUntil("lobby-state", (m) =>
-        m.state.players.some((p) => p.isHost && p.id === hostId),
+        m.state.players.some((p) => p.isHost && p.connected && p.name === "Test Teacher"),
       ),
     );
 
@@ -166,6 +208,21 @@ async function main() {
       await player.waitUntil("lobby-state", (m) => m.state.players.some((p) => p.name === "Alice")),
     );
 
+    // A teacher opening the play page for their own lobby carries the same
+    // cookie; they must become an ordinary player, not the host.
+    const teacherAsPlayer = new TestClient(code, randomUUID(), cookie, "player");
+    await teacherAsPlayer.ready();
+    teacherAsPlayer.send({ type: "join", name: "Teacher Testing" });
+    check(
+      "the teacher's own play page joins as a player",
+      await host.waitUntil(
+        "lobby-state",
+        (m) =>
+          m.state.players.some((p) => p.isHost && p.name === "Test Teacher") &&
+          m.state.players.some((p) => !p.isHost && p.name === "Teacher Testing"),
+      ),
+    );
+
     host.send({ type: "start" });
     await new Promise((r) => setTimeout(r, 200));
     host.send({ type: "begin-countdown" });
@@ -184,28 +241,46 @@ async function main() {
     const impostorError = await impostor.waitFor("error");
     check("only the host can restart", impostorError?.message === "Only host can restart");
 
+    console.log("closing a lobby");
+    host.send({ type: "close-lobby" });
+    const hostClosed = await host.waitFor("lobby-closed");
+    check("the host is told the lobby closed", hostClosed?.reason === "host-closed");
+    const playerClosed = await player.waitFor("lobby-closed");
+    check("so is everyone still in it", playerClosed?.reason === "host-closed");
+
+    const reopened = await createLobby(cookie);
+    check(
+      "closing frees the teacher to open another",
+      reopened.status === 201 && reopened.body.code !== code,
+      `got ${reopened.status}`,
+    );
+
     console.log("unknown lobbies");
     const ghost = new TestClient("ZZZZZZ", randomUUID());
     await ghost.ready();
     const ghostClosed = await ghost.waitFor("lobby-closed");
     check("unknown code is told to stop reconnecting", ghostClosed?.reason === "not-found");
 
-    for (const client of [host, player, stray, impostor, ghost, pretender]) client.close();
+    for (const client of [host, player, stray, impostor, ghost, pretender, teacherAsPlayer])
+      client.close();
 
     console.log("restart recovery");
     await stop(server);
     server = await start();
-    const afterRestart = await createLobby(hostId);
+    const afterRestart = await createLobby(cookie);
     check(
       "the lobby survives a restart",
-      afterRestart.status === 409 && afterRestart.body.code === code,
+      afterRestart.status === 409 && afterRestart.body.code === reopened.body.code,
       `got ${afterRestart.status}`,
     );
 
-    const rejoin = new TestClient(code, hostId);
+    const rejoin = new TestClient(reopened.body.code!, randomUUID(), cookie, "host");
     await rejoin.ready();
     const restored = await rejoin.waitFor("lobby-state");
-    check("state comes back with it", restored?.state.players.some((p) => p.name === "Alice") === true);
+    check(
+      "the teacher is still its host after the restart",
+      restored?.state.players.some((p) => p.isHost && p.name === "Test Teacher") === true,
+    );
     rejoin.close();
   } finally {
     await stop(server);

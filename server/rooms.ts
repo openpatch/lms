@@ -36,12 +36,13 @@ function generateCode(length = 6): string {
 
 export class Room {
   state: LobbyState;
-  /** Who owns this lobby. Today the host's stable client id; a teacher id once there are accounts. */
+  /** The teacher account that opened this lobby. */
   readonly teacherId: string;
   readonly expiresAt: number;
 
   private readonly sockets = new Map<string, WebSocket>();
   private readonly onClosed: (room: Room) => void;
+  private closed = false;
   private countdownTimer: NodeJS.Timeout | undefined;
   private roundTimer: NodeJS.Timeout | undefined;
   private ttlTimer: NodeJS.Timeout;
@@ -86,6 +87,9 @@ export class Room {
   }
 
   save(): void {
+    // Closing hangs up every socket, and those close handlers still want to
+    // record that a player went away. Writing then would put the lobby back.
+    if (this.closed) return;
     store.saveLobby(this.teacherId, this.state, this.expiresAt);
   }
 
@@ -213,6 +217,9 @@ export class Room {
 
   /** Tell everyone the lobby is gone, hang up, and forget it. */
   close(reason: LobbyClosedReason): void {
+    if (this.closed) return;
+    this.closed = true;
+
     clearTimeout(this.ttlTimer);
     clearTimeout(this.countdownTimer);
     clearTimeout(this.roundTimer);
@@ -252,7 +259,7 @@ export type CreateResult = { ok: true; room: Room } | { ok: false; reason: "acti
  * Open a lobby for a teacher. One at a time: a teacher who already has one gets
  * told which, rather than silently losing the class that is still in it.
  */
-export function createRoom(teacherId: string, gameId: string): CreateResult {
+export function createRoom(teacherId: string, gameId: string, hostName: string): CreateResult {
   const existing = roomOfTeacher(teacherId);
   if (existing) return { ok: false, reason: "active-lobby", code: existing.state.code };
 
@@ -264,7 +271,11 @@ export function createRoom(teacherId: string, gameId: string): CreateResult {
     code,
     gameId,
     hostId: teacherId,
-    players: [],
+    // The host seat belongs to the teacher who opened the lobby; they fill it
+    // when they connect.
+    players: [
+      { id: teacherId, name: hostName, isHost: true, score: 0, connected: false },
+    ],
     phase: "lobby",
     gameData: null,
     settings: spec ? defaultGameSettings(spec) : null,

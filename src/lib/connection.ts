@@ -27,17 +27,6 @@ export function getStableId(roomId: string): string {
   return id;
 }
 
-/** The id this browser uses when opening lobbies. Becomes a teacher account id later. */
-export function getHostId(): string {
-  const key = "lms:hostId";
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(key, id);
-  }
-  return id;
-}
-
 export interface GameConnection {
   socket: ReturnType<typeof usePartySocket> | null;
   lobbyState: LobbyState | null;
@@ -49,14 +38,20 @@ export interface GameConnection {
   connected: boolean;
 }
 
+/** Which screen is connecting. The host seat is only ever offered to "host". */
+export type ConnectionRole = "host" | "player";
+
 /**
- * Talk to one lobby. The host must pass the same id it opened the lobby with,
- * or the server will not recognise it as the host.
+ * Talk to one lobby. A student is identified by a per-lobby id kept in this
+ * browser; the host is recognised from their session cookie by the server, so
+ * host identity is never something the client can claim. The role says which
+ * screen this is, so a teacher can open the play page for their own lobby
+ * without taking over the host seat.
  */
 export function useGameConnection(
   roomId: string,
   onMessage?: (msg: ServerMessage) => void,
-  connectionId?: string,
+  role: ConnectionRole = "player",
 ): GameConnection {
   const [lobbyState, setLobbyState] = useState<LobbyState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +61,7 @@ export function useGameConnection(
   onMessageRef.current = onMessage;
   const socketRef = useRef<ReturnType<typeof usePartySocket> | null>(null);
 
-  const stableId = connectionId ?? getStableId(roomId);
+  const stableId = getStableId(roomId);
 
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
@@ -96,6 +91,7 @@ export function useGameConnection(
     host: SERVER_HOST,
     room: roomId,
     id: stableId,
+    query: { role },
     onOpen() {
       setConnected(true);
       setError(null);

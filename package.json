@@ -12,10 +12,12 @@
     "check:games": "tsx scripts/check-games.ts",
     "preview": "vite preview",
     "start": "tsx server/index.ts",
-    "check:server": "tsx scripts/check-server.ts"
+    "check:server": "tsx scripts/check-server.ts",
+    "teacher": "tsx scripts/teacher.ts"
   },
   "dependencies": {
     "@types/katex": "^0.16.8",
+    "better-auth": "^1.7.4",
     "i18next": "^26.4.2",
     "katex": "^0.18.7",
     "mathlive": "^0.110.0",
