@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "start": "node --import tsx server/index.ts",
     "check:server": "tsx scripts/check-server.ts",
-    "teacher": "tsx scripts/teacher.ts"
+    "teacher": "tsx scripts/teacher.ts",
+    "bench": "node --import tsx scripts/bench.ts"
   },
   "dependencies": {
     "@types/katex": "^0.16.8",

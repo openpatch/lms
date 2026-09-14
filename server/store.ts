@@ -65,11 +65,20 @@ export interface StoredLobby {
   state: LobbyState;
 }
 
+/**
+ * Set once the database is closed. Sockets hang up during shutdown and their
+ * close handlers still try to record that a player left, which would run a
+ * finalized statement and take the process down with it.
+ */
+let closed = false;
+
 export function saveLobby(teacherId: string, state: LobbyState, expiresAt: number): void {
+  if (closed) return;
   upsertLobby.run(state.code, teacherId, state.gameId, expiresAt, JSON.stringify(state));
 }
 
 export function deleteLobby(code: string): void {
+  if (closed) return;
   removeLobby.run(code);
 }
 
@@ -91,6 +100,7 @@ export function saveResults(
   gameId: string,
   results: GameResult[],
 ): void {
+  if (closed) return;
   const now = Date.now();
   for (const result of results) {
     insertResult.run(code, teacherId, gameId, result.playerName, result.score, now);
@@ -98,5 +108,7 @@ export function saveResults(
 }
 
 export function close(): void {
+  if (closed) return;
+  closed = true;
   db.close();
 }
