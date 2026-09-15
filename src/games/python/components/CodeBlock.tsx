@@ -1,11 +1,16 @@
-import type { ReactNode } from "react";
+import Block, {
+  CodeLine as Line,
+  type CodeBlockProps,
+  type Language,
+} from "../../../components/CodeBlock";
 
 /**
- * A Python listing, coloured the way an editor would colour it.
+ * A Python listing.
  *
  * The highlighting is deliberately crude: it knows the keywords, the builtins
  * and the turtle commands of the hyperbook's Turtle-Lernpfad, and treats
  * everything else as a plain name. That is the whole language the game uses.
+ * The layout of the block itself is src/components/CodeBlock.tsx.
  */
 
 const KEYWORDS = new Set([
@@ -53,10 +58,10 @@ const BUILTINS = new Set([
   "speed",
 ]);
 
-// Strings, comments, numbers, names, everything else one character at a time.
+// Python's "//" is floor division, not a comment, so only "#" starts one.
 const TOKEN = /("[^"]*"?|'[^']*'?|#.*$|\d+\.?\d*|[A-Za-z_][A-Za-z_0-9]*|[\s\S])/g;
 
-function classOf(token: string): string {
+function classify(token: string): string {
   if (token.startsWith('"') || token.startsWith("'")) return "text-emerald-700";
   if (token.startsWith("#")) return "text-slate-400 italic";
   if (/^\d/.test(token)) return "text-orange-600";
@@ -66,83 +71,14 @@ function classOf(token: string): string {
   return "";
 }
 
-/** One line, split into coloured spans. */
+const python: Language = { token: TOKEN, classify };
+
 export function CodeLine({ text }: { text: string }) {
-  const tokens = text.match(TOKEN) ?? [];
-  return (
-    <>
-      {tokens.map((token, index) => {
-        const className = classOf(token);
-        return className ? (
-          <span key={index} className={className}>
-            {token}
-          </span>
-        ) : (
-          <span key={index}>{token}</span>
-        );
-      })}
-    </>
-  );
+  return <Line text={text} language={python} />;
 }
 
-export interface CodeBlockProps {
-  lines: string[];
-  /** Line numbers down the left edge. */
-  numbered?: boolean;
-  /** Makes every line a button — used by the stage that hunts for the bug. */
-  onPickLine?: (index: number) => void;
-  /** Marks one line, e.g. the one the player just picked. */
-  marked?: number | null;
-  className?: string;
-  /** Rendered under the listing, inside the same card. */
-  children?: ReactNode;
-}
+export type { CodeBlockProps };
 
-export default function CodeBlock({
-  lines,
-  numbered = false,
-  onPickLine,
-  marked = null,
-  className = "",
-  children,
-}: CodeBlockProps) {
-  return (
-    <div
-      className={`w-full overflow-x-auto rounded-xl border-2 border-slate-200 bg-slate-50 py-3 text-left font-mono text-sm leading-relaxed text-slate-800 sm:text-base ${className}`}
-    >
-      {lines.map((line, index) => {
-        const body = (
-          <>
-            {numbered && (
-              <span className="mr-3 inline-block w-5 shrink-0 select-none text-right text-xs text-slate-400">
-                {index + 1}
-              </span>
-            )}
-            <span className="whitespace-pre">{line === "" ? " " : <CodeLine text={line} />}</span>
-          </>
-        );
-
-        // A blank line separates two parts of a program; it is never the bug.
-        if (!onPickLine || line === "") {
-          return (
-            <div key={index} className="px-4 whitespace-pre">
-              {body}
-            </div>
-          );
-        }
-        return (
-          <button
-            key={index}
-            onClick={() => onPickLine(index)}
-            className={`flex w-full items-baseline px-4 text-left transition-colors ${
-              marked === index ? "bg-game-100" : "hover:bg-game-50"
-            }`}
-          >
-            {body}
-          </button>
-        );
-      })}
-      {children}
-    </div>
-  );
+export default function CodeBlock(props: CodeBlockProps) {
+  return <Block {...props} language={python} />;
 }

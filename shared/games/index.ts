@@ -8,6 +8,7 @@ import { chanceSpec } from "./chance";
 import { extremumSpec } from "./extremum";
 import { termeSpec } from "./terme";
 import { pythonSpec } from "./python";
+import { javaSpec } from "./java";
 
 /**
  * Every mini game known to client and server. Adding a game means adding its
@@ -23,6 +24,7 @@ export const gameSpecs: Record<string, GameSpec> = {
   extremum: extremumSpec,
   terme: termeSpec,
   python: pythonSpec,
+  java: javaSpec,
 };
 
 export function getGameSpec(id: string): GameSpec | undefined {

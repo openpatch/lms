@@ -16,7 +16,7 @@ import type {
   ParsonsQuestion,
   TurtleQuestion,
 } from "../../shared/games/python";
-import { answerMatches, sequenceMatches, sequenceScore } from "../../shared/python-code";
+import { answerMatches, sequenceMatches, sequenceScore } from "../../shared/code-answer";
 import {
   drawingFingerprint,
   fingerprintDistance,

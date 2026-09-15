@@ -112,6 +112,7 @@ import chanceGame from "../games/chance";
 import extremumGame from "../games/extremum";
 import termeGame from "../games/terme";
 import pythonGame from "../games/python";
+import javaGame from "../games/java";
 
 export const games: Record<string, GameDefinition> = {
   example: exampleGame,
@@ -122,6 +123,7 @@ export const games: Record<string, GameDefinition> = {
   extremum: extremumGame,
   terme: termeGame,
   python: pythonGame,
+  java: javaGame,
 };
 
 // Every spec needs a client definition, and vice versa.

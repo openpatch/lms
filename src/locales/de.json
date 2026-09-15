@@ -577,6 +577,158 @@
           "rules": "Finde in {{questionsPerRound}} Programmen die Zeile, in der der Fehler steckt. Je schneller du sie findest, desto mehr Punkte. Du hast {{duration}} Sekunden."
         }
       }
+    },
+    "java": {
+      "title": "Java-Parcours",
+      "description": "Java lesen, Ausgaben vorhersagen, Struktogramme zuordnen und Fehler finden.",
+      "ask": {
+        "output": "Was gibt das Programm aus?",
+        "value": "Welchen Wert hat {{name}} am Ende?",
+        "count": "Wie oft wird die innerste Anweisung ausgeführt?",
+        "call": "Was gibt der Aufruf aus?",
+        "bubblePass": "Wie sieht das Feld nach dem ersten Durchlauf von Bubblesort aus?",
+        "selectionPass": "Wie sieht das Feld nach dem ersten Schritt von Sortieren durch Auswählen aus?",
+        "bubbleSwaps": "Wie oft wird im ersten Durchlauf von Bubblesort vertauscht?",
+        "bubbleComparisons": "Wie viele Vergleiche macht der erste Durchlauf von Bubblesort?",
+        "linearComparisons": "Wie viele Werte sieht sich die lineare Suche an, bis sie antworten kann?",
+        "linearResult": "Welchen Index liefert die lineare Suche zurück? (-1, wenn sie nichts findet)"
+      },
+      "prompt": {
+        "output": "Was gibt das Programm aus?",
+        "type": "Welcher Datentyp passt für {{what}}?"
+      },
+      "note": {
+        "input": "Eingetippt wird: {{value}}"
+      },
+      "answerOne": "Deine Antwort",
+      "answerSeveral": "Alle Ausgaben, durch Leerzeichen getrennt",
+      "answerHint_one": "Das Programm gibt eine Zeile aus.",
+      "answerHint_other": "Das Programm gibt {{count}} Zeilen aus — schreibe sie in der richtigen Reihenfolge.",
+      "noOutput": "keine Ausgabe",
+      "readingPrompt": "Wie setzt Java die Klammern?",
+      "structogramPrompt": "Welches Struktogramm gehört zu diesem Programm?",
+      "bugsPrompt": "Tippe die Zeile an, die den Fehler enthält.",
+      "typeCase": {
+        "students": "die Anzahl der Schülerinnen und Schüler",
+        "grade": "eine Note wie 2.3",
+        "passed": "ob jemand bestanden hat",
+        "initial": "den ersten Buchstaben eines Namens",
+        "name": "den Namen einer Person",
+        "price": "einen Preis in Euro und Cent",
+        "index": "die Position in einem Feld",
+        "open": "ob ein Fenster offen ist",
+        "city": "den Namen einer Stadt",
+        "seconds": "eine Anzahl von Sekunden"
+      },
+      "typeOf": {
+        "students": "Eine Anzahl ist eine ganze Zahl — int.",
+        "grade": "Eine Note hat Nachkommastellen — double.",
+        "passed": "Ja oder nein, mehr gibt es nicht — boolean.",
+        "initial": "Genau ein Zeichen — char, in einfachen Anführungszeichen.",
+        "name": "Mehrere Zeichen — String, in doppelten Anführungszeichen.",
+        "price": "Euro und Cent haben Nachkommastellen — double.",
+        "index": "Ein Index ist eine ganze Zahl — int.",
+        "open": "Offen oder zu — boolean.",
+        "city": "Eine Zeichenkette — String.",
+        "seconds": "Sekunden werden ganzzahlig gezählt — int."
+      },
+      "why": {
+        "widening": "Sobald ein double beteiligt ist, rechnet Java als Kommazahl — und gibt sie mit .0 aus.",
+        "intDivision": "Zwei ganze Zahlen ergeben eine Ganzzahldivision: der Rest fällt weg.",
+        "cast": "Das (double) vor dem ersten Wert macht daraus eine Division mit Kommazahlen.",
+        "truncate": "(int) schneidet die Nachkommastellen ab, es wird nicht gerundet.",
+        "round": "Math.round rundet zur nächsten ganzen Zahl.",
+        "concat": "Java arbeitet von links nach rechts: erst wird die Zahl an den Text gehängt, dann die zweite.",
+        "bracketed": "Die Klammer wird zuerst gerechnet und erst dann an den Text gehängt.",
+        "zeroIndex": "Gezählt wird ab 0: charAt(0) liefert das erste Zeichen.",
+        "length": "length() zählt alle Zeichen; der letzte Index ist length() - 1.",
+        "substring": "substring(a, b) endet vor der Position b.",
+        "equals": "Zeichenketten werden mit equals verglichen, nicht mit =="
+      },
+      "structogram": {
+        "yes": "ja",
+        "no": "nein",
+        "right": "das richtige Struktogramm"
+      },
+      "bugs": {
+        "wasLine": "Zeile {{line}}:",
+        "line": "Zeile {{line}}",
+        "semicolon": "Jede Anweisung endet mit einem Semikolon.",
+        "paren": "Die runde Klammer um die Bedingung wird nicht wieder geschlossen.",
+        "assign": "In einer Bedingung wird mit == verglichen; ein einfaches = weist zu.",
+        "comma": "Java schreibt das Dezimaltrennzeichen als Punkt, nicht als Komma.",
+        "charQuotes": "Ein char steht in einfachen Anführungszeichen; doppelte machen daraus einen String.",
+        "boolean": "Die Wahrheitswerte heißen true und false, klein geschrieben.",
+        "case": "Java unterscheidet Groß- und Kleinschreibung — die Methode heißt println.",
+        "name": "Ein Bezeichner darf keine Leerzeichen enthalten.",
+        "parseInt": "IO.readln liefert einen String; für eine Zahl muss Integer.parseInt darum.",
+        "emptyIf": "Das Semikolon hinter der Bedingung beendet die Verzweigung — der Block läuft immer.",
+        "endless": "Der Zähler entfernt sich vom Abbruchkriterium — die Schleife endet nie.",
+        "offByOne": "Die Schleife läuft einen Schritt zu weit; gültig ist i < feld.length.",
+        "index": "Gezählt wird ab 0: der letzte gültige Index ist length - 1.",
+        "equals": "Zeichenketten werden mit equals verglichen; == vergleicht die Verweise.",
+        "intDivision": "Beide Werte sind int, also wird ganzzahlig geteilt — der Schnitt stimmt nicht.",
+        "concat": "Das Plus hängt hier an einen Text an, statt zu addieren; die Summe gehört in eine Klammer.",
+        "shadow": "Ein innerer Block darf keine Variable anlegen, die es außen schon gibt — das zweite int ist zu viel.",
+        "noReturn": "Der Wert wird berechnet, aber nicht zurückgegeben — es fehlt return."
+      },
+      "stages": {
+        "output": {
+          "name": "Java als Taschenrechner",
+          "summary": "Vorhersagen, was IO.println ausgibt",
+          "rules": "Sage für {{questionsPerRound}} kurze Programme voraus, was sie ausgeben — im Kopf, ohne Taschenrechner. Achte besonders auf / und %: zwei ganze Zahlen ergeben eine Ganzzahldivision. Du hast {{duration}} Sekunden."
+        },
+        "types": {
+          "name": "Datentypen",
+          "summary": "int oder double, char oder String — und was das Plus macht",
+          "rules": "Entscheide bei {{questionsPerRound}} Aufgaben, welche Ausgabe entsteht oder welcher Datentyp passt. 9 und 9.0 sind zwei verschiedene Antworten. Du hast {{duration}} Sekunden."
+        },
+        "variables": {
+          "name": "Variablen verfolgen",
+          "summary": "Welcher Wert steckt am Ende in der Variablen?",
+          "rules": "Verfolge in {{questionsPerRound}} Programmen, was in den Variablen landet. Das = bedeutet nicht »ist gleich«, sondern »bekommt den Wert«. Du hast {{duration}} Sekunden."
+        },
+        "logic": {
+          "name": "Logik-Duell",
+          "summary": "true oder false — &&, || und ! auf Tempo",
+          "rules": "Entscheide für {{questionsPerRound}} Ausdrücke, ob sie true oder false ergeben. Denk an die Rangfolge: ! vor && vor ||. Je schneller du richtig liegst, desto mehr Punkte. Du hast {{duration}} Sekunden."
+        },
+        "branch": {
+          "name": "Verzweigungen",
+          "summary": "Welcher Zweig wird ausgeführt?",
+          "rules": "Entscheide bei {{questionsPerRound}} Programmen, welche Ausgabe erscheint. Java prüft von oben nach unten und nimmt den ersten Zweig, der passt. Du hast {{duration}} Sekunden."
+        },
+        "loops": {
+          "name": "Schleifen",
+          "summary": "for, while, do-while und Verschachtelung",
+          "rules": "Lies {{questionsPerRound}} Schleifen: mal zählst du die Durchläufe, mal schreibst du alle ausgegebenen Werte der Reihe nach auf. Achte darauf, ob die Bedingung im Kopf oder im Fuß steht. Du hast {{duration}} Sekunden."
+        },
+        "structogram": {
+          "name": "Struktogramme",
+          "summary": "Programm und Struktogramm einander zuordnen",
+          "rules": "Ordne {{questionsPerRound}} Programmen das Struktogramm zu, das dasselbe sagt. Achte darauf, welcher Zweig wohin gehört und ob die Bedingung oben oder unten steht. Du hast {{duration}} Sekunden."
+        },
+        "methods": {
+          "name": "Methoden",
+          "summary": "Parameter, Argumente und return",
+          "rules": "Sage für {{questionsPerRound}} Programme voraus, was der Aufruf ausgibt. Achte auf die Reihenfolge der Argumente — und darauf, ob die Methode überhaupt etwas zurückgibt. Du hast {{duration}} Sekunden."
+        },
+        "arrays": {
+          "name": "Felder",
+          "summary": "Index, length und der Durchlauf",
+          "rules": "Beantworte {{questionsPerRound}} Fragen zu Feldern. Denk daran: gezählt wird ab 0, und length steht ohne Klammern. Du hast {{duration}} Sekunden."
+        },
+        "sorting": {
+          "name": "Suchen und Sortieren",
+          "summary": "Einen Durchlauf von Hand ausführen",
+          "rules": "Führe bei {{questionsPerRound}} Aufgaben ein Verfahren von Hand aus: ein Durchlauf Bubblesort, ein Schritt Sortieren durch Auswählen oder die Vergleiche der linearen Suche. Mehrere Zahlen schreibst du der Reihe nach, durch Leerzeichen getrennt. Du hast {{duration}} Sekunden."
+        },
+        "bugs": {
+          "name": "Fehlersuche",
+          "summary": "Die eine fehlerhafte Zeile finden",
+          "rules": "Finde in {{questionsPerRound}} Programmen die Zeile, in der der Fehler steckt. Je schneller du sie findest, desto mehr Punkte. Du hast {{duration}} Sekunden."
+        }
+      }
     }
   },
   "settings": {
@@ -670,7 +822,40 @@
     "bugTasks": "Fehlerarten",
     "bugTasksMixed": "Gemischt",
     "bugTasksSyntax": "Nur Syntaxfehler",
-    "bugTasksSemantic": "Nur Denkfehler"
+    "bugTasksSemantic": "Nur Denkfehler",
+    "arithmeticTasks": "Aufgabentypen",
+    "arithmeticTasksMixed": "Gemischt",
+    "arithmeticTasksBasic": "Nur Grundrechenarten",
+    "arithmeticTasksDivision": "Nur Division und Modulo",
+    "typeTasks": "Aufgabentypen",
+    "typeTasksMixed": "Gemischt",
+    "typeTasksNumbers": "Nur int und double",
+    "typeTasksStrings": "Nur Texte und Zeichen",
+    "typeTasksNaming": "Nur Datentyp auswählen",
+    "withShorthand": "Auch Kurzformen wie += und ++",
+    "boolTasks": "Aufgabentypen",
+    "boolTasksMixed": "Gemischt",
+    "boolTasksValues": "Nur true und false",
+    "boolTasksVariables": "Nur Ausdrücke mit Variablen",
+    "withCompoundConditions": "Auch Bedingungen mit && und ||",
+    "loopKind": "Schleifenart",
+    "loopKindMixed": "Gemischt",
+    "loopKindFor": "Nur Zählschleifen",
+    "loopKindWhile": "Nur kopfgesteuerte Schleifen",
+    "loopKindDoWhile": "Nur fußgesteuerte Schleifen",
+    "withNestedLoops": "Auch verschachtelte Schleifen",
+    "methodTasks": "Aufgabentypen",
+    "methodTasksMixed": "Gemischt",
+    "methodTasksReturns": "Nur Rückgabewerte",
+    "methodTasksOrder": "Nur Reihenfolge der Argumente",
+    "arrayTasks": "Aufgabentypen",
+    "arrayTasksMixed": "Gemischt",
+    "arrayTasksIndex": "Nur Index und length",
+    "arrayTasksTraverse": "Nur Felder durchlaufen",
+    "sortTasks": "Aufgabentypen",
+    "sortTasksMixed": "Gemischt",
+    "sortTasksSearch": "Nur lineare Suche",
+    "sortTasksSort": "Nur Sortierverfahren"
   },
   "auth": {
     "title": "Anmeldung für Lehrkräfte",

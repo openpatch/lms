@@ -50,8 +50,11 @@ framework and is the same for every game.
 | `src/components/TermInput.tsx` | A MathLive math field: the player writes a term, the stage gets LaTeX |
 | `src/components/ParameterSliders.tsx` | One slider per parameter, for "tune it until it fits" stages |
 | `shared/<topic>-math.ts`, `shared/polynomial.ts`, `shared/matching.ts`, `shared/term-algebra.ts` | Topic logic both sides share: fractions, roots, probability trees, polynomials, card assignments, terms with several variables |
-| `shared/python-turtle.ts`, `shared/python-code.ts` | The turtle a program is written into and drawn from, and how a typed answer is read |
-| `src/games/python/components/CodeBlock.tsx` | A Python listing, coloured; optionally numbered and clickable line by line |
+| `shared/code-answer.ts` | How a typed answer is read, in any language: numbers as numbers, `wahr` for `true`, a multi-line output as a sequence |
+| `shared/python-turtle.ts`, `shared/python-code.ts` | The turtle a program is written into and drawn from, and the shape of a Python listing |
+| `shared/java-code.ts`, `shared/java-structogram.ts` | How Java prints a value and what `/` and `%` do to two ints; the Struktogramm both sides draw |
+| `src/components/CodeBlock.tsx` | A listing, optionally numbered and clickable line by line. A `Language` — one per game, in `src/games/<game>/components/CodeBlock.tsx` — says how to split a line and which token gets which colour |
+| `src/games/java/components/Structogram.tsx` | A Struktogramm drawn with borders: statement, Verzweigung, kopf- and fußgesteuerte Schleife |
 | `scripts/check-games.ts` | `pnpm check:games` — smoke test for every registered game |
 | `src/lib/auth.ts`, `src/pages/Login.tsx`, `src/components/RequireTeacher.tsx` | Signing a teacher in, and the screens that need one |
 | `scripts/check-server.ts` | `pnpm check:server` — signs in, opens a lobby, plays a round, restarts the server |
@@ -367,6 +370,7 @@ serves in `grades`; this table says which vorhaben a stage was built for.
 | `UV-MAT-Q1GK-01` / `Q1LK-01` | Extremwertprobleme | `extremum` | derive (hilfsmittelfrei ableiten), optimize (Nebenbedingung → Zielfunktion → Maximum) |
 | EF/Q1 Analysis | Ableitungsbegriff | `analysis` | multiple-choice, draw-graph, draw-derivative |
 | `UV-INF-SEK1-10-01` | Computerprogramme mit System entwickeln | `python` | output (Grundrechenarten), variables (Variablen, Eingaben), loops (for/while/verschachtelt), branch (if/elif/else), logic (and/or/not), functions (Parameter, return), lists (strukturierter Datentyp), turtle (Programm → Bild), parsons (Quelltexte erstellen), bugs (Quelltexte auf Korrektheit prüfen) |
+| `UV-INF-EF-02` bis `EF-06` | Grundlagen der Programmierung mit Java | `java` | output (Rechnen, `/` und `%`), types (Datentypen, Typumwandlung), variables (Zuweisungen, Kurzformen) — EF-II; logic (`&&`/`\|\|`/`!`), branch (Verzweigungen), loops (for/while/do-while/verschachtelt), structogram (Mehrfachrepräsentation) — EF-III; sorting (Suchen und Sortieren) — EF-IV; arrays (eindimensionale Felder) — EF-V; methods (Untermethoden mit und ohne Rückgabewert) — EF-VI; bugs (Fehlermeldungen lesen und korrigieren) |
 
 Two rules the SILP sets that the games keep to: every stage marked
 *hilfsmittelfrei* has to be solvable without a calculator (from year 7 every
@@ -374,6 +378,24 @@ class test has such a part), and the Zufallsexperimente stay two-stage —
 conditional probabilities and the Vierfeldertafel belong to the EF. A third
 holds for `python`: the fachkonferenz settled on **Python** for UV 10.1, so the
 game is Python and nothing else.
+
+`java` keeps to two more. The SILP calls Mehrfachrepräsentation *verbindlich* for
+EF-III — every control structure shown as a Flussdiagramm **and** as a
+Struktogramm — which is why `structogram` is a station of its own rather than an
+illustration on a rules screen. And EF-V sets arrays as the **only** data
+structure of the Einführungsphase, so nothing in the game reaches past a
+one-dimensional `int[]`.
+
+The stations follow the chapter order of the hyperbook's Lernpfad *Grundlagen
+der Programmierung mit Java*, so a station can be played the week its lesson is
+taught, and they stay inside the Java that Lernpfad teaches: `void main()` and
+`IO.println` rather than `public static void main(String[] args)` and
+`System.out.println`, the four primitive types, `String`, and one array.
+
+Kapitel 6 of that Lernpfad — Objektorientierung, `UV-INF-EF-07` with its
+24 hours — is deliberately not in the game. It is about modelling with class
+diagrams rather than about reading a listing, so it needs a diagram editor and
+belongs in a game of its own.
 
 The `terme` stages follow the chapter order of EdM 8, Kapitel 2, so a stage can be
 played the week its lesson is taught: build and evaluate (2.1), collect (2.2/2.3),
@@ -448,21 +470,34 @@ as they require:
 
 ## Reading a program
 
-The `python` game asks the player to be the interpreter, so every stage shows a
-listing and takes back what the program does. Three things make that work.
+The `python` and `java` games ask the player to be the machine, so every stage
+shows a listing and takes back what the program does. Three things make that
+work.
 
-**The listing.** `CodeBlock` colours a line the way an editor would — keywords,
-the builtins and turtle commands of the Lernpfad, strings, numbers, comments —
-and knows nothing else, because nothing else is in the Python those lessons
-teach. With `numbered` and `onPickLine` the same component becomes the bug hunt:
-every line is a button, and tapping one is the answer.
+**The listing.** `src/components/CodeBlock.tsx` lays a listing out and knows no
+language at all; each game hands it a `Language` that splits a line into tokens
+and colours them. Both are deliberately crude — the Python one knows the
+keywords, builtins and turtle commands of the Turtle-Lernpfad, the Java one the
+primitive types, control structures and the handful of calls of the Java
+Lernpfad — because nothing else is in the language those lessons teach. The two
+tokenizers are not interchangeable: `//` starts a comment in Java and is floor
+division in Python. With `numbered` and `onPickLine` the same component becomes
+the bug hunt: every line is a button, and tapping one is the answer.
 
-**The answer.** A value typed into a box is compared by `shared/python-code.ts`,
+**The answer.** A value typed into a box is compared by `shared/code-answer.ts`,
 which makes the obvious spellings equal: numbers as numbers, so `7`, `7.0` and
 `7,0` are one answer and the int/float distinction never costs a point it was
-not asked about; `wahr` for `True`; any of spaces, commas or newlines between
+not asked about; `wahr` for `true`; any of spaces, commas or newlines between
 the lines of a multi-line output. A program that prints several lines is scored
 line by line, so reading four of five loop passes correctly is worth something.
+
+That leniency is why the Java game's `types` station offers its answers instead
+of taking one: there, `9` and `9.0` *are* different answers, and a box that
+accepted both would hide the very thing the question is about. Everything the
+station needs to compute exactly — an integer division that truncates, a double
+printed with its `.0` — is in `shared/java-code.ts`, and the generators keep to
+divisors whose quotient terminates so that nobody is asked to write down
+`2.3333333333333335`.
 
 **The picture.** A turtle program is a `TurtleCommand[]`, not Python text:
 `toPython()` writes the lines the player reads and `runTurtle()` walks the same
@@ -474,6 +509,24 @@ different. Different is measured on the picture rather than the program:
 box, exactly as the SVG fits it to its card, so a square drawn twice as large
 has the same fingerprint and is thrown away. Without that check a "wrong" answer
 could be pixel-for-pixel the right one.
+
+## Drawing a Struktogramm
+
+The `structogram` station of the Java game is the same idea one representation
+further along: a program and four diagrams, only one of which says what the
+program says. A `Structogram` (`shared/java-structogram.ts`) is a list of boxes —
+a statement, a Verzweigung with a yes- and a no-branch, or a loop whose test sits
+in the head or in the foot — and `src/games/java/components/Structogram.tsx`
+draws them with borders and one small SVG for the triangle over a Verzweigung.
+A box carries the text it shows rather than the code it came from, so the client
+draws a diagram without knowing any Java.
+
+The three wrong answers are mutations of the right one, and each is a
+misconception rather than noise: the branches exchanged, the test moved from the
+head to the foot, a relation off by a step, or two boxes of a sequence swapped.
+`structogramSignature()` flattens a diagram to a string so a mutation that
+changed nothing — swapping two identical boxes — is thrown away instead of being
+offered as a wrong answer that is right.
 
 ## Conventions
 

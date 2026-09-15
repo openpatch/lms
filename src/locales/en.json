@@ -577,6 +577,158 @@
           "rules": "Find the line that holds the mistake in {{questionsPerRound}} programs. The faster you find it, the more points. You have {{duration}} seconds."
         }
       }
+    },
+    "java": {
+      "title": "Java Trail",
+      "description": "Read Java, predict its output, match structograms and hunt down the broken line.",
+      "ask": {
+        "output": "What does the program print?",
+        "value": "What is the value of {{name}} at the end?",
+        "count": "How often does the innermost statement run?",
+        "call": "What does the call print?",
+        "bubblePass": "What does the array look like after the first pass of bubble sort?",
+        "selectionPass": "What does the array look like after the first step of selection sort?",
+        "bubbleSwaps": "How many swaps does the first pass of bubble sort make?",
+        "bubbleComparisons": "How many comparisons does the first pass of bubble sort make?",
+        "linearComparisons": "How many values does the linear search look at before it can answer?",
+        "linearResult": "Which index does the linear search return? (-1 when it finds nothing)"
+      },
+      "prompt": {
+        "output": "What does the program print?",
+        "type": "Which type fits {{what}}?"
+      },
+      "note": {
+        "input": "What gets typed in: {{value}}"
+      },
+      "answerOne": "Your answer",
+      "answerSeveral": "Every line printed, separated by spaces",
+      "answerHint_one": "The program prints one line.",
+      "answerHint_other": "The program prints {{count}} lines — write them in the right order.",
+      "noOutput": "no output",
+      "readingPrompt": "How does Java bracket this?",
+      "structogramPrompt": "Which structogram belongs to this program?",
+      "bugsPrompt": "Tap the line that holds the mistake.",
+      "typeCase": {
+        "students": "the number of students",
+        "grade": "a grade like 2.3",
+        "passed": "whether someone passed",
+        "initial": "the first letter of a name",
+        "name": "a person's name",
+        "price": "a price in euros and cents",
+        "index": "a position in an array",
+        "open": "whether a window is open",
+        "city": "the name of a city",
+        "seconds": "a number of seconds"
+      },
+      "typeOf": {
+        "students": "A count is a whole number — int.",
+        "grade": "A grade has decimals — double.",
+        "passed": "Yes or no, nothing else — boolean.",
+        "initial": "Exactly one character — char, in single quotes.",
+        "name": "Several characters — String, in double quotes.",
+        "price": "Euros and cents have decimals — double.",
+        "index": "An index is a whole number — int.",
+        "open": "Open or shut — boolean.",
+        "city": "A string of characters — String.",
+        "seconds": "Seconds are counted whole — int."
+      },
+      "why": {
+        "widening": "As soon as a double is involved Java keeps the decimals — and prints them with a .0.",
+        "intDivision": "Two whole numbers make an integer division: the remainder is dropped.",
+        "cast": "The (double) in front of the first value turns this into a decimal division.",
+        "truncate": "(int) cuts the decimals off; it does not round.",
+        "round": "Math.round rounds to the nearest whole number.",
+        "concat": "Java works left to right: the number is glued to the text first, then the second one.",
+        "bracketed": "The bracket is computed first and only then glued to the text.",
+        "zeroIndex": "Counting starts at 0: charAt(0) is the first character.",
+        "length": "length() counts every character; the last index is length() - 1.",
+        "substring": "substring(a, b) stops before position b.",
+        "equals": "Strings are compared with equals, never with =="
+      },
+      "structogram": {
+        "yes": "yes",
+        "no": "no",
+        "right": "the right structogram"
+      },
+      "bugs": {
+        "wasLine": "Line {{line}}:",
+        "line": "line {{line}}",
+        "semicolon": "Every statement ends with a semicolon.",
+        "paren": "The bracket around the condition is never closed.",
+        "assign": "A condition compares with ==; a single = assigns.",
+        "comma": "Java writes the decimal separator as a point, not a comma.",
+        "charQuotes": "A char goes in single quotes; double quotes make it a String.",
+        "boolean": "The truth values are true and false, written in lower case.",
+        "case": "Java is case sensitive — the method is called println.",
+        "name": "An identifier cannot contain a space.",
+        "parseInt": "IO.readln hands back a String; a number needs Integer.parseInt around it.",
+        "emptyIf": "The semicolon after the condition ends the branch — the block always runs.",
+        "endless": "The counter moves away from the stopping point — the loop never ends.",
+        "offByOne": "The loop runs one step too far; the valid head is i < array.length.",
+        "index": "Counting starts at 0: the last valid index is length - 1.",
+        "equals": "Strings are compared with equals; == compares the references.",
+        "intDivision": "Both values are int, so this divides as whole numbers — the average is wrong.",
+        "concat": "The plus glues to a text here instead of adding; the sum belongs in brackets.",
+        "shadow": "An inner block cannot declare a variable that already exists outside — the second int is one too many.",
+        "noReturn": "The value is computed but never handed back — return is missing."
+      },
+      "stages": {
+        "output": {
+          "name": "Java as a calculator",
+          "summary": "Predict what IO.println writes",
+          "rules": "Predict the output of {{questionsPerRound}} short programs in your head, without a calculator. Watch out for / and %: two whole numbers make an integer division. You have {{duration}} seconds."
+        },
+        "types": {
+          "name": "Data types",
+          "summary": "int or double, char or String — and what the plus does",
+          "rules": "Decide for {{questionsPerRound}} tasks which output appears or which type fits. 9 and 9.0 are two different answers. You have {{duration}} seconds."
+        },
+        "variables": {
+          "name": "Follow the variable",
+          "summary": "Which value is in the variable at the end?",
+          "rules": "Follow what ends up in the variables of {{questionsPerRound}} programs. The = does not mean “is equal to” but “gets the value”. You have {{duration}} seconds."
+        },
+        "logic": {
+          "name": "Logic duel",
+          "summary": "true or false — &&, || and ! against the clock",
+          "rules": "Decide for {{questionsPerRound}} expressions whether they are true or false. Mind the order: ! before && before ||. The faster you are right, the more points. You have {{duration}} seconds."
+        },
+        "branch": {
+          "name": "Branches",
+          "summary": "Which branch runs?",
+          "rules": "Decide for {{questionsPerRound}} programs which output appears. Java checks from top to bottom and takes the first branch that fits. You have {{duration}} seconds."
+        },
+        "loops": {
+          "name": "Loops",
+          "summary": "for, while, do-while and nesting",
+          "rules": "Read {{questionsPerRound}} loops: sometimes you count the passes, sometimes you write down every value printed, in order. Watch whether the condition sits in the head or in the foot. You have {{duration}} seconds."
+        },
+        "structogram": {
+          "name": "Structograms",
+          "summary": "Match a program to its structogram",
+          "rules": "Match {{questionsPerRound}} programs to the structogram that says the same thing. Watch which branch goes where, and whether the condition sits at the top or at the bottom. You have {{duration}} seconds."
+        },
+        "methods": {
+          "name": "Methods",
+          "summary": "Parameters, arguments and return",
+          "rules": "Predict for {{questionsPerRound}} programs what the call prints. Watch the order of the arguments — and whether the method hands anything back at all. You have {{duration}} seconds."
+        },
+        "arrays": {
+          "name": "Arrays",
+          "summary": "Index, length and walking through",
+          "rules": "Answer {{questionsPerRound}} questions about arrays. Remember: counting starts at 0, and length comes without brackets. You have {{duration}} seconds."
+        },
+        "sorting": {
+          "name": "Searching and sorting",
+          "summary": "Run one pass by hand",
+          "rules": "Run a method by hand for {{questionsPerRound}} tasks: one pass of bubble sort, one step of selection sort, or the comparisons of a linear search. Write several numbers in order, separated by spaces. You have {{duration}} seconds."
+        },
+        "bugs": {
+          "name": "Bug hunt",
+          "summary": "Find the one broken line",
+          "rules": "Find the line that holds the mistake in {{questionsPerRound}} programs. The faster you find it, the more points. You have {{duration}} seconds."
+        }
+      }
     }
   },
   "settings": {
@@ -670,7 +822,40 @@
     "bugTasks": "Kinds of mistake",
     "bugTasksMixed": "Mixed",
     "bugTasksSyntax": "Only syntax errors",
-    "bugTasksSemantic": "Only reasoning errors"
+    "bugTasksSemantic": "Only reasoning errors",
+    "arithmeticTasks": "Kinds of task",
+    "arithmeticTasksMixed": "Mixed",
+    "arithmeticTasksBasic": "Only the four operations",
+    "arithmeticTasksDivision": "Only division and modulo",
+    "typeTasks": "Kinds of task",
+    "typeTasksMixed": "Mixed",
+    "typeTasksNumbers": "Only int and double",
+    "typeTasksStrings": "Only text and characters",
+    "typeTasksNaming": "Only picking the type",
+    "withShorthand": "Include shorthands like += and ++",
+    "boolTasks": "Kinds of task",
+    "boolTasksMixed": "Mixed",
+    "boolTasksValues": "Only true and false",
+    "boolTasksVariables": "Only expressions with variables",
+    "withCompoundConditions": "Include conditions with && and ||",
+    "loopKind": "Kind of loop",
+    "loopKindMixed": "Mixed",
+    "loopKindFor": "Only counting loops",
+    "loopKindWhile": "Only head-controlled loops",
+    "loopKindDoWhile": "Only foot-controlled loops",
+    "withNestedLoops": "Include nested loops",
+    "methodTasks": "Kinds of task",
+    "methodTasksMixed": "Mixed",
+    "methodTasksReturns": "Only return values",
+    "methodTasksOrder": "Only the order of the arguments",
+    "arrayTasks": "Kinds of task",
+    "arrayTasksMixed": "Mixed",
+    "arrayTasksIndex": "Only index and length",
+    "arrayTasksTraverse": "Only walking an array",
+    "sortTasks": "Kinds of task",
+    "sortTasksMixed": "Mixed",
+    "sortTasksSearch": "Only linear search",
+    "sortTasksSort": "Only sorting methods"
   },
   "auth": {
     "title": "Teacher sign-in",
