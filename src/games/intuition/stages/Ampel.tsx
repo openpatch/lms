@@ -91,7 +91,7 @@ export default function AmpelStage({ data, sendAction }: StageProps) {
       <button
         onPointerDown={tap}
         disabled={done}
-        className={`flex aspect-square w-full touch-none items-center justify-center rounded-3xl text-3xl font-bold text-white transition-colors duration-75 select-none disabled:opacity-80 sm:text-4xl ${face.tone}`}
+        className={`no-callout flex aspect-square w-full touch-none items-center justify-center rounded-3xl text-3xl font-bold text-white transition-colors duration-75 select-none disabled:opacity-80 sm:text-4xl ${face.tone}`}
       >
         {face.text}
       </button>

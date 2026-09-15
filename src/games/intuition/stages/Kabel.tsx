@@ -60,6 +60,16 @@ export default function KabelStage({ question, submit }: StageProps<UntangleQues
     setDraft({ questionId: question.id, nodes: next });
   };
 
+  // A touch does not always end in a pointerup: iOS takes one away when a
+  // system gesture or a notification interrupts it, and only pointercancel
+  // arrives. Without this the dot stays stuck to the finger afterwards.
+  const release = (event: React.PointerEvent) => {
+    if (svgRef.current?.hasPointerCapture(event.pointerId)) {
+      svgRef.current.releasePointerCapture(event.pointerId);
+    }
+    setDragging(null);
+  };
+
   return (
     <div
       key={question.id}
@@ -68,6 +78,7 @@ export default function KabelStage({ question, submit }: StageProps<UntangleQues
       <p className="text-center text-gray-500">{t("games.intuition.untanglePrompt")}</p>
 
       <Board
+        dragging
         svgRef={svgRef}
         nodes={nodes}
         edges={question.edges}
@@ -80,11 +91,16 @@ export default function KabelStage({ question, submit }: StageProps<UntangleQues
             : "fill-game-100 stroke-game-solid"
         }
         onNodePointerDown={(index, event) => {
-          event.currentTarget.setPointerCapture(event.pointerId);
+          event.preventDefault();
+          // Captured on the board rather than on the dot, so a finger that
+          // slides off the dot keeps dragging it — and so that what is
+          // captured is the element the move handler is on.
+          svgRef.current?.setPointerCapture(event.pointerId);
           setDragging(index);
         }}
         onPointerMove={moveTo}
-        onPointerUp={() => setDragging(null)}
+        onPointerUp={release}
+        onPointerCancel={release}
       />
 
       <p

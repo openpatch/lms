@@ -13,6 +13,9 @@ import {
 const FRAME_MS = 33;
 const REPORT_MS = 600;
 
+/** Most targets in one report. Must not exceed the server's own cap. */
+const MAX_REPORT = 50;
+
 /**
  * Targets appear, shrink and are gone.
  *
@@ -66,12 +69,20 @@ export default function ZieleStage({ data, sendAction }: StageProps) {
     /** Everything settled since the last report, still in timeline order. */
     let sentUpTo = 0;
     const flush = () => {
-      const events: TargetEvent[] = [];
+      // Sent in chunks the server will take. It matters more than it looks:
+      // a tablet that is locked or switched away from for half a minute comes
+      // back with every target since then written off at once, and a report
+      // too big to be accepted would be dropped whole — leaving this player's
+      // count behind the server's for the rest of the round, which rejects
+      // every later hit as out of order.
       while (settled.current.has(sentUpTo)) {
-        events.push({ id: sentUpTo, ms: settled.current.get(sentUpTo) ?? null });
-        sentUpTo += 1;
+        const events: TargetEvent[] = [];
+        while (settled.current.has(sentUpTo) && events.length < MAX_REPORT) {
+          events.push({ id: sentUpTo, ms: settled.current.get(sentUpTo) ?? null });
+          sentUpTo += 1;
+        }
+        send.current({ action: "hits", events });
       }
-      if (events.length > 0) send.current({ action: "hits", events });
     };
     const timer = setInterval(flush, REPORT_MS);
     // One last report on the way out, so the final seconds still count.
@@ -113,7 +124,9 @@ export default function ZieleStage({ data, sendAction }: StageProps) {
 
       <svg
         viewBox="0 0 100 100"
-        className="aspect-square w-full max-w-md touch-none rounded-2xl border-2 border-gray-200 bg-white select-none"
+        // Nothing here is scrolled or zoomed, and a long press on a target
+        // should not offer to look it up.
+        className="no-callout aspect-square w-full max-w-md touch-none rounded-2xl border-2 border-gray-200 bg-white select-none"
       >
         {live.map((target) => {
           const age = (elapsed - target.at) / target.life;

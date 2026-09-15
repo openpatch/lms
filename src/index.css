@@ -48,6 +48,41 @@
   --color-game-ink: var(--game-ink);
 }
 
+/*
+ * Touch devices, and the iPads a class is most likely to be holding.
+ *
+ * Without `touch-action` a quick second tap on a control is a double-tap, and
+ * Safari reads that as "zoom in" — which is unfortunate in a game whose
+ * stations are a row of lamps to flick, a true/false duel against the clock,
+ * and a row of cards to swap. `manipulation` gives up only that gesture and
+ * keeps scrolling and pinch-zoom, so nothing accessible is lost. The stations
+ * that are dragged rather than tapped ask for `touch-none` themselves.
+ *
+ * The tap highlight is the grey box Safari paints over whatever was touched.
+ * It inherits, so one declaration covers the app, and on a round of fast
+ * tapping it is most of what you would otherwise see.
+ */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+input,
+select,
+summary,
+label,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* Long-pressing a target or a dot on iOS otherwise offers to copy or look it
+   up. Scoped to the boards, because elsewhere — over a listing a student might
+   want to copy — that menu is a feature. */
+.no-callout {
+  -webkit-touch-callout: none;
+}
+
 @keyframes feedback-flash {
   0%   { opacity: 0.7; }
   100% { opacity: 0; }

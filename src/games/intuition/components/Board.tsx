@@ -23,6 +23,10 @@ export interface BoardProps {
   onNodePointerDown?: (index: number, event: React.PointerEvent<SVGGElement>) => void;
   onPointerMove?: (event: React.PointerEvent<SVGSVGElement>) => void;
   onPointerUp?: (event: React.PointerEvent<SVGSVGElement>) => void;
+  onPointerCancel?: (event: React.PointerEvent<SVGSVGElement>) => void;
+  /** True when dots are dragged rather than only tapped: the board then has to
+   *  swallow every gesture, including the drag that would scroll the page. */
+  dragging?: boolean;
   svgRef?: React.Ref<SVGSVGElement>;
   children?: ReactNode;
 }
@@ -37,6 +41,8 @@ export default function Board({
   onNodePointerDown,
   onPointerMove,
   onPointerUp,
+  onPointerCancel,
+  dragging = false,
   svgRef,
   children,
 }: BoardProps) {
@@ -44,9 +50,15 @@ export default function Board({
     <svg
       ref={svgRef}
       viewBox="-6 -6 112 112"
-      className="aspect-square w-full max-w-md touch-none rounded-2xl border-2 border-gray-200 bg-white select-none"
+      // A board that is only tapped keeps scrolling and pinch-zoom and gives up
+      // just the double-tap, which iOS would otherwise read as "zoom in" when
+      // two taps land quickly.
+      className={`no-callout aspect-square w-full max-w-md rounded-2xl border-2 border-gray-200 bg-white select-none ${
+        dragging ? "touch-none" : "touch-manipulation"
+      }`}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel ?? onPointerUp}
       onPointerLeave={onPointerUp}
     >
       {edges.map((edge, index) => {
