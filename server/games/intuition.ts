@@ -89,6 +89,10 @@ const MAX_COLOR_DISTANCE = Math.sqrt(3 * 255 * 255);
  */
 const COLOR_ZERO_AT = 0.25;
 
+/** Closer than this and the two halves of the seam are the same colour to look
+ *  at — about 2% of the longest distance there is between two colours. */
+const EXACT_ENOUGH = MAX_COLOR_DISTANCE * 0.02;
+
 function colorDistance(a: Rgb, b: Rgb): number {
   return Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
 }
@@ -129,11 +133,14 @@ const farbeStage: StageHandler<ColorQuestion> = {
       g: Math.max(0, Math.min(255, mixed.g)),
       b: Math.max(0, Math.min(255, mixed.b)),
     };
-    const error = colorDistance(clamped, question.target) / MAX_COLOR_DISTANCE;
-    const points = closenessPoints(error, COLOR_ZERO_AT);
+    const distance = colorDistance(clamped, question.target);
+    const points = closenessPoints(distance / MAX_COLOR_DISTANCE, COLOR_ZERO_AT);
     // "Correct" is what the tick in the review means, so it is reserved for a
-    // mix nobody could tell from the target.
-    return { correct: error < 0.02, points: Math.round(points) };
+    // mix nobody could tell from the target — but on the coarse sliders one
+    // click is 16, and a tolerance of 9 made the nearest miss a mix that looks
+    // identical and is marked wrong. A station that hands out big steps cannot
+    // then ask for an accuracy smaller than a step.
+    return { correct: distance <= Math.max(EXACT_ENOUGH, question.step), points: Math.round(points) };
   },
 };
 
@@ -151,7 +158,14 @@ function coinLamps(count: number): number[] {
   return [1, 2, 5, 10, 20, 50, 100, 200].slice(0, count);
 }
 
-function lampTask(values: number[], shuffled: boolean): Omit<LampQuestion, "id"> {
+/**
+ * The lamps stay in the order they are worth, smallest first.
+ *
+ * A shuffled row was a second puzzle sitting on top of the first — find the
+ * lamp, then do the arithmetic — and finding the lamp is not what this station
+ * is about. In order, the row reads like the place values it is teaching.
+ */
+function lampTask(values: number[]): Omit<LampQuestion, "id"> {
   const maximum = values.reduce((sum, value) => sum + value, 0);
   // Draw the target by lighting lamps rather than by picking a number, so it
   // is always reachable — with coins, most numbers are not.
@@ -166,7 +180,7 @@ function lampTask(values: number[], shuffled: boolean): Omit<LampQuestion, "id">
       break;
     }
   }
-  return { values: shuffled ? shuffle(values) : values, target, maximum };
+  return { values: [...values].sort((a, b) => a - b), target, maximum };
 }
 
 const lampenStage: StageHandler<LampQuestion> = {
@@ -178,9 +192,7 @@ const lampenStage: StageHandler<LampQuestion> = {
     return build(Number(settings.questionsPerRound), () => {
       const useCoins = mode === "coins" || (mode === "mixed" && Math.random() < 0.4);
       const values = useCoins ? coinLamps(count) : doubleLamps(count);
-      // The neat ascending row is a ladder to climb; a shuffled one has to be
-      // read. Every third question is shuffled, which keeps both in the round.
-      return lampTask(values, Math.random() < 0.35);
+      return lampTask(values);
     });
   },
 
