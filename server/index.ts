@@ -248,6 +248,7 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
         id: connectionId,
         name,
         isHost: false,
+        crowns: 0,
         score: 0,
         connected: true,
       });

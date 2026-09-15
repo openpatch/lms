@@ -54,8 +54,8 @@ function lobbyFor(spec: GameSpec, stageId: string): LobbyState {
     gameId: spec.id,
     hostId: "host",
     players: [
-      { id: "host", name: "Host", isHost: true, score: 0, connected: true },
-      { id: "player", name: "Player", isHost: false, score: 0, connected: true },
+      { id: "host", name: "Host", isHost: true, score: 0, crowns: 0, connected: true },
+      { id: "player", name: "Player", isHost: false, score: 0, crowns: 0, connected: true },
     ],
     phase: "playing",
     gameData: null,

@@ -210,6 +210,7 @@ export default function Play() {
         <ResultsList
           results={withGains(finalResults, roundResults, (roundData?.currentRound ?? 1) > 1)}
           title={t("game.finalResults")}
+          honourRounds
         />
         {roundData && <RoundReview game={game} data={roundData} playerId={myPlayerId} />}
         <p className="text-gray-500">{t("play.waitingHost")}</p>

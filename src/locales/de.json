@@ -81,7 +81,10 @@
     "toLobby": "Zu dieser Lobby",
     "closeLobby": "Lobby schließen",
     "gained": "+{{points}}",
-    "endRound": "Runde beenden"
+    "endRound": "Runde beenden",
+    "crownsWon_one": "einen Rundensieg",
+    "crownsWon_other": "{{count}} Rundensiege",
+    "mostRounds": "Die meisten Rundensiege: {{name}}"
   },
   "lobby": {
     "title": "Lobby",

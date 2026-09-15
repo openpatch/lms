@@ -200,6 +200,7 @@ export default function HostLobby() {
         <ResultsList
           results={withGains(finalResults, roundResults, (data?.currentRound ?? 1) > 1)}
           title={t("game.finalResults")}
+          honourRounds
         />
         <button
           onClick={() => conn.sendMessage({ type: "restart" })}

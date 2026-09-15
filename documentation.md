@@ -32,6 +32,14 @@ a bell about to go, a station that turned out to be too hard. Whatever has been
 answered counts, and the rest counts for what it would have counted for had the
 clock run out on it.
 
+Whoever takes a round is **crowned** for it, on `Player.crowns`, and that is
+kept well away from the points. A session where one player is simply better
+than everyone else is a session the rest stop playing in, so the round is a
+second thing to win: come fourth overall with two crowns and the last screen
+says so by name. A tie is won by everybody in it — a tiebreak nobody can see
+would be worse than sharing — and a round where nobody scored is a round nobody
+won. Crowns reset with the scores when the host restarts.
+
 ```
  lobby ──► explanation ──► countdown ──► playing ──► round-finished ──► … ──► finished
            (stage rules)     (3, 2, 1)   (stage UI)   (next stage)

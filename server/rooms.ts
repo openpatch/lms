@@ -271,10 +271,18 @@ export class Room {
     this.roundTimer = undefined;
     this.stopLiveTicking();
 
-    // Add round scores to each player's cumulative total
+    // Add round scores to each player's cumulative total, and crown whoever
+    // took the round. A tie is won by everybody in it — picking one of them by
+    // some tiebreak nobody can see would be worse than sharing it — and a
+    // round where nobody scored is a round nobody won.
+    const best = Math.max(0, ...results.map((r) => r.score));
     for (const result of results) {
       const player = this.state.players.find((p) => p.id === result.playerId);
-      if (player) player.score += result.score;
+      if (!player) continue;
+      player.score += result.score;
+      result.wonRound = best > 0 && result.score === best;
+      if (result.wonRound) player.crowns = (player.crowns ?? 0) + 1;
+      result.crowns = player.crowns ?? 0;
     }
 
     const isLastRound = handler?.isLastRound?.(this.state) ?? true;
@@ -298,7 +306,12 @@ export class Room {
   private finalResults(): GameResult[] {
     return this.state.players
       .filter((p) => !p.isHost)
-      .map((p) => ({ playerId: p.id, playerName: p.name, score: p.score }))
+      .map((p) => ({
+        playerId: p.id,
+        playerName: p.name,
+        score: p.score,
+        crowns: p.crowns ?? 0,
+      }))
       .sort((a, b) => b.score - a.score);
   }
 
@@ -312,7 +325,10 @@ export class Room {
     this.setPhase("lobby");
     this.state.gameData = null;
     this.state.countdownEndsAt = null;
-    this.state.players.forEach((p) => (p.score = 0));
+    this.state.players.forEach((p) => {
+      p.score = 0;
+      p.crowns = 0;
+    });
     this.save();
     this.broadcastLobbyState();
   }
@@ -377,7 +393,7 @@ export function createRoom(teacherId: string, gameId: string, hostName: string):
     // The host seat belongs to the teacher who opened the lobby; they fill it
     // when they connect.
     players: [
-      { id: teacherId, name: hostName, isHost: true, score: 0, connected: false },
+      { id: teacherId, name: hostName, isHost: true, score: 0, crowns: 0, connected: false },
     ],
     phase: "lobby",
     gameData: null,

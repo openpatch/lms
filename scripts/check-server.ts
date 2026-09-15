@@ -281,6 +281,13 @@ async function main() {
       meddlerError?.message,
     );
 
+    // Alice scores something so that the round has a winner to crown; the
+    // teacher's play page sits on its hands.
+    for (let tap = 0; tap < 5; tap++) {
+      player.send({ type: "game-action", payload: { action: "click" } });
+    }
+    await new Promise((r) => setTimeout(r, 300));
+
     host.send({ type: "end-round" });
     // The example game has one stage, so its round ending is the game ending.
     const cutShort = await player.waitFor("finished");
@@ -290,6 +297,11 @@ async function main() {
       !!cutShort && cutShort.results.length > 0,
       `${cutShort?.results.length ?? 0} result(s)`,
     );
+
+    const alice = cutShort?.roundResults.find((r) => r.playerName === "Alice");
+    const idle = cutShort?.roundResults.find((r) => r.playerName === "Teacher Testing");
+    check("whoever took the round is crowned for it", alice?.wonRound === true && alice?.crowns === 1);
+    check("and whoever did not is not", idle?.wonRound !== true && (idle?.crowns ?? 0) === 0);
 
     const impostor = new TestClient(code, randomUUID());
     await impostor.ready();

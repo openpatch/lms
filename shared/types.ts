@@ -53,6 +53,14 @@ export interface Player {
   name: string;
   isHost: boolean;
   score: number;
+  /**
+   * Rounds won, which is not the same thing as points and deliberately does
+   * not become them. Somebody who is out of the running overall can still take
+   * a round, and a session where the same person wins everything is a session
+   * the rest stopped playing in — so winning one is worth keeping, and worth
+   * keeping separately.
+   */
+  crowns: number;
   connected: boolean;
 }
 
@@ -108,6 +116,10 @@ export interface GameResult {
   playerId: string;
   playerName: string;
   score: number;
+  /** Rounds this player has won so far, this session. */
+  crowns?: number;
+  /** Whether they won the round this result is for. Ties win together. */
+  wonRound?: boolean;
 }
 
 /** Metadata every mini game carries; GameSpec extends it with its stages. */

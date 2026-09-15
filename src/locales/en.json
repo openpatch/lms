@@ -81,7 +81,10 @@
     "toLobby": "Go to that lobby",
     "closeLobby": "Close lobby",
     "gained": "+{{points}}",
-    "endRound": "End the round"
+    "endRound": "End the round",
+    "crownsWon_one": "one round won",
+    "crownsWon_other": "{{count}} rounds won",
+    "mostRounds": "Most rounds won: {{name}}"
   },
   "lobby": {
     "title": "Lobby",
