@@ -19,12 +19,32 @@ export default function KabelStage({ question, submit }: StageProps<UntangleQues
   const { t } = useTranslation();
   const [draft, setDraft] = useState<{ questionId: number; nodes: Point[] } | null>(null);
   const [dragging, setDragging] = useState<number | null>(null);
+  /** Where in the dot it was picked up, so it does not jump to the fingertip. */
+  const grab = useRef<Point>({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
 
   if (!question) return null;
 
   const nodes = draft?.questionId === question.id ? draft.nodes : question.nodes;
   const crossings = countCrossings(nodes, question.edges);
+
+  /**
+   * Where on the board a pointer is.
+   *
+   * Through the board's own transform rather than by scaling its bounding box.
+   * The box is not the coordinate system: the viewBox has a margin around the
+   * hundred units the dots live in, so dividing by the width lands on the
+   * right spot only in the very middle and is six units — about a fingertip —
+   * out at either edge. With a mouse pointer you see that and correct for it
+   * without noticing; with a finger the dot simply slides out from under you.
+   */
+  const onBoard = (event: React.PointerEvent): Point | null => {
+    const svg = svgRef.current;
+    const screen = svg?.getScreenCTM();
+    if (!svg || !screen) return null;
+    const { x, y } = new DOMPoint(event.clientX, event.clientY).matrixTransform(screen.inverse());
+    return { x, y };
+  };
 
   /** Does this edge cross any other? That is what paints it red. */
   const isCrossed = (index: number) =>
@@ -43,19 +63,14 @@ export default function KabelStage({ question, submit }: StageProps<UntangleQues
     });
 
   const moveTo = (event: React.PointerEvent) => {
-    if (dragging == null || !svgRef.current) return;
-    // The board is a 0-100 box however big it is drawn, so where the finger is
-    // on the screen becomes where it is on the board with one division.
-    const box = svgRef.current.getBoundingClientRect();
-    const point = {
-      x: ((event.clientX - box.left) / box.width) * 100,
-      y: ((event.clientY - box.top) / box.height) * 100,
-    };
+    if (dragging == null) return;
+    const point = onBoard(event);
+    if (!point) return;
     const next = [...nodes];
     // Kept inside the box, so a dot can never be dragged off the board.
     next[dragging] = {
-      x: Math.max(2, Math.min(98, point.x)),
-      y: Math.max(2, Math.min(98, point.y)),
+      x: Math.max(2, Math.min(98, point.x - grab.current.x)),
+      y: Math.max(2, Math.min(98, point.y - grab.current.y)),
     };
     setDraft({ questionId: question.id, nodes: next });
   };
@@ -85,13 +100,24 @@ export default function KabelStage({ question, submit }: StageProps<UntangleQues
         edgeClass={(index) =>
           isCrossed(index) ? "stroke-rose-400" : "stroke-emerald-400"
         }
+        // The dot being dragged grows, because a fingertip covers the one that
+        // is not: what is left showing around the finger is the only way to
+        // see which one is moving.
+        nodeRadius={(index) => (dragging === index ? 8 : 5)}
         nodeClass={(index) =>
           dragging === index
-            ? "fill-game-solid stroke-game-solid"
+            ? "fill-game-solid stroke-game-700"
             : "fill-game-100 stroke-game-solid"
         }
         onNodePointerDown={(index, event) => {
           event.preventDefault();
+          const point = onBoard(event);
+          // Picked up where it was touched, not by the middle: a dot that
+          // teleports to the fingertip the moment it is pressed throws off
+          // the aim it was pressed with.
+          grab.current = point
+            ? { x: point.x - nodes[index].x, y: point.y - nodes[index].y }
+            : { x: 0, y: 0 };
           // Captured on the board rather than on the dot, so a finger that
           // slides off the dot keeps dragging it — and so that what is
           // captured is the element the move handler is on.
@@ -101,6 +127,7 @@ export default function KabelStage({ question, submit }: StageProps<UntangleQues
         onPointerMove={moveTo}
         onPointerUp={release}
         onPointerCancel={release}
+        keepOnLeave
       />
 
       <p

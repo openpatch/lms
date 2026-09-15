@@ -18,6 +18,8 @@ export interface BoardProps {
   edgeLabel?: (edge: Edge) => string | null;
   /** Classes for the circle of each node. */
   nodeClass?: (index: number) => string;
+  /** Radius of one node, when the stage wants it bigger than the default. */
+  nodeRadius?: (index: number) => number;
   /** Written inside a node. */
   nodeLabel?: (index: number) => string | null;
   onNodePointerDown?: (index: number, event: React.PointerEvent<SVGGElement>) => void;
@@ -27,6 +29,10 @@ export interface BoardProps {
   /** True when dots are dragged rather than only tapped: the board then has to
    *  swallow every gesture, including the drag that would scroll the page. */
   dragging?: boolean;
+  /** Keep hold of a pointer that wanders off the board. A captured pointer is
+   *  still this board's, and letting go of it there drops the drag whenever a
+   *  dot is pulled towards an edge. */
+  keepOnLeave?: boolean;
   svgRef?: React.Ref<SVGSVGElement>;
   children?: ReactNode;
 }
@@ -37,12 +43,14 @@ export default function Board({
   edgeClass,
   edgeLabel,
   nodeClass,
+  nodeRadius,
   nodeLabel,
   onNodePointerDown,
   onPointerMove,
   onPointerUp,
   onPointerCancel,
   dragging = false,
+  keepOnLeave = false,
   svgRef,
   children,
 }: BoardProps) {
@@ -59,7 +67,7 @@ export default function Board({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel ?? onPointerUp}
-      onPointerLeave={onPointerUp}
+      onPointerLeave={keepOnLeave ? undefined : onPointerUp}
     >
       {edges.map((edge, index) => {
         const from = nodes[edge.a];
@@ -98,10 +106,14 @@ export default function Board({
           onPointerDown={(event) => onNodePointerDown?.(index, event)}
           className={onNodePointerDown ? "cursor-pointer" : undefined}
         >
+          {/* A fingertip is wider than a dot. This is what it actually has to
+              hit — invisible, and comfortably clear of the next dot, which is
+              never nearer than the generator's minimum gap. */}
+          {onNodePointerDown && <circle cx={node.x} cy={node.y} r={10} fill="transparent" />}
           <circle
             cx={node.x}
             cy={node.y}
-            r={5}
+            r={nodeRadius?.(index) ?? 5}
             strokeWidth={1.5}
             className={nodeClass?.(index) ?? "fill-game-100 stroke-game-solid"}
           />
