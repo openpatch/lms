@@ -83,6 +83,81 @@ label,
   -webkit-touch-callout: none;
 }
 
+/*
+ * A slider a station is *played* with, as opposed to the ones a teacher sets a
+ * round up with — those keep the browser's own, which is exactly right for a
+ * mouse and a settings form.
+ *
+ * Three things have to be true for a finger on an iPad, and the colour mixer
+ * had none of them:
+ *
+ * `appearance: none` throws away WebKit's thumb along with its track, and a
+ * track with no thumb is a bar with nothing on it to take hold of — so the
+ * thumb is drawn here, big enough to find.
+ *
+ * The thing you grab is 44px tall even though the bar you see is 8px: a finger
+ * is not a pointer, and the hit area is the input's own box, not the thumb
+ * that overflows it.
+ *
+ * And the drag belongs to the slider. Under the app-wide `manipulation` a
+ * sideways drag is still the page's to interpret, which on Safari means it can
+ * end as a selected label rather than a colour.
+ */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2.75rem;
+  background: transparent;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--track, var(--color-gray-200, #e5e7eb));
+}
+
+.slider::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--track, var(--color-gray-200, #e5e7eb));
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  /* Half the thumb, less half the track: what centres one on the other. */
+  margin-top: -0.625rem;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid var(--thumb, #6b7280);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+
+.slider::-moz-range-thumb {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid var(--thumb, #6b7280);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+
+.slider:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--thumb, #6b7280);
+  outline-offset: 2px;
+}
+
+.slider:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--thumb, #6b7280);
+  outline-offset: 2px;
+}
+
 @keyframes feedback-flash {
   0%   { opacity: 0.7; }
   100% { opacity: 0; }

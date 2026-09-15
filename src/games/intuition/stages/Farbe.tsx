@@ -47,7 +47,9 @@ export default function FarbeStage({ question, submit }: StageProps<ColorQuestio
         <span>{t("games.intuition.color.yours")}</span>
       </div>
 
-      <div className="w-full space-y-3">
+      {/* Nothing in this row is worth selecting, and a drag that starts a
+          hair off the slider would otherwise select the label beside it. */}
+      <div className="w-full space-y-1 select-none">
         {CHANNELS.map((channel) => (
           <div key={channel.key} className="flex items-center gap-3">
             <span className="w-16 shrink-0 text-sm text-gray-600">{t(channel.labelKey)}</span>
@@ -63,11 +65,16 @@ export default function FarbeStage({ question, submit }: StageProps<ColorQuestio
                   value: { ...mix, [channel.key]: Number(event.target.value) },
                 })
               }
-              className="h-2 flex-1 cursor-pointer appearance-none rounded-full"
-              style={{
-                background: `linear-gradient(to right, #fff, ${channel.track})`,
-                accentColor: channel.track,
-              }}
+              // The gradient belongs to the track rather than to the input, so
+              // that the box a finger has to hit can be tall while the bar it
+              // draws stays thin — see `.slider`.
+              className="slider flex-1 cursor-pointer"
+              style={
+                {
+                  "--track": `linear-gradient(to right, #fff, ${channel.track})`,
+                  "--thumb": channel.track,
+                } as React.CSSProperties
+              }
             />
             <span className="w-10 text-right text-sm text-gray-500 tabular-nums">
               {mix[channel.key]}
