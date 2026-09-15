@@ -4,6 +4,25 @@ import type { MathfieldElement } from "mathlive";
 /** Set while the virtual keyboard is up, so a pinned bar can move above it. */
 const KEYBOARD_HEIGHT = "--virtual-keyboard-height";
 
+/**
+ * How long a field that has gone away waits before closing the keyboard.
+ *
+ * The stages rebuild the field for every question (`key={question.id}`), so an
+ * unmount is usually the next question arriving rather than the round ending.
+ * Closing straight away would drop the keyboard and bring it back on every
+ * single answer. The next field cancels this on its way in, and a person never
+ * sees the gap; a round that really is over has seconds, not milliseconds.
+ */
+const HIDE_AFTER_MS = 100;
+
+/** A pending close, shared because the keyboard itself is shared. */
+let pendingHide: ReturnType<typeof setTimeout> | undefined;
+
+function closeKeyboard() {
+  window.mathVirtualKeyboard?.hide();
+  document.documentElement.style.removeProperty(KEYBOARD_HEIGHT);
+}
+
 export interface TermInputProps {
   /** The term as LaTeX. Changing it from outside resets the field. */
   value: string;
@@ -43,8 +62,13 @@ export default function TermInput({
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
+    // Whatever went away a moment ago was this stage moving to its next
+    // question, not the player leaving the field.
+    clearTimeout(pendingHide);
+    pendingHide = undefined;
     let field: MathfieldElement | null = null;
     let cancelled = false;
+    let releaseKeyboard: (() => void) | undefined;
 
     import("mathlive").then(({ MathfieldElement }) => {
       if (cancelled) return;
@@ -90,33 +114,51 @@ export default function TermInput({
       field.menuItems = [];
       fieldRef.current = field;
       if (autoFocus) field.focus();
+
+      // The virtual keyboard is a page-level thing that MathLive brings with
+      // it, so it does not exist until the import above has resolved — which
+      // is why this is wired up in here rather than in an effect of its own.
+      // On mount there is nothing at window.mathVirtualKeyboard yet, and a
+      // listener attached then is attached to nothing at all.
+      const keyboard = window.mathVirtualKeyboard;
+      if (!keyboard) return;
+      // It is fixed to the bottom of the screen and would sit on top of the
+      // stage's action bar; this lets the bar step out of its way.
+      //
+      // Both events, and that matters: coming up fires only
+      // "virtual-keyboard-toggle", while going away fires that *and*
+      // "geometrychange". Listening for the geometry alone would therefore
+      // miss the one case the bar has to react to — the keyboard arriving
+      // over the button the player is about to press.
+      const update = () => {
+        const height = keyboard.visible ? keyboard.boundingRect.height : 0;
+        document.documentElement.style.setProperty(KEYBOARD_HEIGHT, `${height}px`);
+      };
+      keyboard.addEventListener("virtual-keyboard-toggle", update);
+      keyboard.addEventListener("geometrychange", update);
+      update();
+      releaseKeyboard = () => {
+        keyboard.removeEventListener("virtual-keyboard-toggle", update);
+        keyboard.removeEventListener("geometrychange", update);
+      };
     });
 
     return () => {
       cancelled = true;
+      // Taking a focused element out of the document does not reliably blur
+      // it, and the keyboard outlives the field it was opened for: without
+      // this it stays up over the round results and the next stage, covering
+      // the bottom third of a tablet. Only one math field is ever on screen at
+      // a time, so this keyboard is this field's.
+      field?.blur();
+      releaseKeyboard?.();
       field?.remove();
       fieldRef.current = null;
+      pendingHide = setTimeout(closeKeyboard, HIDE_AFTER_MS);
     };
     // The field is built once; `value` is pushed in by the effect below
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFocus]);
-
-  // The virtual keyboard is fixed to the bottom of the screen and would sit on
-  // top of the stage's action bar; this lets the bar step out of its way.
-  useEffect(() => {
-    const keyboard = window.mathVirtualKeyboard;
-    if (!keyboard) return;
-    const update = () => {
-      const height = keyboard.visible ? keyboard.boundingRect.height : 0;
-      document.documentElement.style.setProperty(KEYBOARD_HEIGHT, `${height}px`);
-    };
-    keyboard.addEventListener("geometrychange", update);
-    update();
-    return () => {
-      keyboard.removeEventListener("geometrychange", update);
-      document.documentElement.style.removeProperty(KEYBOARD_HEIGHT);
-    };
-  }, []);
 
   useEffect(() => {
     const field = fieldRef.current;
