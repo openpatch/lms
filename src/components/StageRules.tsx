@@ -25,7 +25,12 @@ export default function StageRules({ game, gameData, isHost }: StageRulesProps) 
   const Example = stage.RulesExample;
 
   return (
-    <div className="text-center space-y-4">
+    // `w-full`, so this is the same box on both screens it appears on: the
+    // rules screen centres its children as flex items, where a shrink-to-fit
+    // box would be as wide as the longest line, and the countdown stretches it
+    // to the page. Anything inside that is not centred on its own moved
+    // sideways when the round started.
+    <div className="w-full text-center space-y-4">
       <div className="text-sm font-semibold uppercase text-game-ink">
         {t("game.round", { current: data.currentRound, total: data.totalRounds })}
       </div>
@@ -33,7 +38,16 @@ export default function StageRules({ game, gameData, isHost }: StageRulesProps) 
       <p className="text-gray-600 max-w-md mx-auto">
         {t(stage.rulesKey, { ...data.settings, count: data.questions.length })}
       </p>
-      {Example && <Example />}
+      {/* Whatever shape the station wants its picture to be — a map 160px
+          across, a strip of colour, a row of cards — it is a block, and a block
+          does not centre itself under `text-center`. Half of them sat against
+          the left edge. Centring them here fixes every station at once, and
+          keeps each example free to be its own size. */}
+      {Example && (
+        <div className="flex justify-center">
+          <Example />
+        </div>
+      )}
       {isHost ? (
         <p className="text-gray-500 text-sm">{t("game.hostInfo")}</p>
       ) : (
