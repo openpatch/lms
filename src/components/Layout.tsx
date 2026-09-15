@@ -109,7 +109,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div>
               {t("common.appName")} — {t("common.tagline")}
             </div>
-            <div className="flex items-center gap-2">
+            {/* Three items and two separators are more than a phone's width:
+                let the line wrap rather than push the page sideways. */}
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
               <span>
                 {t("common.builtBy")} <span className="text-red-500">&#10084;</span> {t("common.byOpenPatch")}
               </span>
@@ -122,6 +124,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 {t("common.github")}
               </a>
+              {/* Which build this is. A class reporting something a week later
+                  is describing whatever was deployed then, and this is the only
+                  thing on screen that says which one that was. It links to the
+                  commit, so the answer to "what changed" is one click away. */}
+              {__APP_VERSION__.sha && (
+                <>
+                  <span className="text-gray-300">&bull;</span>
+                  <a
+                    href={`https://github.com/openpatch/lms/commit/${__APP_VERSION__.sha.replace("+", "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={__APP_VERSION__.date}
+                    className="font-mono hover:text-brand-600 transition-colors"
+                  >
+                    {__APP_VERSION__.sha}
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </footer>
