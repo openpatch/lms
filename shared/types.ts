@@ -96,6 +96,27 @@ export interface LobbyState {
   /** The host's stage selection and per-stage settings — a GameSettings. */
   settings: unknown;
   countdownEndsAt: number | null;
+  /**
+   * A lobby with no class in it: the teacher is trying the game out alone
+   * before the lesson. It is a real lobby on a real server running the real
+   * rounds — that is the point of it, a rehearsal is worth nothing if it is a
+   * simulation — but its code is never shown, nobody can join it, and what it
+   * scores is not written down.
+   */
+  demo?: boolean;
+}
+
+/**
+ * The seat the teacher plays from in a demo lobby.
+ *
+ * A demo still needs a player, because every round the framework runs is a
+ * round played by players: the host watches and is not scored. So the lobby
+ * opens with one, and the host's own actions are recorded against it. Derived
+ * from the host id rather than stored, so both sides can name it, and marked
+ * with a character no connection id contains.
+ */
+export function demoPlayerId(hostId: string): string {
+  return `${hostId}#demo`;
 }
 
 // Messages: Client -> Server

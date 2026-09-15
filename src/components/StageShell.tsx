@@ -183,6 +183,12 @@ export interface StageShellProps {
   /** Put in the bottom bar for the host. The stage's own action goes there for
    *  a player, and the host never has one — the two never collide. */
   hostAction?: React.ReactNode;
+  /**
+   * Put in the bottom bar beside whatever is already in it. For the demo,
+   * where one person holds both seats and so needs the host's way out of a
+   * round next to the player's way through it.
+   */
+  sideAction?: React.ReactNode;
 }
 
 /**
@@ -197,6 +203,7 @@ export default function StageShell({
   playerId,
   sendMessage,
   hostAction,
+  sideAction,
 }: StageShellProps) {
   const { t } = useTranslation();
   const data = gameData as StageRoundData | null;
@@ -304,9 +311,10 @@ export default function StageShell({
         // A stage with a math field raises --virtual-keyboard-height while the
         // virtual keyboard is up, so the bar stays above it instead of under it.
         style={{ bottom: "var(--virtual-keyboard-height, 0px)" }}
-        className="fixed inset-x-0 z-20 empty:hidden bg-white/95 backdrop-blur border-t border-gray-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-center"
+        className="fixed inset-x-0 z-20 empty:hidden bg-white/95 backdrop-blur border-t border-gray-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-wrap items-center justify-center gap-3"
       >
         {isHost ? hostAction : null}
+        {sideAction}
       </div>
     </div>
   );

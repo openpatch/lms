@@ -9,6 +9,7 @@ import { randomUUID } from "node:crypto";
 import { WebSocketServer, type WebSocket } from "ws";
 import { toNodeHandler } from "better-auth/node";
 import type { ClientMessage, ServerMessage } from "../shared/types";
+import { demoPlayerId } from "../shared/types";
 import { getGameSpec, validateGameSpecs } from "../shared/games";
 import { resolveGameSettings } from "../shared/framework";
 import { gameHandlers } from "./games";
@@ -63,7 +64,7 @@ const httpServer = createServer((req, res) => {
     });
     req.on("end", () => {
       void (async () => {
-        let payload: { gameId?: string };
+        let payload: { gameId?: string; demo?: boolean };
         try {
           payload = JSON.parse(body || "{}") as typeof payload;
         } catch {
@@ -83,7 +84,12 @@ const httpServer = createServer((req, res) => {
           return;
         }
 
-        const result = createRoom(teacher.id, payload.gameId, teacher.name);
+        const result = createRoom(
+          teacher.id,
+          payload.gameId,
+          teacher.name,
+          payload.demo === true,
+        );
         if (!result.ok) {
           json(res, 409, { error: "active-lobby", code: result.code });
           return;
@@ -213,6 +219,12 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
     case "join": {
       if (isHost) {
         send(ws, { type: "error", message: "The host cannot join as a player" });
+        return;
+      }
+      // A demo is the teacher rehearsing alone. Its code is never shown, but a
+      // guessed one must not put a student into a lobby with no lesson in it.
+      if (state.demo) {
+        send(ws, { type: "error", message: "This lobby is a rehearsal, not a game" });
         return;
       }
       const name = typeof msg.name === "string" ? msg.name.trim().slice(0, MAX_NAME_LENGTH) : "";
@@ -347,9 +359,14 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
     case "game-action": {
       if (state.phase !== "playing") return;
 
+      // In a demo the teacher is the class: the host screen is the one playing,
+      // and the framework scores players, not hosts — so what the host does
+      // there is recorded against the seat the lobby opened with.
+      const actorId = state.demo && isHost ? demoPlayerId(state.hostId) : connectionId;
+
       const handler = gameHandlers[state.gameId];
       if (handler?.onMessage) {
-        const result = handler.onMessage(state, msg.payload, { id: connectionId });
+        const result = handler.onMessage(state, msg.payload, { id: actorId });
         if (result) {
           state.gameData = result;
           if (handler.isLive?.(state)) {

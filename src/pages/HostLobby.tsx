@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router";
 import JoinCode from "../components/JoinCode";
@@ -10,10 +10,9 @@ import Countdown from "../components/Countdown";
 import StageShell from "../components/StageShell";
 import StageRules from "../components/StageRules";
 import StageSettingsForm from "../components/StageSettingsForm";
-import { useGameConnection } from "../lib/connection";
+import { useLobbySession } from "../lib/lobby-session";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
-import type { ServerMessage, GameResult } from "../../shared/types";
 import type { StageRoundData } from "../../shared/framework";
 
 export default function HostLobby() {
@@ -21,33 +20,9 @@ export default function HostLobby() {
   const { gameId, code } = useParams();
   const game = gameId ? getGame(gameId) : undefined;
   useActiveGame(game);
-  const [gameData, setGameData] = useState<unknown>(null);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [countdownEndsAt, setCountdownEndsAt] = useState<number | null>(null);
-  const [roundResults, setRoundResults] = useState<GameResult[]>([]);
-  const [finalResults, setFinalResults] = useState<GameResult[]>([]);
 
-  const onMessage = (msg: ServerMessage) => {
-    if (msg.type === "countdown") {
-      setGameData(msg.gameData);
-      setCountdownEndsAt(msg.countdownEndsAt);
-      setGameStarted(false);
-    } else if (msg.type === "game-start") {
-      setGameData(msg.gameData);
-      setGameStarted(true);
-      setCountdownEndsAt(null);
-      setRoundResults([]);
-    } else if (msg.type === "game-state") {
-      setGameData(msg.gameData);
-    } else if (msg.type === "round-finished") {
-      setRoundResults(msg.results);
-    } else if (msg.type === "finished") {
-      setFinalResults(msg.results);
-      setRoundResults(msg.roundResults);
-    }
-  };
-
-  const conn = useGameConnection(code ?? "", onMessage, "host");
+  const { conn, gameData, gameStarted, countdownEndsAt, roundResults, finalResults } =
+    useLobbySession(code ?? "", "host");
 
   // Send "host" message on every connect (handles reconnect)
   useEffect(() => {
@@ -55,29 +30,6 @@ export default function HostLobby() {
       conn.sendMessage({ type: "host", gameId });
     }
   }, [conn.connected, conn.sendMessage, gameId]);
-
-  // Derive game state from lobby state on reconnect
-  useEffect(() => {
-    if (!conn.lobbyState) return;
-    if (conn.lobbyState.phase === "explanation" && conn.lobbyState.gameData) {
-      setGameData(conn.lobbyState.gameData);
-      setGameStarted(false);
-      setCountdownEndsAt(null);
-    } else if (conn.lobbyState.phase === "playing" && conn.lobbyState.gameData) {
-      setGameData(conn.lobbyState.gameData);
-      setGameStarted(true);
-      setCountdownEndsAt(null);
-    } else if (conn.lobbyState.phase === "countdown" && conn.lobbyState.countdownEndsAt) {
-      setGameData(conn.lobbyState.gameData);
-      setCountdownEndsAt(conn.lobbyState.countdownEndsAt);
-      setGameStarted(false);
-    } else if (conn.lobbyState.phase === "lobby") {
-      setGameStarted(false);
-      setCountdownEndsAt(null);
-      setRoundResults([]);
-      setFinalResults([]);
-    }
-  }, [conn.lobbyState?.phase, conn.lobbyState?.gameData, conn.lobbyState?.countdownEndsAt]);
 
   if (!game) {
     return (

@@ -121,6 +121,16 @@
     "invalidCode": "Invalid code",
     "emptyName": "Please enter a name"
   },
+  "demo": {
+    "tryIt": "Try it without a class",
+    "tryItHint": "Play the round yourself before you play it with the class.",
+    "badge": "Rehearsal",
+    "noClass": "Nobody can join, and nothing is recorded.",
+    "start": "Start the rehearsal",
+    "again": "Once more",
+    "end": "End the rehearsal",
+    "over": "The rehearsal is over."
+  },
   "play": {
     "connecting": "Connecting...",
     "waitingHost": "Waiting for host to start",

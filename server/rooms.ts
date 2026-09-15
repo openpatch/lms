@@ -13,6 +13,7 @@ import type {
   LobbyState,
   ServerMessage,
 } from "../shared/types";
+import { demoPlayerId } from "../shared/types";
 import { getGameSpec } from "../shared/games";
 import { defaultGameSettings } from "../shared/framework";
 import { gameHandlers } from "./games";
@@ -291,7 +292,11 @@ export class Room {
       this.setPhase("finished");
       this.save();
       const finalResults = this.finalResults();
-      store.saveResults(this.state.code, this.teacherId, this.state.gameId, finalResults);
+      // A rehearsal is not a lesson: what the teacher scored playing against
+      // themselves has no business in the record of what classes scored.
+      if (!this.state.demo) {
+        store.saveResults(this.state.code, this.teacherId, this.state.gameId, finalResults);
+      }
       this.broadcast({ type: "finished", results: finalResults, roundResults: results });
     } else {
       this.setPhase("round-finished");
@@ -378,9 +383,21 @@ export type CreateResult = { ok: true; room: Room } | { ok: false; reason: "acti
  * Open a lobby for a teacher. One at a time: a teacher who already has one gets
  * told which, rather than silently losing the class that is still in it.
  */
-export function createRoom(teacherId: string, gameId: string, hostName: string): CreateResult {
+export function createRoom(
+  teacherId: string,
+  gameId: string,
+  hostName: string,
+  demo = false,
+): CreateResult {
   const existing = roomOfTeacher(teacherId);
-  if (existing) return { ok: false, reason: "active-lobby", code: existing.state.code };
+  if (existing) {
+    // One lobby per teacher, still — but a demo has nobody in it, so it gives
+    // way to whatever is asked for next. A lobby with a class in it gives way
+    // to nothing, a demo included: losing the class to a stray click on
+    // "try it out" would be the worst thing this button could do.
+    if (existing.state.demo) existing.close("host-closed");
+    else return { ok: false, reason: "active-lobby", code: existing.state.code };
+  }
 
   let code = generateCode();
   while (rooms.has(code)) code = generateCode();
@@ -391,14 +408,30 @@ export function createRoom(teacherId: string, gameId: string, hostName: string):
     gameId,
     hostId: teacherId,
     // The host seat belongs to the teacher who opened the lobby; they fill it
-    // when they connect.
+    // when they connect. A demo gets a second seat with it, the one the
+    // teacher actually plays from — the host is never scored.
     players: [
       { id: teacherId, name: hostName, isHost: true, score: 0, crowns: 0, connected: false },
+      ...(demo
+        ? [
+            {
+              id: demoPlayerId(teacherId),
+              name: hostName,
+              isHost: false,
+              score: 0,
+              crowns: 0,
+              // Nothing ever connects to this seat: the host's own socket
+              // speaks for it, and it is present for as long as the lobby is.
+              connected: true,
+            },
+          ]
+        : []),
     ],
     phase: "lobby",
     gameData: null,
     settings: spec ? defaultGameSettings(spec) : null,
     countdownEndsAt: null,
+    ...(demo ? { demo: true } : {}),
   };
 
   const room = new Room(state, teacherId, Date.now() + LOBBY_TTL_MS, forget);

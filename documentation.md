@@ -73,6 +73,8 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `GameMeta.hidden` | Keeps a game out of the arena while leaving it registered, checked and reachable by URL — the example game, which is a template rather than something a class plays |
 | `src/games/<game>/stages/*.tsx` | One component per stage: render the current question |
 | `src/components/StageShell.tsx` | The bars around a stage: round, score and clock pinned under the app header, the stage's action pinned to the bottom edge (`StageActionBar`) — or the host's, through `hostAction` — plus the ranked host view and feedback |
+| `src/lib/lobby-session.ts` | `useLobbySession()` — which round is on and what it came to, for all three screens that watch a lobby |
+| `src/pages/Demo.tsx` | The teacher playing a game alone, to try it out — see "Trying it out first" |
 | `src/components/StageRules.tsx` | The rules screen before a round |
 | `src/components/StageSettingsForm.tsx` | The host's stage picker and settings, built from the schema |
 | `src/components/NumberLine.tsx` | Ticks, click-to-pick and markers on an axis |
@@ -405,6 +407,50 @@ the stations share their components. Every other game still gets the question,
 the ranking and the distribution — and its `Review` already renders the right
 answer for the player, so a `Solution` for it is mostly a matter of lifting
 that half out.
+
+## Trying it out first
+
+Preparing a lesson with one of these means knowing what the round will actually
+feel like: how hard the questions come out at this setting, whether sixty
+seconds is too long, what the stage looks like blown up on the projector. None
+of that can be read off the settings form. Finding it out by opening a lobby
+and joining it from a second device works, and is enough of a nuisance that it
+does not get done.
+
+So **"Ohne Klasse ausprobieren"**, under the create-lobby button on a game's
+page, opens a lobby with the class left out. It is not a simulation — a
+rehearsal against a mock is worth nothing. It is the real server running the
+real rounds, with one difference: the lobby opens with a **single player seat**
+(`demoPlayerId(hostId)`, in `shared/types.ts`) and the host's own actions are
+recorded against it. The teacher holds both seats at once, which is the whole
+point: they see the rules screen they would be reading out, then play the stage
+a student would play, and when the round ends they get the player's review and
+the host's debrief on the same screen, because in a rehearsal there is nobody
+to hide either from.
+
+Three things make it a rehearsal rather than a lesson:
+
+- **Nobody can join it.** The code is never shown, and `join` is refused
+  outright, so a guessed code cannot put a student in a lobby with no lesson in
+  it.
+- **Nothing is written down.** `endRound` skips `store.saveResults`, so what a
+  teacher scored playing against themselves stays out of the record of what
+  classes scored.
+- **It gives way.** One lobby per teacher still holds, but a demo has nobody in
+  it, so asking for a class lobby closes it and carries on rather than making
+  the teacher go and find it first. The reverse never happens: a lobby with a
+  class in it gives way to nothing, a demo included — losing a class to a stray
+  click on "try it out" would be the worst thing that button could do.
+
+The one thing the demo screen adds to a stage is `StageShell`'s `sideAction`,
+which puts the host's "Runde beenden" in the bottom bar next to the stage's own
+button. One person holding both seats needs both, and a sixty-second live stage
+should not have to be sat through twice to get to the debrief.
+
+`pnpm check:server` plays a demo round end to end and checks all three
+guarantees, including that the teacher's taps actually score — without the
+attribution they land on the host and score nothing, which is what the check
+catches.
 
 ## Colour
 

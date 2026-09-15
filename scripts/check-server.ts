@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import WebSocket from "ws";
 import type { ClientMessage, ServerMessage } from "../shared/types";
+import { DatabaseSync } from "node:sqlite";
 
 const PORT = 3999;
 const BASE = `http://localhost:${PORT}`;
@@ -128,11 +129,11 @@ class TestClient {
   }
 }
 
-async function createLobby(cookie: string | undefined, gameId = "example") {
+async function createLobby(cookie: string | undefined, gameId = "example", demo = false) {
   const response = await fetch(`${BASE}/parties/lobbies`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: BASE, ...(cookie ? { cookie } : {}) },
-    body: JSON.stringify({ gameId }),
+    body: JSON.stringify({ gameId, demo }),
   });
   return { status: response.status, body: (await response.json()) as { code?: string; error?: string } };
 }
@@ -167,6 +168,9 @@ async function signIn(email: string, password: string): Promise<string | undefin
 async function main() {
   await addTeacher("teacher@example.org", "Test Teacher", "smoke-test-password");
   await addTeacher("other@example.org", "Other Teacher", "smoke-test-password");
+  // The demo checks open and close lobbies of their own, so they get a teacher
+  // of their own rather than fighting the one the round above leaves a lobby on.
+  await addTeacher("demo@example.org", "Demo Teacher", "smoke-test-password");
   let server = await start();
 
   try {
@@ -322,6 +326,90 @@ async function main() {
       reopened.status === 201 && reopened.body.code !== code,
       `got ${reopened.status}`,
     );
+
+    console.log("a demo lobby");
+    // A teacher rehearsing alone: one seat, opened with the lobby, that their
+    // own host connection plays from. Everything the class version does, with
+    // nobody to play it against and nothing written down at the end.
+    const demoCookie = await signIn("demo@example.org", "smoke-test-password");
+    const demoCreated = await createLobby(demoCookie, "example", true);
+    const demoCode = demoCreated.body.code ?? "";
+    check("a teacher can open one", demoCreated.status === 201, `got ${demoCreated.status}`);
+
+    const demoHost = new TestClient(demoCode, randomUUID(), demoCookie, "host");
+    await demoHost.ready();
+    demoHost.send({ type: "host", gameId: "example" });
+    const demoLobby = await demoHost.waitFor("lobby-state");
+    const demoSeats = demoLobby?.state.players.filter((p) => !p.isHost) ?? [];
+    check(
+      "it opens with exactly one seat for the teacher to play from",
+      demoLobby?.state.demo === true && demoSeats.length === 1,
+      `${demoSeats.length} seat(s)`,
+    );
+
+    const gatecrasher = new TestClient(demoCode, randomUUID());
+    await gatecrasher.ready();
+    gatecrasher.send({ type: "join", name: "Curious Student" });
+    const gatecrashed = await gatecrasher.waitFor("error");
+    check(
+      "nobody can join it, even knowing the code",
+      gatecrashed?.message === "This lobby is a rehearsal, not a game",
+      gatecrashed?.message,
+    );
+
+    demoHost.send({ type: "start" });
+    demoHost.send({ type: "begin-countdown" });
+    check("a round starts with one player in the lobby", !!(await demoHost.waitFor("game-start")));
+
+    // The host screen is the one playing. In a class lobby the framework
+    // ignores the host's actions entirely; here they have to land on the seat.
+    for (let tap = 0; tap < 4; tap++) {
+      demoHost.send({ type: "game-action", payload: { action: "click" } });
+    }
+    await new Promise((r) => setTimeout(r, 300));
+    demoHost.send({ type: "end-round" });
+    const demoFinished = await demoHost.waitFor("finished");
+    const demoScore = demoFinished?.results[0]?.score ?? 0;
+    check(
+      "what the teacher does is scored against that seat",
+      demoScore > 0,
+      `scored ${demoScore}`,
+    );
+
+    // Read the throwaway database directly rather than importing the server's
+    // store, which would open whichever file DB_PATH names in *this* process.
+    const readBack = new DatabaseSync(DB_PATH, { readOnly: true });
+    const recorded = readBack
+      .prepare(`select count(*) as n from results where code = ?`)
+      .get(demoCode) as { n: number };
+    readBack.close();
+    check("but the rehearsal is not written down", recorded.n === 0, `${recorded.n} row(s)`);
+
+    // A demo has nobody in it, so it stands aside for the real thing rather
+    // than making the teacher go and close it first.
+    const afterDemo = await createLobby(demoCookie);
+    check(
+      "and it gives way to a lobby for an actual class",
+      afterDemo.status === 201,
+      `got ${afterDemo.status}`,
+    );
+    const demoClosed = await demoHost.waitFor("lobby-closed");
+    check("the demo screen is told it went", demoClosed?.reason === "host-closed");
+
+    // The other way round it must not: a class in the lobby outranks a click
+    // on "try it out".
+    const demoOverClass = await createLobby(demoCookie, "example", true);
+    check(
+      "but a lobby with a class in it gives way to nothing",
+      demoOverClass.status === 409 && demoOverClass.body.code === afterDemo.body.code,
+      `got ${demoOverClass.status}`,
+    );
+
+    const classHost = new TestClient(afterDemo.body.code!, randomUUID(), demoCookie, "host");
+    await classHost.ready();
+    classHost.send({ type: "close-lobby" });
+    await classHost.waitFor("lobby-closed");
+    for (const client of [demoHost, gatecrasher, classHost]) client.close();
 
     console.log("unknown lobbies");
     const ghost = new TestClient("ZZZZZZ", randomUUID());

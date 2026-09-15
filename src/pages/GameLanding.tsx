@@ -28,7 +28,9 @@ export default function GameLanding() {
 
   // The server hands out the code, so two teachers can never land on the same
   // one and a teacher can only have one lobby open at a time.
-  const handleCreateLobby = async () => {
+  //
+  // A demo is the same call and the same lobby, minus the class: see Demo.tsx.
+  const handleCreateLobby = async (demo = false) => {
     setPending(true);
     setNotice(null);
     setExistingCode(null);
@@ -36,7 +38,7 @@ export default function GameLanding() {
       const response = await fetch(serverUrl("/parties/lobbies"), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ gameId: game.id }),
+        body: JSON.stringify({ gameId: game.id, demo }),
       });
 
       if (response.status === 401) {
@@ -55,7 +57,7 @@ export default function GameLanding() {
         setNotice(t("common.error"));
         return;
       }
-      navigate(`/arena/${game.id}/host/${data.code}`);
+      navigate(`/arena/${game.id}/${demo ? "demo" : "host"}/${data.code}`);
     } catch {
       setNotice(t("game.serverUnreachable"));
     } finally {
@@ -91,7 +93,7 @@ export default function GameLanding() {
             <span>{t("game.maxPlayers", { count: game.maxPlayers })}</span>
           </div>
           <button
-            onClick={handleCreateLobby}
+            onClick={() => void handleCreateLobby()}
             disabled={!isLive || pending}
             className={`w-full py-3 rounded-xl font-semibold transition-colors ${
               isLive && !pending
@@ -101,6 +103,16 @@ export default function GameLanding() {
           >
             {!isLive ? t("arena.soon") : pending ? t("game.creating") : t("game.createLobby")}
           </button>
+          {/* Underneath, and quieter: trying the game out alone is what you do
+              while preparing the lesson, not what you do in front of a class. */}
+          <button
+            onClick={() => void handleCreateLobby(true)}
+            disabled={!isLive || pending}
+            className="mt-3 w-full rounded-xl border-2 border-game-200 py-3 font-semibold text-game-ink transition-colors hover:border-game-solid disabled:border-gray-200 disabled:text-gray-400"
+          >
+            {t("demo.tryIt")}
+          </button>
+          <p className="mt-2 text-center text-sm text-gray-500">{t("demo.tryItHint")}</p>
           {notice && (
             <div className="mt-4 text-sm text-center text-amber-700">
               <p>{notice}</p>

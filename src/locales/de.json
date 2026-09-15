@@ -121,6 +121,16 @@
     "invalidCode": "Ungültiger Code",
     "emptyName": "Bitte gib einen Namen ein"
   },
+  "demo": {
+    "tryIt": "Ohne Klasse ausprobieren",
+    "tryItHint": "Spiel die Runde selbst durch, bevor du sie mit der Klasse spielst.",
+    "badge": "Probelauf",
+    "noClass": "Niemand kann beitreten, und nichts wird gewertet.",
+    "start": "Probelauf starten",
+    "again": "Noch einmal",
+    "end": "Probelauf beenden",
+    "over": "Der Probelauf ist beendet."
+  },
   "play": {
     "connecting": "Verbinde...",
     "waitingHost": "Warten auf Spielstart",
