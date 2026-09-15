@@ -276,7 +276,7 @@ export class Room {
       this.save();
       const finalResults = this.finalResults();
       store.saveResults(this.state.code, this.teacherId, this.state.gameId, finalResults);
-      this.broadcast({ type: "finished", results: finalResults });
+      this.broadcast({ type: "finished", results: finalResults, roundResults: results });
     } else {
       this.setPhase("round-finished");
       this.save();

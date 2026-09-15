@@ -94,7 +94,9 @@ export type ServerMessage =
   | { type: "game-state"; gameData: unknown }
   | { type: "game-event"; event: unknown }
   | { type: "round-finished"; results: GameResult[]; isLastRound: boolean }
-  | { type: "finished"; results: GameResult[] }
+  /** `results` are the totals; `roundResults` is what the last round added to
+   *  them, since a game that ends never sends a "round-finished" for it. */
+  | { type: "finished"; results: GameResult[]; roundResults: GameResult[] }
   /** The lobby is gone: it expired, or the host closed it. Stop reconnecting. */
   | { type: "lobby-closed"; reason: LobbyClosedReason };
 

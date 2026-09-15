@@ -79,7 +79,8 @@
     "lobbyExpired": "This lobby has expired.",
     "lobbyNotFound": "There is no lobby with this code.",
     "toLobby": "Go to that lobby",
-    "closeLobby": "Close lobby"
+    "closeLobby": "Close lobby",
+    "gained": "+{{points}}"
   },
   "lobby": {
     "title": "Lobby",

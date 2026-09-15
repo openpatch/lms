@@ -79,7 +79,8 @@
     "lobbyExpired": "Diese Lobby ist abgelaufen.",
     "lobbyNotFound": "Es gibt keine Lobby mit diesem Code.",
     "toLobby": "Zu dieser Lobby",
-    "closeLobby": "Lobby schließen"
+    "closeLobby": "Lobby schließen",
+    "gained": "+{{points}}"
   },
   "lobby": {
     "title": "Lobby",

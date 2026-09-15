@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { GameResult } from "../../shared/types";
+import type { ResultRow } from "./results";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 const RANK_STYLES = [
@@ -52,7 +52,7 @@ export default function ResultsList({
   results,
   title,
 }: {
-  results: GameResult[];
+  results: ResultRow[];
   title?: string;
 }) {
   const { t } = useTranslation();
@@ -75,15 +75,30 @@ export default function ResultsList({
               className={`flex items-center justify-between rounded-lg p-3 shadow border-2 ${RANK_STYLES[i] ?? RANK_STYLES[3]}`}
               style={{ animation: `fade-in 0.4s ease-out ${i * 0.1}s both` }}
             >
-              <span className="font-medium flex items-center gap-2">
+              {/* The name gives way, not the score: a class has a Maximilian in
+                  it and the number is what everyone is looking at. */}
+              <span className="font-medium flex min-w-0 flex-1 items-center gap-2">
                 {i < 3 ? (
-                  <span className="text-2xl">{MEDALS[i]}</span>
+                  <span className="shrink-0 text-2xl">{MEDALS[i]}</span>
                 ) : (
-                  <span className="text-lg font-bold text-gray-400 w-8 text-center">{i + 1}</span>
+                  <span className="w-8 shrink-0 text-center text-lg font-bold text-gray-400">
+                    {i + 1}
+                  </span>
                 )}
-                {r.playerName}
+                <span className="truncate">{r.playerName}</span>
               </span>
-              <span className="text-game-ink font-bold text-lg tabular-nums">{r.score}</span>
+              <span className="flex shrink-0 items-baseline gap-2 pl-2">
+                {r.gained != null && (
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${
+                      r.gained > 0 ? "text-emerald-600" : "text-gray-400"
+                    }`}
+                  >
+                    {t("game.gained", { points: r.gained })}
+                  </span>
+                )}
+                <span className="text-game-ink font-bold text-lg tabular-nums">{r.score}</span>
+              </span>
             </div>
           ))
         )}

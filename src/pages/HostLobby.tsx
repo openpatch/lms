@@ -4,6 +4,7 @@ import { useParams, Link } from "react-router";
 import JoinCode from "../components/JoinCode";
 import PlayerList from "../components/PlayerList";
 import ResultsList from "../components/ResultsList";
+import { standings, withGains } from "../components/results";
 import Countdown from "../components/Countdown";
 import StageShell from "../components/StageShell";
 import StageRules from "../components/StageRules";
@@ -40,6 +41,7 @@ export default function HostLobby() {
       setRoundResults(msg.results);
     } else if (msg.type === "finished") {
       setFinalResults(msg.results);
+      setRoundResults(msg.roundResults);
     }
   };
 
@@ -168,7 +170,10 @@ export default function HostLobby() {
         <div className="text-sm font-semibold uppercase text-game-ink">
           {t("game.round", { current: data?.currentRound ?? 0, total: data?.totalRounds ?? 0 })}
         </div>
-        <ResultsList results={roundResults} title={t("game.roundResults")} />
+        <ResultsList
+          results={standings(lobbyState.players, roundResults, (data?.currentRound ?? 1) > 1)}
+          title={t("game.roundResults")}
+        />
         <button
           onClick={() => conn.sendMessage({ type: "next-round" })}
           className="px-6 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
@@ -181,9 +186,13 @@ export default function HostLobby() {
 
   // Finished phase
   if (phase === "finished" && lobbyState) {
+    const data = lobbyState.gameData as { currentRound?: number } | null;
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
-        <ResultsList results={finalResults} title={t("game.finalResults")} />
+        <ResultsList
+          results={withGains(finalResults, roundResults, (data?.currentRound ?? 1) > 1)}
+          title={t("game.finalResults")}
+        />
         <button
           onClick={() => conn.sendMessage({ type: "restart" })}
           className="px-6 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
