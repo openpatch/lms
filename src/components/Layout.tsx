@@ -72,6 +72,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   {t("common.join")}
                 </Link>
               )}
+              {/* Only a signed-in teacher has lessons to look back at. */}
+              {!playing && session && location.pathname !== "/review" && (
+                <Link
+                  to="/review"
+                  className="hidden sm:inline text-sm text-gray-600 hover:text-game-ink transition-colors"
+                >
+                  {t("review.nav")}
+                </Link>
+              )}
               {!playing &&
                 (session ? (
                   <button

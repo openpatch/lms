@@ -121,6 +121,16 @@
     "invalidCode": "Ungültiger Code",
     "emptyName": "Bitte gib einen Namen ein"
   },
+  "review": {
+    "nav": "Auswertung",
+    "title": "Auswertung",
+    "subtitle": "Was deine Klassen geantwortet haben — auch wenn die Lobby längst zu ist.",
+    "empty": "Noch keine gespielte Runde. Sobald eine Runde zu Ende ist, steht sie hier.",
+    "notFound": "Zu diesem Code gibt es keine Auswertung.",
+    "roundCount_one": "1 Runde",
+    "roundCount_other": "{{count}} Runden",
+    "student": "Name"
+  },
   "demo": {
     "tryIt": "Ohne Klasse ausprobieren",
     "tryItHint": "Spiel die Runde selbst durch, bevor du sie mit der Klasse spielst.",

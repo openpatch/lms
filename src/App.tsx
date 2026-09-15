@@ -6,6 +6,8 @@ import Arena from "./pages/Arena";
 import GameLanding from "./pages/GameLanding";
 import HostLobby from "./pages/HostLobby";
 import Demo from "./pages/Demo";
+import Review from "./pages/Review";
+import ReviewSession from "./pages/ReviewSession";
 import Join from "./pages/Join";
 import Play from "./pages/Play";
 import Login from "./pages/Login";
@@ -31,6 +33,22 @@ export default function App() {
             element={
               <RequireTeacher>
                 <Demo />
+              </RequireTeacher>
+            }
+          />
+          <Route
+            path="/review"
+            element={
+              <RequireTeacher>
+                <Review />
+              </RequireTeacher>
+            }
+          />
+          <Route
+            path="/review/:code"
+            element={
+              <RequireTeacher>
+                <ReviewSession />
               </RequireTeacher>
             }
           />

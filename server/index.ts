@@ -101,6 +101,40 @@ const httpServer = createServer((req, res) => {
     return;
   }
 
+  // What the class answered, after the lobby is gone. Both of these are the
+  // teacher's own and nobody else's: the queries are scoped by teacher id, so
+  // a guessed code from another teacher's lesson reads as empty rather than as
+  // somebody else's class.
+  if (req.method === "GET" && url.pathname === "/parties/sessions") {
+    void (async () => {
+      const teacher = await teacherFrom(req.headers);
+      if (!teacher) {
+        json(res, 401, { error: "Not authorised" });
+        return;
+      }
+      json(res, 200, { sessions: store.listSessions(teacher.id) });
+    })();
+    return;
+  }
+
+  const session = url.pathname.match(/^\/parties\/sessions\/([A-Z0-9]{4,12})$/);
+  if (req.method === "GET" && session) {
+    void (async () => {
+      const teacher = await teacherFrom(req.headers);
+      if (!teacher) {
+        json(res, 401, { error: "Not authorised" });
+        return;
+      }
+      const found = store.loadSession(teacher.id, session[1]);
+      if (found.rounds.length === 0) {
+        json(res, 404, { error: "No such session" });
+        return;
+      }
+      json(res, 200, { code: session[1], ...found });
+    })();
+    return;
+  }
+
   res.writeHead(404);
   res.end();
 });

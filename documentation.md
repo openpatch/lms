@@ -74,6 +74,8 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `src/games/<game>/stages/*.tsx` | One component per stage: render the current question |
 | `src/components/StageShell.tsx` | The bars around a stage: round, score and clock pinned under the app header, the stage's action pinned to the bottom edge (`StageActionBar`) — or the host's, through `hostAction` — plus the ranked host view and feedback |
 | `src/lib/lobby-session.ts` | `useLobbySession()` — which round is on and what it came to, for all three screens that watch a lobby |
+| `src/pages/Review.tsx`, `ReviewSession.tsx` | Lessons after the fact — see "After the lesson" |
+| `src/components/AnswerGrid.tsx` | One round read down the names instead of across the questions |
 | `src/pages/Demo.tsx` | The teacher playing a game alone, to try it out — see "Trying it out first" |
 | `src/components/StageRules.tsx` | The rules screen before a round |
 | `src/components/StageSettingsForm.tsx` | The host's stage picker and settings, built from the schema |
@@ -407,6 +409,44 @@ the stations share their components. Every other game still gets the question,
 the ranking and the distribution — and its `Review` already renders the right
 answer for the player, so a `Solution` for it is mostly a matter of lifting
 that half out.
+
+## After the lesson
+
+The debrief above is for the minute after a round, while the class is still in
+the room. The other half of the same need comes later: the lesson is over, the
+lobby is long gone, and the next one has to be planned. `/review` is that —
+every lesson this teacher has played, and inside one, every round it played.
+
+**A round is stored as it ends**, not when the game does (`Room.endRound` →
+`store.saveRound`). A lesson that stops at the bell and a lobby closed on the
+way out of the room are both normal, and either would otherwise take the round
+with it. A demo stores nothing: a rehearsal is not a lesson.
+
+What is stored is **the round itself** — its questions, its settings, and every
+player's answer — as JSON in the `rounds` table, with the player list beside it
+because names are not in the round. That is what lets the review screen hand
+the question back to the stage's own `Component` and have a Struktogramm still
+be a Struktogramm rather than a row of stored strings. Around 5 KB per round for
+seven students, so about 20 KB for a full class; a single answer is cut at
+`MAX_STORED_ANSWER` so one pathological drawing cannot set the size of the
+table.
+
+Each round is then shown **both ways round**:
+
+| Screen | Sorted by | Answers |
+| --- | --- | --- |
+| `RoundDebrief` | the questions, hardest first | what to teach again |
+| `AnswerGrid` | the students, by how many they got | who to teach it to |
+
+They read the same stored round; the grid is it turned ninety degrees. Clicking
+a name gives that student's round in words — every question, what they wrote,
+whether it was right — which is the thing that was not recoverable at all
+before, because the lobby took it with it.
+
+**Both endpoints are scoped by teacher id in the SQL**, not by the code. A code
+is six characters and guessable, and it must not be a key to somebody else's
+classroom: another teacher asking for it gets a 404, which `check:server`
+verifies by asking as the wrong teacher.
 
 ## Trying it out first
 

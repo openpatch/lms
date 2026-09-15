@@ -171,6 +171,7 @@ async function main() {
   // The demo checks open and close lobbies of their own, so they get a teacher
   // of their own rather than fighting the one the round above leaves a lobby on.
   await addTeacher("demo@example.org", "Demo Teacher", "smoke-test-password");
+  await addTeacher("review@example.org", "Review Teacher", "smoke-test-password");
   let server = await start();
 
   try {
@@ -327,6 +328,87 @@ async function main() {
       `got ${reopened.status}`,
     );
 
+    console.log("reviewing a lesson afterwards");
+    // The round above was played and then its lobby was closed. What the class
+    // answered has to have outlived both.
+    const sessions = await fetch(`${BASE}/parties/sessions`, {
+      headers: { cookie: cookie! },
+    });
+    const sessionList = (await sessions.json()) as { sessions: { code: string; rounds: number }[] };
+    const played = sessionList.sessions.find((entry) => entry.code === code);
+    check("the lesson is still there once the lobby is gone", !!played, `${sessionList.sessions.length} session(s)`);
+
+    const detail = await fetch(`${BASE}/parties/sessions/${code}`, {
+      headers: { cookie: cookie! },
+    });
+    const lesson = (await detail.json()) as {
+      rounds: { stageId: string; players: { name: string }[]; data: { answers: Record<string, Record<string, { answer: string }>> } }[];
+    };
+    check("with the round it played", detail.status === 200 && lesson.rounds.length === 1);
+
+    // The whole point of the screen is not the score, it is the answer. The
+    // example game is questionless — its taps live in extra, not in answers —
+    // so the string a student typed is checked against a game that asks
+    // questions, end to end: typed into the round, read back out of the table.
+    const reviewCookie = await signIn("review@example.org", "smoke-test-password");
+    const lesson2 = await createLobby(reviewCookie, "java");
+    const lesson2Code = lesson2.body.code!;
+    const teacher2 = new TestClient(lesson2Code, randomUUID(), reviewCookie, "host");
+    await teacher2.ready();
+    teacher2.send({ type: "host", gameId: "java" });
+    const pupil = new TestClient(lesson2Code, randomUUID());
+    await pupil.ready();
+    pupil.send({ type: "join", name: "Bea" });
+    await pupil.waitUntil("lobby-state", (m) => m.state.players.some((p) => p.name === "Bea"));
+
+    teacher2.send({ type: "start" });
+    teacher2.send({ type: "begin-countdown" });
+    const begun = (await pupil.waitFor("game-start")) as
+      | { gameData: { questions: { id: number }[] } }
+      | undefined;
+    const firstQuestion = begun?.gameData.questions[0]?.id;
+    // Deliberately wrong: a wrong answer is still an answer, and being able to
+    // read back exactly what a student wrote is the thing being checked.
+    const typed = "voellig daneben";
+    pupil.send({
+      type: "game-action",
+      payload: { action: "answer", questionId: firstQuestion, answer: typed },
+    });
+    await new Promise((r) => setTimeout(r, 300));
+    teacher2.send({ type: "end-round" });
+    await teacher2.waitFor("round-finished");
+    teacher2.send({ type: "close-lobby" });
+    await teacher2.waitFor("lobby-closed");
+
+    const kept = await fetch(`${BASE}/parties/sessions/${lesson2Code}`, {
+      headers: { cookie: reviewCookie! },
+    });
+    const keptBody = (await kept.json()) as {
+      rounds: {
+        players: { id: string; name: string }[];
+        data: { answers: Record<string, Record<string, { answer: string; correct?: boolean }>> };
+      }[];
+    };
+    const bea = keptBody.rounds[0]?.players.find((p) => p.name === "Bea");
+    const beaAnswer = bea ? keptBody.rounds[0].data.answers[bea.id]?.[String(firstQuestion)] : undefined;
+    check(
+      "with the answer a student typed, word for word",
+      beaAnswer?.answer === typed,
+      beaAnswer ? `stored "${beaAnswer.answer}"` : "nothing stored",
+    );
+    check("and whether it was right", beaAnswer?.correct === false);
+    for (const client of [teacher2, pupil]) client.close();
+
+    // A code is six characters and guessable. It must not be a key to somebody
+    // else's classroom.
+    const nosy = await fetch(`${BASE}/parties/sessions/${code}`, {
+      headers: { cookie: otherCookie! },
+    });
+    check("another teacher cannot read it", nosy.status === 404, `got ${nosy.status}`);
+
+    const strangerList = await fetch(`${BASE}/parties/sessions`);
+    check("and a stranger cannot list any", strangerList.status === 401, `got ${strangerList.status}`);
+
     console.log("a demo lobby");
     // A teacher rehearsing alone: one seat, opened with the lobby, that their
     // own host connection plays from. Everything the class version does, with
@@ -384,6 +466,15 @@ async function main() {
       .get(demoCode) as { n: number };
     readBack.close();
     check("but the rehearsal is not written down", recorded.n === 0, `${recorded.n} row(s)`);
+
+    const demoReview = await fetch(`${BASE}/parties/sessions/${demoCode}`, {
+      headers: { cookie: demoCookie! },
+    });
+    check(
+      "and leaves nothing to review either",
+      demoReview.status === 404,
+      `got ${demoReview.status}`,
+    );
 
     // A demo has nobody in it, so it stands aside for the real thing rather
     // than making the teacher go and close it first.

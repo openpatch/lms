@@ -286,6 +286,25 @@ export class Room {
       result.crowns = player.crowns ?? 0;
     }
 
+    // Keep the round for review, now rather than when the game ends: a lesson
+    // that stops at the bell and a lobby closed on the way out of the room are
+    // both normal, and either would otherwise take the round with it. A demo
+    // is not a lesson and leaves nothing behind.
+    if (!this.state.demo) {
+      const round = this.state.gameData as
+        | { stageId?: string; currentRound?: number; answers?: Record<string, never> }
+        | null;
+      if (round?.stageId) {
+        store.saveRound(
+          this.state.code,
+          this.teacherId,
+          this.state.gameId,
+          round as Parameters<typeof store.saveRound>[3],
+          this.state.players.filter((p) => !p.isHost),
+        );
+      }
+    }
+
     const isLastRound = handler?.isLastRound?.(this.state) ?? true;
 
     if (isLastRound) {

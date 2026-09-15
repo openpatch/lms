@@ -121,6 +121,16 @@
     "invalidCode": "Invalid code",
     "emptyName": "Please enter a name"
   },
+  "review": {
+    "nav": "Review",
+    "title": "Review",
+    "subtitle": "What your classes answered — long after the lobby is gone.",
+    "empty": "No round played yet. As soon as one ends, it shows up here.",
+    "notFound": "There is no review for that code.",
+    "roundCount_one": "1 round",
+    "roundCount_other": "{{count}} rounds",
+    "student": "Name"
+  },
   "demo": {
     "tryIt": "Try it without a class",
     "tryItHint": "Play the round yourself before you play it with the class.",
