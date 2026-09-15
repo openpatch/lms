@@ -18,8 +18,11 @@ import {
   answeredCount,
   comboMultiplier,
   currentStreak,
+  emptyTally,
+  liveScore,
   playerRoundScore,
   resolveGameSettings,
+  type LiveTally,
 } from "../shared/framework";
 
 /** What a stage handler knows about the round it is building or grading. */
@@ -67,6 +70,65 @@ export interface StageHandler<Q extends StageQuestion = StageQuestion> {
   ): boolean;
   /** Score of one player in a finished round. Defaults to the sum of answer points. */
   scorePlayer?(data: StageRoundData<Q>, playerId: string): number;
+
+  /**
+   * True for a stage the player acts in continuously — targets to hit, a light
+   * to react to — rather than one they answer question by question.
+   *
+   * It changes two things. On the wire the room stops broadcasting on every
+   * action and sends the round on a tick instead (see server/rooms.ts), so a
+   * class tapping four times a second costs what a class tapping once a second
+   * costs. And in here, the round no longer ends when everybody has answered:
+   * there is nothing to finish answering, so it ends on the clock.
+   *
+   * A live stage keeps its state per player in `extra.tally` with
+   * `recordLiveEvent`, not in `answers`, and scores from there.
+   */
+  live?: boolean;
+
+  /**
+   * Called on the room's tick while this stage is being played, so a stage can
+   * move on by itself. Mutate `data` and return true when something changed.
+   */
+  onTick?(data: StageRoundData<Q>, now: number, ctx: StageContext): boolean;
+
+  /**
+   * How often that tick should fire, in milliseconds. Leave it out for the
+   * room's default. Set it high for a stage that only wants the scoreboard to
+   * keep up — the timeline of a shooting gallery is sent again on every beat,
+   * so beating four times a second means sending it four times a second.
+   */
+  tickMs?: number;
+}
+
+/**
+ * Records one thing that happened to a player in a live round.
+ *
+ * The combo bonus is applied the same way the question path applies it, so a
+ * run of ten targets is worth what a run of ten right answers is worth and the
+ * two kinds of station stay comparable in the same game.
+ */
+export function recordLiveEvent(
+  data: StageRoundData,
+  playerId: string,
+  event: { correct: boolean; points: number; ms?: number },
+): LiveTally {
+  const extra = data.extra as { tally?: Record<string, LiveTally> };
+  const tallies = (extra.tally ??= {});
+  const tally = (tallies[playerId] ??= emptyTally());
+
+  if (event.correct) {
+    tally.streak += 1;
+    tally.bestStreak = Math.max(tally.bestStreak, tally.streak);
+    tally.hits += 1;
+    tally.points += Math.round(Math.max(0, event.points) * comboMultiplier(tally.streak));
+    if (event.ms != null && isFinite(event.ms)) tally.totalMs += event.ms;
+  } else {
+    tally.streak = 0;
+    tally.misses += 1;
+    tally.points += Math.round(Math.max(0, event.points));
+  }
+  return tally;
 }
 
 /** Longest answer payload the server accepts (drawings are the big ones). */
@@ -140,7 +202,14 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
       questions: handler.createQuestions(ctx),
       answers: {},
       settings: ctx.settings,
-      extra: handler.createExtra?.(ctx) ?? {},
+      extra: {
+        ...(handler.createExtra?.(ctx) ?? {}),
+        // Everyone starts on the board rather than appearing once they score,
+        // so the host's list is the class from the first second.
+        ...(handler.live
+          ? { tally: Object.fromEntries(ctx.players.map((p) => [p.id, emptyTally()])) }
+          : {}),
+      },
       startTime: Date.now(),
       duration,
       finished: false,
@@ -154,11 +223,13 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
   function roundResults(state: LobbyState): GameResult[] {
     const data = state.gameData as StageRoundData;
     const handler = handlerFor(data);
+    const fallback = (playerId: string) =>
+      handler?.live ? liveScore(data, playerId) : playerRoundScore(data, playerId);
     return nonHostPlayers(state)
       .map((p) => ({
         playerId: p.id,
         playerName: p.name,
-        score: handler?.scorePlayer?.(data, p.id) ?? playerRoundScore(data, p.id),
+        score: handler?.scorePlayer?.(data, p.id) ?? fallback(p.id),
       }))
       .sort((a, b) => b.score - a.score);
   }
@@ -234,8 +305,10 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
       if (players.length === 0) return undefined;
 
       const timeExpired = (Date.now() - data.startTime) / 1000 >= data.duration;
-      // A stage without questions (a tap round, say) only ends on the clock.
+      // A live stage, and a stage without questions, only ever end on the
+      // clock: there is nothing there to finish answering.
       const allAnswered =
+        !handlerFor(data)?.live &&
         data.questions.length > 0 &&
         players.every((p) => answeredCount(data, p.id) >= data.questions.length);
 
@@ -250,6 +323,23 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
     getDurationMs(state: LobbyState) {
       const data = state.gameData as StageRoundData | null;
       return (data?.duration ?? 60) * 1000;
+    },
+
+    isLive(state: LobbyState) {
+      return handlerFor(state.gameData as StageRoundData | null)?.live === true;
+    },
+
+    liveTickMs(state: LobbyState) {
+      return handlerFor(state.gameData as StageRoundData | null)?.tickMs ?? 0;
+    },
+
+    onTick(state: LobbyState, now: number) {
+      const data = state.gameData as StageRoundData | null;
+      const handler = handlerFor(data);
+      const stage = spec.stages.find((s) => s.id === data?.stageId);
+      if (!data || !handler?.onTick || !stage || data.finished) return undefined;
+      const ctx = contextFor(state, stage, data.currentRound);
+      return handler.onTick(data, now, ctx) ? { ...data } : undefined;
     },
   };
 }

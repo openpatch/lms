@@ -33,7 +33,7 @@ framework and is the same for every game.
 | `shared/games/<game>.ts` | One game's spec (metadata + stages + settings) and its question types |
 | `shared/games/index.ts` | Registry of all specs, plus `validateGameSpecs()` |
 | `server/index.ts` | The Node process: HTTP for opening a lobby, one WebSocket per player |
-| `server/rooms.ts` | One lobby in memory — phases, timers, broadcast — and the registry of all of them |
+| `server/rooms.ts` | One lobby in memory — phases, timers, broadcast — and the registry of all of them. Also the tick a live round runs on |
 | `server/store.ts` | SQLite: lobbies mirrored for restart recovery, results written when a game ends |
 | `server/auth.ts` | Teacher accounts: one gate, `teacherFrom()`, and no public sign-up |
 | `server/framework.ts` | `createStageGame()` — runs rounds, records answers, ends rounds |
@@ -58,6 +58,7 @@ framework and is the same for every game.
 | `shared/intuition-graph.ts`, `shared/intuition-cipher.ts` | The little graph two stations are drawn on — crossings, a planar generator, a shortest path — and the ring of letters a third one turns |
 | `src/games/intuition/components/Board.tsx` | The 100x100 square both map stations draw on: edges, nodes, and whatever a node does when it is touched |
 | `src/games/intuition/components/PixelPicture.tsx` | A glyph squeezed through an n-by-n canvas and blown back up, so a blocky picture needs no image file |
+| `src/games/intuition/stages/LiveSummary.tsx` | What a live round comes to: hits, misses, longest run, average reaction |
 | `scripts/check-games.ts` | `pnpm check:games` — smoke test for every registered game |
 | `src/lib/auth.ts`, `src/pages/Login.tsx`, `src/components/RequireTeacher.tsx` | Signing a teacher in, and the screens that need one |
 | `scripts/check-server.ts` | `pnpm check:server` — signs in, opens a lobby, plays a round, restarts the server |
@@ -262,6 +263,74 @@ npm run dev           # client, plus `npm run dev:server` for the game server
 `check:games` builds a round of every stage, feeds it a nonsense answer and verifies
 that it is graded rather than crashing, and reports any missing translation.
 
+## Live stages
+
+Most stages are a list of questions: the player answers each one once, the
+framework records it, and the round ends when everybody is through or the clock
+runs out. A **live stage** is the other kind — one the player acts *in*.
+Targets appear and have to be hit; a light turns green and has to be beaten.
+There is no question to be on, and the round only ever ends on the clock.
+
+A stage handler declares itself with `live: true`, and three things change.
+
+**It keeps a tally, not answers.** Thirty players resolving fifty targets each
+would put fifteen hundred answer objects into a round that is broadcast on a
+tick. Instead each player has one `LiveTally` in `extra.tally` — points, hits,
+misses, streak, best streak, total reaction — written with `recordLiveEvent()`,
+which applies the same combo bonus the question path applies so a run of ten
+targets is worth what a run of ten right answers is worth. `questions` stays
+empty, which is also what keeps the progress counter and the per-question
+review out of the way.
+
+**It is broadcast on a tick, not on every action.** This is the part that
+decides whether the stage works in a room of thirty. A question game sends a
+few hundred messages a round; a class tapping four times a second sends
+thousands, and every one of them would otherwise cost a SQLite write and one
+serialised copy of the round per socket. `Room` runs an interval for as long as
+a live round lasts, `server/index.ts` calls `markLive()` instead of saving and
+broadcasting, and the tick sends the round once if anything changed. SQLite is
+written far less often again (`LIVE_SAVE_MS`), because what a restart has to
+put back is the round, not the last quarter-second of it.
+
+The beat is a cost as much as a cadence — the whole round goes out on each one,
+timeline included — so a stage picks its own with `tickMs`. `ziele` carries a
+fifty-target timeline that never changes and only wants the scoreboard to keep
+up, so it beats once a second. `ampel` carries almost nothing but has to get
+its own state onto thirty screens together, so it beats four times as often.
+
+**It can move by itself.** `onTick(data, now, ctx)` is called on that same beat,
+so a stage does not have to wait for a player to do something. That is what
+makes the traffic light possible: when it turns green is decided on the server,
+on the tick, and sent — so it is not in anything the device was given in
+advance. It could not be. Every other stage in the app ships its answer to the
+client (the Caesar shift, the expected output), and a determined student with
+the network tab open has always been able to read it; a station whose answer is
+*how fast can you react* is the one where that would not be cheating so much as
+replacing the exercise.
+
+Two things a live stage has to get right, and both are about not measuring the
+wrong thing:
+
+- **The device does the timing, the server does the scoring.** The shooting
+  gallery's whole timeline goes out with the round so that thirty devices show
+  the same target at the same moment whatever the wifi is doing. What the
+  device sends back is when each target was resolved, in order; the server
+  decides what that was worth, and throws out anything faster than
+  `MIN_REACTION_MS`, anything arriving after the target was gone, and anything
+  out of order — which needs no bookkeeping at all, because the next target a
+  player may report is always `hits + misses`.
+- **Latency must not look like slowness.** The traffic light is measured from
+  the moment green arrived *on the device*, not from the moment the server sent
+  it. On school wifi those two are a reaction time apart, and counting the
+  difference would turn the station into a test of the connection. The cost of
+  that choice is one edge case, handled in `Ampel.tsx`: a device that arrives
+  in the middle of a light never saw it turn, so it sits that light out instead
+  of being handed a reaction to nothing — otherwise reloading during green
+  would be worth a hundred points, which a class would find in one lesson.
+
+`RoundSummary` replaces the round review for these, since there is no list of
+questions to walk back through — what there is, is the tally.
+
 ## Colour
 
 Every game owns one colour from `GameColor` (`shared/types.ts`), and no two games
@@ -438,10 +507,13 @@ in the first lesson of Jahrgang 5, in a Q2 course, and on the parents' evening,
 and a badge reading "5, 6" would only tell the wrong half of the school to stay
 away.
 
-Underneath, each station is one idea from the subject with the vocabulary taken
-off: place value (`lampen`), resolution (`pixel`), a shift cipher (`drehen`), a
-planar drawing (`kabel`), a shortest path (`weg`), sorting by adjacent swaps
-(`nachbarn`). That is meant to be useful rather than a joke at the player's
+Underneath, most stations are one idea from the subject with the vocabulary
+taken off: place value (`lampen`), resolution (`pixel`), a shift cipher
+(`drehen`), a planar drawing (`kabel`), a shortest path (`weg`), sorting by
+adjacent swaps (`nachbarn`). Two are not pretending to be anything — `ziele`
+and `ampel` are an aim trainer and a reaction test, they are the two live
+stages (see **Live stages**), and they are in here because a round wants
+somewhere to put its hands. That is meant to be useful rather than a joke at the player's
 expense — a class that has spent ten minutes flicking lamps worth 1, 2, 4 and 8
 has somewhere to stand when the word *Dualsystem* turns up later.
 

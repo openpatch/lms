@@ -114,9 +114,44 @@ for (const spec of Object.values(gameSpecs)) {
       }
     }
 
+    // Anything that is not an answer has to be shrugged off rather than throw:
+    // a live stage takes nothing else, and a client that has gone wrong sends
+    // whatever it likes.
+    const live = handler.isLive?.(state) === true;
+    const junk: unknown[] = [
+      {},
+      { action: "🙈" },
+      { action: "hits", events: "not an array" },
+      { action: "hits", events: [{ id: "x", ms: -1 }] },
+      { action: "tap", light: -1, ms: "soon" },
+    ];
+    for (const payload of junk) {
+      try {
+        handler.onMessage!(state, payload, sender);
+      } catch (error) {
+        fail(`${spec.id}/${stage.id}: crashed on ${JSON.stringify(payload)} — ${error}`);
+        break;
+      }
+    }
+
+    if (live) {
+      // A live round moves on by itself, so the tick has to survive being
+      // called before anything has happened and long after everything has.
+      try {
+        handler.onTick?.(state, Date.now());
+        handler.onTick?.(state, Date.now() + round.duration * 1000);
+      } catch (error) {
+        fail(`${spec.id}/${stage.id}: crashed on a tick — ${error}`);
+      }
+      const tally = (round.extra as { tally?: Record<string, unknown> }).tally;
+      if (!tally || !("player" in tally)) {
+        fail(`${spec.id}/${stage.id}: a live round starts every player on the board`);
+      }
+    }
+
     console.log(
-      `  ✓ ${stage.id}: ${round.questions.length} question(s), ${round.duration}s, ` +
-        `${stage.settings.length} setting(s)`,
+      `  ✓ ${stage.id}: ${live ? "live" : `${round.questions.length} question(s)`}, ` +
+        `${round.duration}s, ${stage.settings.length} setting(s)`,
     );
   }
 }

@@ -207,6 +207,57 @@ export function speedPoints(seconds: number, perSecond = 3, floor = 30, max = 10
   return Math.max(floor, max - Math.floor(Math.max(0, seconds)) * perSecond);
 }
 
+// ---------------------------------------------------------------------------
+// Live stages
+// ---------------------------------------------------------------------------
+
+/**
+ * What a live stage keeps for one player while the round runs.
+ *
+ * A live stage is one the player acts *in* rather than answers: targets to hit,
+ * a light to react to. There is no question to be on, so there is nothing to
+ * put in `answers` — thirty players resolving thirty targets each would put
+ * nine hundred answer objects into a round that is rebroadcast on a tick.
+ * Instead every player has one of these in `extra.tally`, which is thirty small
+ * objects however long the round runs.
+ */
+export interface LiveTally {
+  /** Points so far, combo bonus included. */
+  points: number;
+  /** Events that went well, and events that did not. */
+  hits: number;
+  misses: number;
+  /** Consecutive hits right now, and the best run of the round. */
+  streak: number;
+  bestStreak: number;
+  /** Total reaction time over the hits, so the round can report an average. */
+  totalMs: number;
+}
+
+export function emptyTally(): LiveTally {
+  return { points: 0, hits: 0, misses: 0, streak: 0, bestStreak: 0, totalMs: 0 };
+}
+
+/** Where a live stage keeps its per-player state inside a round. */
+export function liveTallies(data: StageRoundData): Record<string, LiveTally> {
+  const extra = data.extra as { tally?: Record<string, LiveTally> };
+  return extra.tally ?? {};
+}
+
+export function liveTally(data: StageRoundData, playerId: string): LiveTally {
+  return liveTallies(data)[playerId] ?? emptyTally();
+}
+
+/** Score of one player in a live round — the client mirror of the same sum. */
+export function liveScore(data: StageRoundData, playerId: string): number {
+  return Math.round(liveTally(data, playerId).points);
+}
+
+/** Mean reaction over the hits, or null when there were none. */
+export function liveAverageMs(tally: LiveTally): number | null {
+  return tally.hits > 0 ? Math.round(tally.totalMs / tally.hits) : null;
+}
+
 /** Score of one player in the current round. */
 export function playerRoundScore(data: StageRoundData, playerId: string): number {
   const answers = data.answers[playerId] ?? {};

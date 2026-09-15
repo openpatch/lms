@@ -732,7 +732,7 @@
     },
     "intuition": {
       "title": "Bauchgefühl",
-      "description": "Farben treffen, Bilder erkennen, Kabel entwirren — sieben Stationen ganz ohne Vorwissen.",
+      "description": "Farben treffen, Bilder erkennen, Kabel entwirren, Ziele jagen — neun Stationen ganz ohne Vorwissen.",
       "colorPrompt": "Triff die Farbe von links.",
       "color": {
         "red": "Rot",
@@ -827,8 +827,33 @@
           "name": "Nur Nachbarn",
           "summary": "Sortieren mit möglichst wenigen Zügen",
           "rules": "Bring die Karten der Größe nach in eine Reihe. Tauschen darfst du aber immer nur zwei, die nebeneinander liegen — und je weniger Züge, desto mehr Punkte. {{questionsPerRound}} Reihen in {{duration}} Sekunden."
+        },
+        "ziele": {
+          "name": "Zielklick",
+          "summary": "Triff die Ziele, bevor sie schrumpfen",
+          "rules": "Ziele tauchen auf und werden dabei immer kleiner. Tipp sie an, solange sie groß sind — je früher, desto mehr Punkte. Der Lauf geht {{duration}} Sekunden."
+        },
+        "ampel": {
+          "name": "Ampel",
+          "summary": "Warten, bis es grün wird — dann zuschlagen",
+          "rules": "Das Feld ist rot. Sobald es grün wird, tipp so schnell du kannst. Wer zu früh tippt, verliert diese Ampel. {{duration}} Sekunden lang, so viele Ampeln wie reinpassen."
         }
-      }
+      },
+      "targetPrompt": "Triff die Ziele, bevor sie verschwinden.",
+      "targetHits": "getroffen",
+      "targetMissed": "daneben",
+      "lightPrompt": "Warte auf Grün — und dann so schnell du kannst.",
+      "lightWait": "WARTEN",
+      "lightGo": "JETZT!",
+      "lightTooEarly": "Zu früh!",
+      "lightNumber": "Ampel {{number}}",
+      "summary": {
+        "hits": "getroffen",
+        "misses": "daneben",
+        "streak": "beste Serie",
+        "average": "im Schnitt"
+      },
+      "lightMissed": "Diese Ampel war schon an"
     }
   },
   "settings": {
@@ -971,7 +996,19 @@
     "withFrequencyHint": "Häufigsten Buchstaben verraten",
     "nodeCount": "Anzahl der Punkte",
     "mapSize": "Größe der Karte",
-    "cardCount": "Anzahl der Karten"
+    "cardCount": "Anzahl der Karten",
+    "targetLife": "Wie lange ein Ziel bleibt",
+    "targetLifeGemuetlich": "Gemütlich",
+    "targetLifeNormal": "Normal",
+    "targetLifeFlink": "Flink",
+    "targetSize": "Größe der Ziele",
+    "targetSizeGross": "Groß",
+    "targetSizeNormal": "Normal",
+    "targetSizeKlein": "Klein",
+    "waitSpread": "Wartezeit bis Grün",
+    "waitSpreadKurz": "Kurz (1–2,5 s)",
+    "waitSpreadNormal": "Normal (1,5–4 s)",
+    "waitSpreadLang": "Lang (2–6 s)"
   },
   "auth": {
     "title": "Anmeldung für Lehrkräfte",

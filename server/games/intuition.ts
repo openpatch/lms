@@ -17,6 +17,11 @@ import type {
   Rgb,
   SwapAnswer,
   SwapQuestion,
+  Target,
+  TargetBatch,
+  TargetRoundExtra,
+  LightRoundExtra,
+  LightTap,
   UntangleAnswer,
   UntangleQuestion,
 } from "../../shared/games/intuition";
@@ -29,9 +34,9 @@ import {
   type Point,
 } from "../../shared/intuition-graph";
 import { shiftText } from "../../shared/intuition-cipher";
-import { closenessPoints, speedPoints } from "../../shared/framework";
+import { closenessPoints, liveScore, liveTally, speedPoints } from "../../shared/framework";
 import type { StageHandler } from "../framework";
-import { createStageGame } from "../framework";
+import { createStageGame, recordLiveEvent } from "../framework";
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -531,6 +536,221 @@ const nachbarnStage: StageHandler<SwapQuestion> = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// ziele — the live one: targets appear, shrink and are gone
+// ---------------------------------------------------------------------------
+
+/**
+ * Faster than this and nobody reacted to anything — they either guessed where
+ * the next one would be or they are not a person. Either way it is not a hit.
+ */
+const MIN_REACTION_MS = 120;
+
+/** Most events one report may carry, so a bad client cannot flood the round. */
+const MAX_BATCH = 50;
+
+const TARGET_LIFE: Record<string, number> = { gemuetlich: 1900, normal: 1300, flink: 900 };
+const TARGET_SIZE: Record<string, number> = { gross: 9, normal: 6.5, klein: 4.5 };
+
+/**
+ * The whole round, laid out before it starts.
+ *
+ * The timeline goes to the player's device rather than being fed target by
+ * target, because a target that appears when the network says so is a target
+ * that appears at a different moment on thirty devices. What the device cannot
+ * do is award itself points: it reports when each target was hit, and the
+ * server decides what that was worth.
+ */
+function buildTimeline(durationSeconds: number, life: number, radius: number): Target[] {
+  const gap = Math.round(life * 0.7);
+  const targets: Target[] = [];
+  let previous: { x: number; y: number } | null = null;
+
+  for (let at = 400; at + life < durationSeconds * 1000; at += gap) {
+    let spot = { x: randomInt(12, 88), y: randomInt(12, 88) };
+    // Never twice in nearly the same place: that is a drill in holding still,
+    // not in aiming.
+    for (let attempt = 0; attempt < 30 && previous; attempt++) {
+      if (Math.hypot(spot.x - previous.x, spot.y - previous.y) >= 28) break;
+      spot = { x: randomInt(12, 88), y: randomInt(12, 88) };
+    }
+    previous = spot;
+    targets.push({ id: targets.length, at, life, x: spot.x, y: spot.y, r: radius });
+  }
+  return targets;
+}
+
+const zieleStage: StageHandler = {
+  id: "ziele",
+  live: true,
+  // Nothing here moves on its own: the board is running on the player's device
+  // and the tick exists only to carry the scoreboard. Beating any faster would
+  // mean sending a fifty-target timeline that never changes several times a
+  // second to every device in the room.
+  tickMs: 1000,
+
+  createQuestions: () => [],
+
+  createExtra({ settings }) {
+    const life = TARGET_LIFE[String(settings.targetLife)] ?? TARGET_LIFE.normal;
+    const radius = TARGET_SIZE[String(settings.targetSize)] ?? TARGET_SIZE.normal;
+    const extra: TargetRoundExtra = {
+      targets: buildTimeline(Number(settings.duration), life, radius),
+    };
+    return { ...extra };
+  },
+
+  // Nothing is answered question by question here; everything arrives as a
+  // report of targets that have come and gone.
+  evaluate: () => ({ correct: false, points: 0 }),
+
+  onAction(data, payload, playerId) {
+    if (payload.action !== "hits") return false;
+    const batch = payload as unknown as TargetBatch;
+    if (!Array.isArray(batch.events) || batch.events.length > MAX_BATCH) return false;
+
+    const { targets } = data.extra as unknown as TargetRoundExtra;
+    let changed = false;
+
+    for (const event of batch.events) {
+      const tally = liveTally(data, playerId);
+      // Targets are resolved in order and exactly once, so the next one a
+      // player may report is the one after everything they have reported so
+      // far. That is the whole replay protection, and it needs no bookkeeping.
+      const next = tally.hits + tally.misses;
+      if (Number(event?.id) !== next) continue;
+      const target = targets[next];
+      if (!target) continue;
+
+      const ms = event.ms == null ? null : Number(event.ms);
+      const hit = ms != null && isFinite(ms) && ms >= MIN_REACTION_MS && ms <= target.life;
+      recordLiveEvent(data, playerId, {
+        correct: hit,
+        // Full marks the instant it appears, nothing by the time it goes, and
+        // never less than a token for getting there at all.
+        points: hit ? Math.max(25, closenessPoints(ms / target.life)) : 0,
+        ms: hit ? ms : undefined,
+      });
+      changed = true;
+    }
+    return changed;
+  },
+
+  scorePlayer: (data, playerId) => liveScore(data, playerId),
+};
+
+// ---------------------------------------------------------------------------
+// ampel — the other live one: wait for green, and do not jump
+// ---------------------------------------------------------------------------
+
+/** How long a green light waits to be hit before it counts as missed. */
+const GO_WINDOW_MS = 2000;
+
+/** Reaction worth everything, and reaction worth nothing. */
+const PERFECT_MS = 180;
+const HOPELESS_MS = 620;
+
+const WAIT_SPREAD: Record<string, [number, number]> = {
+  kurz: [1000, 2500],
+  normal: [1500, 4000],
+  lang: [2000, 6000],
+};
+
+function nextWait(settings: Record<string, unknown>): number {
+  const [from, to] = WAIT_SPREAD[String(settings.waitSpread)] ?? WAIT_SPREAD.normal;
+  return randomInt(from, to);
+}
+
+/**
+ * The light nobody can see coming.
+ *
+ * When it turns green is decided here, on the tick, and sent out — so it is
+ * not in anything the device was given in advance. It could not be: a station
+ * whose answer is "how fast can you react" is the one station where knowing
+ * the moment in advance replaces the whole exercise.
+ *
+ * What the device does measure is the gap between the green arriving *there*
+ * and the tap. A slow connection then means the light turns green late rather
+ * than that the player looks slow, which on school wifi is the difference
+ * between a reaction test and a broadband test.
+ */
+const ampelStage: StageHandler = {
+  id: "ampel",
+  live: true,
+  // This one does move on its own, and the moment it moves is the whole
+  // station, so it beats quickly — it can afford to, carrying no timeline.
+  tickMs: 250,
+
+  createQuestions: () => [],
+
+  createExtra({ settings }) {
+    const extra: LightRoundExtra = {
+      light: 0,
+      phase: "wait",
+      since: Date.now(),
+      waitMs: nextWait(settings),
+      tapped: {},
+    };
+    return { ...extra };
+  },
+
+  evaluate: () => ({ correct: false, points: 0 }),
+
+  onTick(data, now, ctx) {
+    const extra = data.extra as unknown as LightRoundExtra;
+
+    if (extra.phase === "wait") {
+      if (now - extra.since < extra.waitMs) return false;
+      extra.phase = "go";
+      extra.since = now;
+      return true;
+    }
+
+    if (now - extra.since < GO_WINDOW_MS) return false;
+    // The light is going out: everyone who never touched it missed it.
+    for (const player of ctx.players) {
+      if (extra.tapped[player.id] === extra.light) continue;
+      extra.tapped[player.id] = extra.light;
+      recordLiveEvent(data, player.id, { correct: false, points: 0 });
+    }
+    extra.light += 1;
+    extra.phase = "wait";
+    extra.since = now;
+    extra.waitMs = nextWait(ctx.settings);
+    return true;
+  },
+
+  onAction(data, payload, playerId) {
+    if (payload.action !== "tap") return false;
+    const tap = payload as unknown as LightTap;
+    const extra = data.extra as unknown as LightRoundExtra;
+
+    // Only the light that is up, and only once.
+    if (Number(tap.light) !== extra.light) return false;
+    if (extra.tapped[playerId] === extra.light) return false;
+    extra.tapped[playerId] = extra.light;
+
+    // Tapped while it was still red: a false start costs the light.
+    if (tap.ms == null || extra.phase !== "go") {
+      recordLiveEvent(data, playerId, { correct: false, points: 0 });
+      return true;
+    }
+
+    const ms = Number(tap.ms);
+    const real = isFinite(ms) && ms >= MIN_REACTION_MS && ms <= GO_WINDOW_MS;
+    recordLiveEvent(data, playerId, {
+      correct: real,
+      points: real
+        ? Math.max(10, closenessPoints((ms - PERFECT_MS) / (HOPELESS_MS - PERFECT_MS)))
+        : 0,
+      ms: real ? ms : undefined,
+    });
+    return true;
+  },
+
+  scorePlayer: (data, playerId) => liveScore(data, playerId),
+};
+
 export default createStageGame(intuitionSpec, [
   farbeStage,
   lampenStage,
@@ -538,5 +758,7 @@ export default createStageGame(intuitionSpec, [
   drehenStage,
   kabelStage,
   wegStage,
+  zieleStage,
+  ampelStage,
   nachbarnStage,
 ] as StageHandler[]);

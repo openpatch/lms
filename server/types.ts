@@ -48,4 +48,34 @@ export interface GameHandler {
    * If provided, the server schedules an alarm to end the round automatically.
    */
   getDurationMs?: (state: LobbyState) => number;
+
+  /**
+   * Is the round now being played a live one — a stage the player acts in
+   * continuously rather than answering question by question?
+   *
+   * The room treats those differently on the wire: instead of saving and
+   * broadcasting on every action, it runs a tick while the round lasts and
+   * sends the round from there. Thirty players tapping four times a second is
+   * not thirty players answering ten questions, and the difference is the
+   * difference between a lesson and a stalled server.
+   */
+  isLive?: (state: LobbyState) => boolean;
+
+  /**
+   * How often that tick should fire for the round now being played.
+   *
+   * It is a cost as much as a cadence: every beat is one serialised copy of
+   * the round per socket, and a round that carries a long timeline pays for
+   * that timeline again on each one. A stage that only needs the scoreboard to
+   * feel live wants a slow beat; a stage whose own state has to reach thirty
+   * screens together wants a quick one.
+   */
+  liveTickMs?: (state: LobbyState) => number;
+
+  /**
+   * Called on that tick, so a live stage can move on by itself rather than
+   * only in response to a player — a light that decides when to turn green.
+   * Returns the updated game data when something changed, undefined otherwise.
+   */
+  onTick?: (state: LobbyState, now: number) => unknown;
 }

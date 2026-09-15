@@ -342,8 +342,15 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
         const result = handler.onMessage(state, msg.payload, { id: connectionId });
         if (result) {
           state.gameData = result;
-          room.save();
-          room.broadcast({ type: "game-state", gameData: state.gameData });
+          if (handler.isLive?.(state)) {
+            // A live round goes out on the room's tick instead. Saving and
+            // broadcasting here would mean doing both several times a second
+            // per player, which is the one thing a tap stage must not cost.
+            room.markLive();
+          } else {
+            room.save();
+            room.broadcast({ type: "game-state", gameData: state.gameData });
+          }
         }
       }
 

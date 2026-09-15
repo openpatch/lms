@@ -64,6 +64,10 @@ export interface StageComponents {
   /** One row of the round review. Without it the review still shows what the
    *  player answered and what it scored, just not the question itself. */
   Review?: ComponentType<StageReviewProps<any>>;
+  /** Replaces the whole round review. A live stage has no list of questions to
+   *  walk through afterwards — what it has is a tally — so it brings one of
+   *  these instead of a `Review`. */
+  RoundSummary?: AnyStageComponent;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

@@ -46,8 +46,31 @@ export default function RoundReview({
 }) {
   const { t } = useTranslation();
   const stage = getStage(game, data.stageId);
+  if (!stage) return null;
+
+  // A live stage has no questions to walk through — it has a tally — so it
+  // says what the round came to in its own words.
+  if (stage.RoundSummary) {
+    const Summary = stage.RoundSummary;
+    return (
+      <section className="w-full max-w-md">
+        <h3 className="mb-2 px-1 font-bold text-game-ink">{t("game.yourAnswers")}</h3>
+        <Summary
+          data={data}
+          question={null}
+          answeredCount={0}
+          submit={() => {}}
+          sendAction={() => {}}
+          settings={data.settings}
+          isHost={false}
+          playerId={playerId}
+        />
+      </section>
+    );
+  }
+
   // Stages that are not question based (a tap round) have nothing to list
-  if (!stage || data.questions.length === 0) return null;
+  if (data.questions.length === 0) return null;
 
   const answers = data.answers[playerId] ?? {};
   const Review = stage.Review;

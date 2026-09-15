@@ -21,6 +21,25 @@ import * as store from "./store";
 /** How long before the countdown hands over to the round itself. */
 const COUNTDOWN_MS = 3_000;
 
+/**
+ * How often a live round is sent out.
+ *
+ * A live stage is one the class acts in continuously, so its actions arrive
+ * far faster than a question game's do and every one of them would otherwise
+ * cost a SQLite write and one serialised copy of the round per socket. Instead
+ * the round goes out on this tick, which puts a ceiling on the cost no matter
+ * how hard thirty people are tapping: the tick is also where a stage that
+ * drives itself gets to move.
+ *
+ * Twice a second keeps a scoreboard feeling live; a stage that has to get its
+ * own state onto thirty screens together asks for something quicker with
+ * `tickMs`, and one carrying a long timeline asks for something slower.
+ */
+const LIVE_TICK_MS = 500;
+
+/** A live round is mirrored to SQLite this often, rather than on every tick. */
+const LIVE_SAVE_MS = 2_000;
+
 /** A lobby is closed this long after it was created, whoever is still in it. */
 export const LOBBY_TTL_MS = 2 * 60 * 60 * 1000;
 
@@ -45,6 +64,10 @@ export class Room {
   private closed = false;
   private countdownTimer: NodeJS.Timeout | undefined;
   private roundTimer: NodeJS.Timeout | undefined;
+  private liveTimer: NodeJS.Timeout | undefined;
+  /** Set when a live round changed and the next tick should send it. */
+  private liveDirty = false;
+  private liveSavedAt = 0;
   private ttlTimer: NodeJS.Timeout;
 
   constructor(
@@ -159,6 +182,65 @@ export class Room {
     if (handler?.getDurationMs) {
       this.roundTimer = setTimeout(() => this.endRound(), handler.getDurationMs(this.state));
     }
+    if (handler?.isLive?.(this.state)) this.startLiveTicking();
+  }
+
+  /**
+   * A live round changed because a player did something. Nothing goes out now;
+   * the next tick sends it. Callers that are not a live round must not use
+   * this — they save and broadcast as they always did.
+   */
+  markLive(): void {
+    this.liveDirty = true;
+  }
+
+  private startLiveTicking(): void {
+    clearInterval(this.liveTimer);
+    this.liveDirty = true;
+    this.liveSavedAt = 0;
+    const asked = gameHandlers[this.state.gameId]?.liveTickMs?.(this.state) ?? 0;
+    // Clamped: a stage asking for a beat every few milliseconds would be
+    // asking the room to spend the lesson serialising rounds.
+    const every = asked > 0 ? Math.min(2_000, Math.max(100, asked)) : LIVE_TICK_MS;
+    this.liveTimer = setInterval(() => this.liveTick(), every);
+  }
+
+  private stopLiveTicking(): void {
+    clearInterval(this.liveTimer);
+    this.liveTimer = undefined;
+    this.liveDirty = false;
+  }
+
+  /**
+   * One beat of a live round: let the stage move itself on, then send the
+   * round out if anything has changed since the last beat.
+   */
+  private liveTick(): void {
+    if (this.state.phase !== "playing") {
+      this.stopLiveTicking();
+      return;
+    }
+
+    const handler = gameHandlers[this.state.gameId];
+    const moved = handler?.onTick?.(this.state, Date.now());
+    if (moved) {
+      this.state.gameData = moved;
+      this.liveDirty = true;
+    }
+
+    if (this.liveDirty) {
+      this.liveDirty = false;
+      this.broadcast({ type: "game-state", gameData: this.state.gameData });
+      // Mirrored far less often than it is sent: what a restart has to put
+      // back is the round, not the last quarter of a second of it.
+      const now = Date.now();
+      if (now - this.liveSavedAt >= LIVE_SAVE_MS) {
+        this.liveSavedAt = now;
+        this.save();
+      }
+    }
+
+    this.endRound();
   }
 
   /**
@@ -174,6 +256,7 @@ export class Room {
 
     clearTimeout(this.roundTimer);
     this.roundTimer = undefined;
+    this.stopLiveTicking();
 
     // Add round scores to each player's cumulative total
     for (const result of results) {
@@ -211,6 +294,7 @@ export class Room {
     clearTimeout(this.roundTimer);
     this.countdownTimer = undefined;
     this.roundTimer = undefined;
+    this.stopLiveTicking();
 
     this.setPhase("lobby");
     this.state.gameData = null;
@@ -228,6 +312,7 @@ export class Room {
     clearTimeout(this.ttlTimer);
     clearTimeout(this.countdownTimer);
     clearTimeout(this.roundTimer);
+    this.stopLiveTicking();
 
     this.broadcast({ type: "lobby-closed", reason });
     for (const socket of this.sockets.values()) socket.close(1000, reason);

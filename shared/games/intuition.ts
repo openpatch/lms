@@ -143,6 +143,26 @@ export const intuitionSpec: GameSpec = {
       settings: [questionsPerRound([3, 5, 8], 5), duration(120, 240), count("mapSize", [6, 7, 8, 9], 7)],
     },
     {
+      id: "ziele",
+      nameKey: "games.intuition.stages.ziele.name",
+      summaryKey: "games.intuition.stages.ziele.summary",
+      rulesKey: "games.intuition.stages.ziele.rules",
+      // No questionsPerRound: how many targets there are follows from how long
+      // the round lasts and how long each one stays.
+      settings: [
+        duration(45, 120),
+        choice("targetLife", ["gemuetlich", "normal", "flink"], "normal"),
+        choice("targetSize", ["gross", "normal", "klein"], "normal"),
+      ],
+    },
+    {
+      id: "ampel",
+      nameKey: "games.intuition.stages.ampel.name",
+      summaryKey: "games.intuition.stages.ampel.summary",
+      rulesKey: "games.intuition.stages.ampel.rules",
+      settings: [duration(60, 120), choice("waitSpread", ["kurz", "normal", "lang"], "normal")],
+    },
+    {
       id: "nachbarn",
       nameKey: "games.intuition.stages.nachbarn.name",
       summaryKey: "games.intuition.stages.nachbarn.summary",
@@ -226,6 +246,69 @@ export interface SwapQuestion extends StageQuestion {
   values: number[];
   /** The fewest swaps that can sort them — the number of inversions. */
   minSwaps: number;
+}
+
+// ---------------------------------------------------------------------------
+// The two live stations
+// ---------------------------------------------------------------------------
+
+/** One target of the shooting gallery, on the round's own timeline. */
+export interface Target {
+  /** Its place in the timeline; targets are resolved in this order. */
+  id: number;
+  /** When it appears, milliseconds after the round started. */
+  at: number;
+  /** How long it stays before it is gone. */
+  life: number;
+  /** Where, in the same 0-100 box the maps use. */
+  x: number;
+  y: number;
+  /** Radius when it appears; it shrinks to `SHRINK_TO` of that as it ages. */
+  r: number;
+}
+
+/** How small a target gets by the end of its life — never nothing, or the last
+ *  moments of it would be unhittable rather than merely hard. */
+export const SHRINK_TO = 0.35;
+
+/** What a live round of the shooting gallery keeps in `extra`, beside the tally. */
+export interface TargetRoundExtra {
+  targets: Target[];
+}
+
+/** One resolved target, as the player's device reports it. */
+export interface TargetEvent {
+  id: number;
+  /** Milliseconds after the target appeared, or null when it was missed. */
+  ms: number | null;
+}
+
+export interface TargetBatch {
+  events: TargetEvent[];
+}
+
+/** Where the traffic light is, for everybody at once. */
+export interface LightRoundExtra {
+  /** Which light of the round this is, counting from zero. */
+  light: number;
+  phase: "wait" | "go";
+  /** Server clock reading when this phase began. */
+  since: number;
+  /** How long "wait" lasts this time — never sent while it is still waiting. */
+  waitMs: number;
+  /** Highest light each player has already answered. */
+  tapped: Record<string, number>;
+}
+
+/** What a player sends when they hit the light — or jump the gun. */
+export interface LightTap {
+  light: number;
+  /**
+   * Milliseconds between this device showing green and the tap, measured on
+   * the device: a slow connection then delays when the light arrives rather
+   * than making the player look slow. Null means they tapped while it was red.
+   */
+  ms: number | null;
 }
 
 /** What the player sends back from the untangling station. */

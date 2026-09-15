@@ -732,7 +732,7 @@
     },
     "intuition": {
       "title": "Gut Feeling",
-      "description": "Match colours, name pictures, untangle wires — seven stations that need no prior knowledge at all.",
+      "description": "Match colours, name pictures, untangle wires, chase targets — nine stations that need no prior knowledge at all.",
       "colorPrompt": "Match the colour on the left.",
       "color": {
         "red": "Red",
@@ -827,8 +827,33 @@
           "name": "Neighbours only",
           "summary": "Sort in as few moves as you can",
           "rules": "Put the cards in order by size. But you may only ever swap two that lie next to each other — and the fewer moves, the more points. {{questionsPerRound}} rows in {{duration}} seconds."
+        },
+        "ziele": {
+          "name": "Target practice",
+          "summary": "Hit the targets before they shrink",
+          "rules": "Targets appear and shrink while they are there. Tap them while they are still big — the earlier, the more points. The run lasts {{duration}} seconds."
+        },
+        "ampel": {
+          "name": "Traffic light",
+          "summary": "Wait for green — then pounce",
+          "rules": "The panel is red. The moment it turns green, tap as fast as you can. Tap too early and that light is lost. {{duration}} seconds, and as many lights as fit."
         }
-      }
+      },
+      "targetPrompt": "Hit the targets before they are gone.",
+      "targetHits": "hit",
+      "targetMissed": "missed",
+      "lightPrompt": "Wait for green — then as fast as you can.",
+      "lightWait": "WAIT",
+      "lightGo": "NOW!",
+      "lightTooEarly": "Too early!",
+      "lightNumber": "Light {{number}}",
+      "summary": {
+        "hits": "hit",
+        "misses": "missed",
+        "streak": "best run",
+        "average": "on average"
+      },
+      "lightMissed": "That light was already on"
     }
   },
   "settings": {
@@ -971,7 +996,19 @@
     "withFrequencyHint": "Give away the most frequent letter",
     "nodeCount": "Number of dots",
     "mapSize": "Size of the map",
-    "cardCount": "Number of cards"
+    "cardCount": "Number of cards",
+    "targetLife": "How long a target stays",
+    "targetLifeGemuetlich": "Leisurely",
+    "targetLifeNormal": "Normal",
+    "targetLifeFlink": "Brisk",
+    "targetSize": "Size of the targets",
+    "targetSizeGross": "Large",
+    "targetSizeNormal": "Normal",
+    "targetSizeKlein": "Small",
+    "waitSpread": "Wait before green",
+    "waitSpreadKurz": "Short (1–2.5 s)",
+    "waitSpreadNormal": "Normal (1.5–4 s)",
+    "waitSpreadLang": "Long (2–6 s)"
   },
   "auth": {
     "title": "Teacher sign-in",
