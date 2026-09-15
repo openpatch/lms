@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 
 export default function Join() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [code, setCode] = useState("");
+  // A player who scanned the host's QR code arrives with the lobby code in
+  // hand, so all that is left to fill in is a name.
+  const [searchParams] = useSearchParams();
+  const [code, setCode] = useState(() =>
+    (searchParams.get("code") ?? "").trim().toUpperCase().slice(0, 6),
+  );
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
