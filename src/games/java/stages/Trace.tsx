@@ -74,19 +74,125 @@ export default function TraceStage({ question, submit }: StageProps<CodeAnswerQu
   );
 }
 
-export function TraceRulesExample() {
+/**
+ * The picture over a station's rules: a listing the size of one the round will
+ * ask, the question it will be asked with, and the answer it wants.
+ *
+ * The six stations share the component above because they genuinely ask the
+ * player the same thing. They must not share this. The picture is the half of
+ * the rules screen a class actually looks at, and one integer-division snippet
+ * standing over "count the passes" teaches the shape of the wrong question.
+ * The question line is the stage's own `games.java.ask.*`, so the example is
+ * worded exactly as the round will word it.
+ */
+function TraceExample({
+  lines,
+  ask,
+  askArg,
+  answer,
+}: {
+  lines: string[];
+  ask: string;
+  askArg?: string;
+  answer: string;
+}) {
+  const { t } = useTranslation();
   return (
-    <div className="flex flex-col items-center gap-3">
-      <CodeBlock
-        lines={["void main() {", "    int zahl = 7;", "    IO.println(zahl / 2);", "}"]}
-        className="max-w-xs"
-      />
+    <div className="flex flex-col items-center gap-2">
+      <CodeBlock lines={lines} className="max-w-xs" />
+      <p className="text-sm text-gray-500">{t(`games.java.ask.${ask}`, { name: askArg })}</p>
       <div className="flex items-center gap-3 text-gray-500">
         <span>&rarr;</span>
         <span className="rounded-lg border-2 border-gray-200 px-3 py-1 font-mono text-lg text-gray-700">
-          3
+          {answer}
         </span>
       </div>
     </div>
+  );
+}
+
+/** output — two ints divided stay an int, which is the thing to look out for. */
+export function OutputRulesExample() {
+  return (
+    <TraceExample
+      lines={["void main() {", "    int zahl = 7;", "    IO.println(zahl / 2);", "}"]}
+      ask="output"
+      answer="3"
+    />
+  );
+}
+
+/** variables — `=` is not "is equal to", it is "gets the value of". */
+export function VariablesRulesExample() {
+  return (
+    <TraceExample
+      lines={["void main() {", "    int a = 4;", "    a = a + 3;", "    a = a * 2;", "}"]}
+      ask="value"
+      askArg="a"
+      answer="14"
+    />
+  );
+}
+
+/** loops — every pass writes a line, and they are wanted in order. */
+export function LoopsRulesExample() {
+  return (
+    <TraceExample
+      lines={[
+        "void main() {",
+        "    for (int i = 1; i < 4; i++) {",
+        "        IO.println(i * 2);",
+        "    }",
+        "}",
+      ]}
+      ask="output"
+      answer="2 4 6"
+    />
+  );
+}
+
+/** methods — the call is what prints, and the arguments have an order. */
+export function MethodsRulesExample() {
+  return (
+    <TraceExample
+      lines={[
+        "void main() {",
+        "    IO.println(verdopple(5));",
+        "}",
+        "",
+        "int verdopple(int zahl) {",
+        "    return zahl * 2;",
+        "}",
+      ]}
+      ask="call"
+      answer="10"
+    />
+  );
+}
+
+/** arrays — counted from 0, so the second value sits at index 1. */
+export function ArraysRulesExample() {
+  return (
+    <TraceExample
+      lines={[
+        "void main() {",
+        "    int[] werte = {4, 9, 2, 7};",
+        "    IO.println(werte[1]);",
+        "}",
+      ]}
+      ask="output"
+      answer="9"
+    />
+  );
+}
+
+/** sorting — a procedure carried out by hand, not a program read off. */
+export function SortingRulesExample() {
+  return (
+    <TraceExample
+      lines={["int[] werte = {5, 3, 8, 1};"]}
+      ask="bubblePass"
+      answer="3 5 1 8"
+    />
   );
 }
