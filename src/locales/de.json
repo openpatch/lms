@@ -80,7 +80,8 @@
     "lobbyNotFound": "Es gibt keine Lobby mit diesem Code.",
     "toLobby": "Zu dieser Lobby",
     "closeLobby": "Lobby schließen",
-    "gained": "+{{points}}"
+    "gained": "+{{points}}",
+    "endRound": "Runde beenden"
   },
   "lobby": {
     "title": "Lobby",

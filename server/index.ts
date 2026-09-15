@@ -289,6 +289,15 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
       break;
     }
 
+    case "end-round": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can end the round" });
+        return;
+      }
+      room.endRound(true);
+      break;
+    }
+
     case "restart": {
       if (!isHost) {
         send(ws, { type: "error", message: "Only host can restart" });

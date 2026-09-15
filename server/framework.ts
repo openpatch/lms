@@ -318,6 +318,10 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
       return { ...data };
     },
 
+    roundResults(state: LobbyState) {
+      return roundResults(state);
+    },
+
     checkRoundFinished(state: LobbyState) {
       const data = state.gameData as StageRoundData | null;
       if (!data) return undefined;

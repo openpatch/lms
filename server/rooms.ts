@@ -251,12 +251,20 @@ export class Room {
   /**
    * End the round if the game says it is over — either every answer is in, or the
    * round timer ran out. Returns whether the round actually ended.
+   *
+   * With `force`, the game is not consulted: the host has decided the round is
+   * over, which is a thing a lesson needs — a class that has all finished, a
+   * bell about to go, a station that turned out to be too hard. Whatever has
+   * been answered counts, and the rest counts for what it would have counted
+   * for had the clock run out on it.
    */
-  endRound(): boolean {
+  endRound(force = false): boolean {
     if (this.state.phase !== "playing") return false;
 
     const handler = gameHandlers[this.state.gameId];
-    const results = handler?.checkRoundFinished?.(this.state);
+    const results = force
+      ? handler?.roundResults?.(this.state)
+      : handler?.checkRoundFinished?.(this.state);
     if (!results) return false;
 
     clearTimeout(this.roundTimer);

@@ -93,6 +93,23 @@ function useAnswerFeedback(data: StageRoundData | null, playerId: string) {
 }
 
 /** Default spectator view: one row per player with progress and live score. */
+/** Height of one row and the gap under it, in pixels. */
+const ROW_STRIDE = 60;
+
+/**
+ * Who is where, while the round is being played.
+ *
+ * Ranked by **this round** and nothing else. The running total is deliberately
+ * not here: a player who is out of the running overall can still win the round
+ * they are in, and seeing that they are second in it right now is the thing
+ * that keeps them playing. The totals come back the moment the round ends,
+ * which is when they mean something again.
+ *
+ * The rows are placed rather than stacked, so a change in the order slides
+ * instead of jumping. On a projector that is the difference between a
+ * scoreboard and a list of names: you see the overtake happen rather than
+ * noticing afterwards that it has.
+ */
 function ProgressList({
   data,
   players,
@@ -103,44 +120,55 @@ function ProgressList({
   scoreOf: (playerId: string) => number;
 }) {
   const { t } = useTranslation();
-  const guests = players.filter((p) => !p.isHost);
+  const questions = data.questions.length;
 
-  if (guests.length === 0) {
+  const rows = players
+    .filter((p) => !p.isHost)
+    .map((player) => ({
+      player,
+      round: scoreOf(player.id),
+      answered: answeredCount(data, player.id),
+    }))
+    // Level pegging early on, so the name keeps the order from shuffling about
+    // while everyone is still on nothing.
+    .sort((a, b) => b.round - a.round || a.player.name.localeCompare(b.player.name));
+
+  if (rows.length === 0) {
     return <p className="text-gray-400 text-center py-4">{t("lobby.waiting")}</p>;
   }
 
   return (
-    <div className="w-full max-w-md space-y-2">
-      {guests.map((player) => {
-        const answered = answeredCount(data, player.id);
-        const total = data.questions.length;
-        const percent = total > 0 ? (answered / total) * 100 : 0;
-        const score = scoreOf(player.id);
-        return (
-          <div
-            key={player.id}
-            className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3"
-          >
-            <span className="font-medium text-gray-700 flex-1">{player.name}</span>
-            {total > 0 && (
-              <>
-                <div className="w-32 h-2 bg-game-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-game-solid transition-all duration-300"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-                <span className="text-sm text-gray-500 tabular-nums">
-                  {answered}/{total}
-                </span>
-              </>
-            )}
-            <span className="text-sm font-bold text-game-ink tabular-nums min-w-12 text-right">
-              {score}
-            </span>
-          </div>
-        );
-      })}
+    <div className="relative w-full max-w-md" style={{ height: rows.length * ROW_STRIDE }}>
+      {rows.map((row, rank) => (
+        <div
+          key={row.player.id}
+          className="absolute inset-x-0 top-0 flex h-13 items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 transition-transform duration-500 ease-out"
+          style={{ transform: `translateY(${rank * ROW_STRIDE}px)` }}
+        >
+          <span className="w-5 shrink-0 text-sm font-bold text-gray-400 tabular-nums">
+            {rank + 1}
+          </span>
+          <span className="min-w-0 flex-1 truncate font-medium text-gray-700">
+            {row.player.name}
+          </span>
+          {questions > 0 && (
+            <>
+              <div className="h-2 w-20 overflow-hidden rounded-full bg-game-100 sm:w-28">
+                <div
+                  className="h-full bg-game-solid transition-all duration-300"
+                  style={{ width: `${(row.answered / questions) * 100}%` }}
+                />
+              </div>
+              <span className="shrink-0 text-sm text-gray-500 tabular-nums">
+                {row.answered}/{questions}
+              </span>
+            </>
+          )}
+          <span className="min-w-10 shrink-0 text-right text-sm font-bold text-game-ink tabular-nums">
+            {row.round}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -152,6 +180,9 @@ export interface StageShellProps {
   isHost: boolean;
   playerId: string;
   sendMessage: (payload: unknown) => void;
+  /** Put in the bottom bar for the host. The stage's own action goes there for
+   *  a player, and the host never has one — the two never collide. */
+  hostAction?: React.ReactNode;
 }
 
 /**
@@ -165,6 +196,7 @@ export default function StageShell({
   isHost,
   playerId,
   sendMessage,
+  hostAction,
 }: StageShellProps) {
   const { t } = useTranslation();
   const data = gameData as StageRoundData | null;
@@ -273,7 +305,9 @@ export default function StageShell({
         // virtual keyboard is up, so the bar stays above it instead of under it.
         style={{ bottom: "var(--virtual-keyboard-height, 0px)" }}
         className="fixed inset-x-0 z-20 empty:hidden bg-white/95 backdrop-blur border-t border-gray-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-center"
-      />
+      >
+        {isHost ? hostAction : null}
+      </div>
     </div>
   );
 }

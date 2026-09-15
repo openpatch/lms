@@ -157,6 +157,14 @@ export default function HostLobby() {
           isHost={true}
           playerId={hostId}
           sendMessage={conn.sendGameAction}
+          hostAction={
+            <button
+              onClick={() => conn.sendMessage({ type: "end-round" })}
+              className="rounded-xl border-2 border-gray-300 px-6 py-2 font-semibold text-gray-600 transition-colors hover:border-game-solid hover:text-game-ink"
+            >
+              {t("game.endRound")}
+            </button>
+          }
         />
       </div>
     );

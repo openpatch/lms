@@ -20,6 +20,18 @@ Everything else — the countdown, the timer, answer bookkeeping, streaks and co
 bonus, the score header, the host's progress view, round results — belongs to the
 framework and is the same for every game.
 
+While a round runs, the host sees the class ranked by **that round** — not by
+the running total, on purpose: a player who is out of the running overall can
+still win the round they are in, and seeing that keeps them playing. The totals
+come back the moment the round ends, with what it added beside them. The rows
+are placed rather than stacked so a change in the order slides instead of
+jumping — on a projector that is the difference between watching an overtake
+and noticing afterwards that it happened. The host can also stop a round before the clock does
+(`end-round`, host only), which a lesson needs: a class that has all finished,
+a bell about to go, a station that turned out to be too hard. Whatever has been
+answered counts, and the rest counts for what it would have counted for had the
+clock run out on it.
+
 ```
  lobby ──► explanation ──► countdown ──► playing ──► round-finished ──► … ──► finished
            (stage rules)     (3, 2, 1)   (stage UI)   (next stage)
@@ -51,7 +63,7 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `src/lib/game-registry.ts` | `defineGame()` — joins a spec with its React components |
 | `src/lib/game-theme.ts` | The colour palettes and the `--game-*` variables that paint a game's screens |
 | `src/games/<game>/stages/*.tsx` | One component per stage: render the current question |
-| `src/components/StageShell.tsx` | The bars around a stage: round, score and clock pinned under the app header, the stage's action pinned to the bottom edge (`StageActionBar`), plus host view and feedback |
+| `src/components/StageShell.tsx` | The bars around a stage: round, score and clock pinned under the app header, the stage's action pinned to the bottom edge (`StageActionBar`) — or the host's, through `hostAction` — plus the ranked host view and feedback |
 | `src/components/StageRules.tsx` | The rules screen before a round |
 | `src/components/StageSettingsForm.tsx` | The host's stage picker and settings, built from the schema |
 | `src/components/NumberLine.tsx` | Ticks, click-to-pick and markers on an axis |

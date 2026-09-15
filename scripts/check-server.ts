@@ -269,6 +269,28 @@ async function main() {
     const strayError = await stray.waitFor("error");
     check("nobody joins mid-game", strayError?.message === "Game already in progress");
 
+    // Cutting a round short is the host's alone, and it has to work while the
+    // clock still has seconds left on it — that is the whole point of it.
+    const meddler = new TestClient(code, randomUUID());
+    await meddler.ready();
+    meddler.send({ type: "end-round" });
+    const meddlerError = await meddler.waitFor("error");
+    check(
+      "only the host can end the round early",
+      meddlerError?.message === "Only host can end the round",
+      meddlerError?.message,
+    );
+
+    host.send({ type: "end-round" });
+    // The example game has one stage, so its round ending is the game ending.
+    const cutShort = await player.waitFor("finished");
+    check("the host can end a round before the clock does", !!cutShort);
+    check(
+      "and everyone is still scored for it",
+      !!cutShort && cutShort.results.length > 0,
+      `${cutShort?.results.length ?? 0} result(s)`,
+    );
+
     const impostor = new TestClient(code, randomUUID());
     await impostor.ready();
     impostor.send({ type: "restart" });

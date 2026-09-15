@@ -77,6 +77,8 @@ export type ClientMessage =
   | { type: "begin-countdown" }
   | { type: "restart" }
   | { type: "next-round" }
+  /** Stop the round now, whatever the clock says. Host only. */
+  | { type: "end-round" }
   | { type: "update-settings"; settings: unknown }
   | { type: "game-action"; payload: unknown }
   | { type: "kick"; playerId: string }

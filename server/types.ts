@@ -50,6 +50,13 @@ export interface GameHandler {
   checkRoundFinished?: (state: LobbyState) => GameResult[] | undefined;
 
   /**
+   * What the round stands at, asked rather than waited for: the host has cut
+   * it short. Whatever has been answered counts, and whatever has not is worth
+   * what it would have been worth had the clock run out.
+   */
+  roundResults?: (state: LobbyState) => GameResult[];
+
+  /**
    * Called to determine if the current round is the last round.
    * If true, the server transitions to "finished" instead of "round-finished".
    */
