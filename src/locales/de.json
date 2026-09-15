@@ -84,7 +84,17 @@
     "endRound": "Runde beenden",
     "crownsWon_one": "einen Rundensieg",
     "crownsWon_other": "{{count}} Rundensiege",
-    "mostRounds": "Die meisten Rundensiege: {{name}}"
+    "mostRounds": "Die meisten Rundensiege: {{name}}",
+    "debrief": {
+      "title": "Aufgaben der Runde",
+      "open": "Aufgaben besprechen",
+      "close": "Besprechung schließen",
+      "correctOf": "{{correct}} von {{total}}",
+      "whatTheySaid": "Geantwortet wurde",
+      "unanswered": "nicht beantwortet",
+      "times_one": "1×",
+      "times_other": "{{count}}×"
+    }
   },
   "lobby": {
     "title": "Lobby",

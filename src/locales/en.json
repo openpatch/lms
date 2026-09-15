@@ -84,7 +84,17 @@
     "endRound": "End the round",
     "crownsWon_one": "one round won",
     "crownsWon_other": "{{count}} rounds won",
-    "mostRounds": "Most rounds won: {{name}}"
+    "mostRounds": "Most rounds won: {{name}}",
+    "debrief": {
+      "title": "The round's questions",
+      "open": "Talk the questions through",
+      "close": "Close the debrief",
+      "correctOf": "{{correct}} of {{total}}",
+      "whatTheySaid": "What was answered",
+      "unanswered": "not answered",
+      "times_one": "1×",
+      "times_other": "{{count}}×"
+    }
   },
   "lobby": {
     "title": "Lobby",

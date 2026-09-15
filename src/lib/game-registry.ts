@@ -68,6 +68,22 @@ export interface StageComponents {
    *  walk through afterwards — what it has is a tally — so it brings one of
    *  these instead of a `Review`. */
   RoundSummary?: AnyStageComponent;
+  /**
+   * The right answer on its own, for the host talking a question through with
+   * the class afterwards (`RoundDebrief`).
+   *
+   * Optional, and the debrief is useful without it: the question is drawn by
+   * the stage's own component and how many got it right needs no help. This is
+   * for the case that matters most and that the data cannot cover — the
+   * question *nobody* got, where the answer appears nowhere on the board.
+   */
+  Solution?: ComponentType<{ question: any }>;
+  /**
+   * What one raw answer means, for the same screen. A stage that takes typed
+   * text needs nothing here; one whose answers are "2" or a line number does,
+   * or the class's answers read as a column of indices.
+   */
+  answerLabel?: (question: any, answer: string) => string;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

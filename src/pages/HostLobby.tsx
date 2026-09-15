@@ -4,6 +4,7 @@ import { useParams, Link } from "react-router";
 import JoinCode from "../components/JoinCode";
 import PlayerList from "../components/PlayerList";
 import ResultsList from "../components/ResultsList";
+import RoundDebrief from "../components/RoundDebrief";
 import { standings, withGains } from "../components/results";
 import Countdown from "../components/Countdown";
 import StageShell from "../components/StageShell";
@@ -13,6 +14,7 @@ import { useGameConnection } from "../lib/connection";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import type { ServerMessage, GameResult } from "../../shared/types";
+import type { StageRoundData } from "../../shared/framework";
 
 export default function HostLobby() {
   const { t } = useTranslation();
@@ -173,6 +175,7 @@ export default function HostLobby() {
   // Round-finished phase
   if (phase === "round-finished" && lobbyState) {
     const data = lobbyState.gameData as { currentRound?: number; totalRounds?: number } | null;
+    const roundData = lobbyState.gameData as StageRoundData | null;
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
         <div className="text-sm font-semibold uppercase text-game-ink">
@@ -188,6 +191,9 @@ export default function HostLobby() {
         >
           {t("game.nextRound")}
         </button>
+        {roundData && (
+          <RoundDebrief game={game} data={roundData} players={lobbyState.players} />
+        )}
       </div>
     );
   }
@@ -195,6 +201,7 @@ export default function HostLobby() {
   // Finished phase
   if (phase === "finished" && lobbyState) {
     const data = lobbyState.gameData as { currentRound?: number } | null;
+    const roundData = lobbyState.gameData as StageRoundData | null;
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
         <ResultsList
@@ -208,6 +215,9 @@ export default function HostLobby() {
         >
           {t("play.backToLobby")}
         </button>
+        {roundData && (
+          <RoundDebrief game={game} data={roundData} players={lobbyState.players} />
+        )}
       </div>
     );
   }

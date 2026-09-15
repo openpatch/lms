@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { ActionBarContext } from "./action-bar";
 import { useTranslation } from "react-i18next";
 import type { LobbyState } from "../../shared/types";
 import type { StageRoundData } from "../../shared/framework";
@@ -12,8 +13,7 @@ import {
 import { getStage, type GameDefinition, type StageProps } from "../lib/game-registry";
 import { serverTime } from "../lib/server-time";
 
-/** Where a stage's primary button goes: the bar pinned to the bottom edge. */
-const ActionBarContext = createContext<HTMLElement | null>(null);
+
 
 /**
  * Puts the stage's main action — usually "submit" — into the bar at the bottom

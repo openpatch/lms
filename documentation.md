@@ -361,6 +361,43 @@ wrong thing:
 `RoundSummary` replaces the round review for these, since there is no list of
 questions to walk back through — what there is, is the tally.
 
+## Talking the round through
+
+A leaderboard tells a teacher who won. What they leave the lesson needing is
+the other thing — which question the class fell over, and the question itself,
+large enough to put back on the wall. `src/components/RoundDebrief.tsx` is that
+screen: the round's questions ranked hardest first, and any one of them opened
+up with the question as it was asked, the right answer, and what the class
+actually said.
+
+It is **folded away by default**. Most rounds a teacher wants to get on with
+the next one, and a wall of statistics between them and that button would be
+worse than nothing.
+
+Nothing is stored and nothing is asked for. When a round ends the host's own
+copy of it still holds every player's answers, so all of this is arithmetic on
+something already on screen.
+
+The question is drawn by **the stage's own `Component`** — the only way to show
+it exactly as the class saw it, and the only way that works for every game
+rather than the three that happen to have a `Review` row. It is handed a submit
+that does nothing and a bottom bar that is not in the document, and the whole
+subtree is `inert`: nothing in it can be clicked, and nothing in it can take
+focus, which matters because stages focus their answer box on mount and the
+page would otherwise jump to a field that is not there to be filled in.
+
+Two optional hooks let a game say more, and the screen is useful without either:
+
+| Hook | What it adds |
+| --- | --- |
+| `Solution` | The right answer on its own. For the case the data cannot cover: the question *nobody* got, where the answer appears nowhere on the board |
+| `answerLabel` | What a stored answer means. A stage that takes typed text needs nothing; one whose answers are `"2"` or a line number does, or the class's answers read as a column of indices |
+
+Only `java` has both so far (`src/games/java/stages/solutions.tsx` and
+`answer-labels.ts`), which is five components between eleven stations because
+the stations share their components. Every other game still gets the question,
+the ranking and the distribution.
+
 ## Colour
 
 Every game owns one colour from `GameColor` (`shared/types.ts`), and no two games
