@@ -729,6 +729,106 @@
           "rules": "Find the line that holds the mistake in {{questionsPerRound}} programs. The faster you find it, the more points. You have {{duration}} seconds."
         }
       }
+    },
+    "intuition": {
+      "title": "Gut Feeling",
+      "description": "Match colours, name pictures, untangle wires — seven stations that need no prior knowledge at all.",
+      "colorPrompt": "Match the colour on the left.",
+      "color": {
+        "red": "Red",
+        "green": "Green",
+        "blue": "Blue",
+        "target": "wanted",
+        "yours": "yours",
+        "seam": "wanted on the left, your mix on the right"
+      },
+      "lampPrompt": "Switch lamps on until it adds up to:",
+      "lampReview": "Wanted {{target}} · lamps: {{lamps}}",
+      "pixelPrompt": "What is it? The earlier you tap, the more points.",
+      "things": {
+        "pizza": "Pizza",
+        "banane": "Banana",
+        "pinguin": "Penguin",
+        "baum": "Tree",
+        "auto": "Car",
+        "haus": "House",
+        "fisch": "Fish",
+        "erdbeere": "Strawberry",
+        "mond": "Moon",
+        "stern": "Star",
+        "biene": "Bee",
+        "schmetterling": "Butterfly",
+        "apfel": "Apple",
+        "elefant": "Elephant",
+        "rakete": "Rocket",
+        "ballon": "Balloon",
+        "frosch": "Frog",
+        "burger": "Burger",
+        "panda": "Panda",
+        "sonnenblume": "Sunflower",
+        "fahrrad": "Bicycle",
+        "gitarre": "Guitar",
+        "krake": "Octopus",
+        "pilz": "Mushroom"
+      },
+      "dialPrompt": "Turn the ring until there are words.",
+      "dialBack": "one back",
+      "dialOn": "one on",
+      "dialHint": "The most frequent letter is {{letter}}.",
+      "untanglePrompt": "Drag the dots until no wire crosses another.",
+      "untangleClear": "Nothing crosses any more!",
+      "untangleLeft_one": "One crossing left",
+      "untangleLeft_other": "{{count}} crossings left",
+      "untangleReview_one": "It started with one crossing.",
+      "untangleReview_other": "It started with {{count}} crossings.",
+      "routePrompt": "Tap your way from the green dot to the red one.",
+      "routeMinutes": "minutes",
+      "routeTook": "{{minutes}} minutes",
+      "routeBest": "{{minutes}} minutes would have done it",
+      "swapPrompt": "Sort the cards — you may only ever swap two that are side by side.",
+      "swapPair": "swap",
+      "swapCount": "moves — {{par}} is enough",
+      "swapUsed_one": "one move",
+      "swapUsed_other": "{{count}} moves",
+      "swapPar_one": "one move would have done it",
+      "swapPar_other": "{{count}} moves would have done it",
+      "stages": {
+        "farbe": {
+          "name": "Match the colour",
+          "summary": "Three sliders until the colour fits",
+          "rules": "A colour on the left, yours on the right. Move the three sliders until you cannot see the seam any more — close counts too. {{questionsPerRound}} colours in {{duration}} seconds."
+        },
+        "lampen": {
+          "name": "Lamps",
+          "summary": "Switch lamps on until the number fits",
+          "rules": "Every lamp is worth a number. Switch on as many as it takes to add up to exactly the number asked for. {{questionsPerRound}} numbers in {{duration}} seconds."
+        },
+        "pixel": {
+          "name": "What is it?",
+          "summary": "Name it while it is still a blur",
+          "rules": "The picture slowly sharpens. The earlier you know what it is, the more points — but a wrong guess scores nothing. {{questionsPerRound}} pictures in {{duration}} seconds."
+        },
+        "drehen": {
+          "name": "Turn the ring",
+          "summary": "Turn until the jumble becomes words",
+          "rules": "There is a German sentence hidden in the jumble of letters. Turn the ring until you can read it. {{questionsPerRound}} sentences in {{duration}} seconds."
+        },
+        "kabel": {
+          "name": "Tangled wires",
+          "summary": "Drag the dots until nothing crosses",
+          "rules": "Drag the dots until no wire crosses another. It always works out — and every wire you pull free counts, even if you do not finish. {{questionsPerRound}} tangles in {{duration}} seconds."
+        },
+        "weg": {
+          "name": "Which way?",
+          "summary": "The quickest route across the map",
+          "rules": "Every road says how long it takes. Tap your way from the green dot to the red one — the quickest way is rarely the one that looks shortest. {{questionsPerRound}} maps in {{duration}} seconds."
+        },
+        "nachbarn": {
+          "name": "Neighbours only",
+          "summary": "Sort in as few moves as you can",
+          "rules": "Put the cards in order by size. But you may only ever swap two that lie next to each other — and the fewer moves, the more points. {{questionsPerRound}} rows in {{duration}} seconds."
+        }
+      }
     }
   },
   "settings": {
@@ -855,7 +955,23 @@
     "sortTasks": "Kinds of task",
     "sortTasksMixed": "Mixed",
     "sortTasksSearch": "Only linear search",
-    "sortTasksSort": "Only sorting methods"
+    "sortTasksSort": "Only sorting methods",
+    "colorPrecision": "Sliders",
+    "colorPrecisionGrob": "Coarse steps (easier)",
+    "colorPrecisionFein": "Fine steps",
+    "lampValues": "What the lamps are worth",
+    "lampValuesMixed": "Mixed",
+    "lampValuesDouble": "1, 2, 4, 8 …",
+    "lampValuesCoins": "Like coins (1, 2, 5, 10 …)",
+    "lampCount": "Number of lamps",
+    "revealSpeed": "How fast the picture sharpens",
+    "revealSpeedLangsam": "Slow",
+    "revealSpeedNormal": "Normal",
+    "revealSpeedSchnell": "Fast",
+    "withFrequencyHint": "Give away the most frequent letter",
+    "nodeCount": "Number of dots",
+    "mapSize": "Size of the map",
+    "cardCount": "Number of cards"
   },
   "auth": {
     "title": "Teacher sign-in",

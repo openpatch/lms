@@ -8,6 +8,7 @@ import extremumHandler from "./extremum";
 import termeHandler from "./terme";
 import pythonHandler from "./python";
 import javaHandler from "./java";
+import intuitionHandler from "./intuition";
 
 /**
  * Server-side game handler registry.
@@ -23,4 +24,5 @@ export const gameHandlers: Record<string, GameHandler> = {
   terme: termeHandler,
   python: pythonHandler,
   java: javaHandler,
+  intuition: intuitionHandler,
 };

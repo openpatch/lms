@@ -729,6 +729,106 @@
           "rules": "Finde in {{questionsPerRound}} Programmen die Zeile, in der der Fehler steckt. Je schneller du sie findest, desto mehr Punkte. Du hast {{duration}} Sekunden."
         }
       }
+    },
+    "intuition": {
+      "title": "Bauchgefühl",
+      "description": "Farben treffen, Bilder erkennen, Kabel entwirren — sieben Stationen ganz ohne Vorwissen.",
+      "colorPrompt": "Triff die Farbe von links.",
+      "color": {
+        "red": "Rot",
+        "green": "Grün",
+        "blue": "Blau",
+        "target": "gesucht",
+        "yours": "deine",
+        "seam": "links gesucht, rechts deine Mischung"
+      },
+      "lampPrompt": "Schalte Lampen an, bis es passt:",
+      "lampReview": "Gesucht war {{target}} · Lampen: {{lamps}}",
+      "pixelPrompt": "Was ist das? Je früher du tippst, desto mehr Punkte.",
+      "things": {
+        "pizza": "Pizza",
+        "banane": "Banane",
+        "pinguin": "Pinguin",
+        "baum": "Baum",
+        "auto": "Auto",
+        "haus": "Haus",
+        "fisch": "Fisch",
+        "erdbeere": "Erdbeere",
+        "mond": "Mond",
+        "stern": "Stern",
+        "biene": "Biene",
+        "schmetterling": "Schmetterling",
+        "apfel": "Apfel",
+        "elefant": "Elefant",
+        "rakete": "Rakete",
+        "ballon": "Luftballon",
+        "frosch": "Frosch",
+        "burger": "Burger",
+        "panda": "Panda",
+        "sonnenblume": "Sonnenblume",
+        "fahrrad": "Fahrrad",
+        "gitarre": "Gitarre",
+        "krake": "Krake",
+        "pilz": "Pilz"
+      },
+      "dialPrompt": "Dreh den Ring, bis da Wörter stehen.",
+      "dialBack": "einen zurück",
+      "dialOn": "einen weiter",
+      "dialHint": "Am häufigsten kommt {{letter}} vor.",
+      "untanglePrompt": "Zieh die Punkte, bis sich kein Kabel mehr kreuzt.",
+      "untangleClear": "Nichts kreuzt sich mehr!",
+      "untangleLeft_one": "Noch eine Kreuzung",
+      "untangleLeft_other": "Noch {{count}} Kreuzungen",
+      "untangleReview_one": "Am Anfang war eine Kreuzung drin.",
+      "untangleReview_other": "Am Anfang waren {{count}} Kreuzungen drin.",
+      "routePrompt": "Tippe dich vom grünen zum roten Punkt.",
+      "routeMinutes": "Minuten",
+      "routeTook": "{{minutes}} Minuten",
+      "routeBest": "{{minutes}} Minuten wären gegangen",
+      "swapPrompt": "Sortiere die Karten — tauschen darfst du nur Nachbarn.",
+      "swapPair": "tauschen",
+      "swapCount": "Züge — mit {{par}} geht es",
+      "swapUsed_one": "ein Zug",
+      "swapUsed_other": "{{count}} Züge",
+      "swapPar_one": "mit einem Zug möglich",
+      "swapPar_other": "mit {{count}} Zügen möglich",
+      "stages": {
+        "farbe": {
+          "name": "Farbe treffen",
+          "summary": "Drei Regler, bis die Farbe stimmt",
+          "rules": "Links siehst du eine Farbe, rechts deine. Schieb die drei Regler, bis kein Unterschied mehr zu sehen ist — nah dran zählt auch. {{questionsPerRound}} Farben in {{duration}} Sekunden."
+        },
+        "lampen": {
+          "name": "Lampen",
+          "summary": "Lampen anschalten, bis die Zahl stimmt",
+          "rules": "Jede Lampe ist eine Zahl wert. Schalte so viele an, dass zusammen genau die gesuchte Zahl herauskommt. {{questionsPerRound}} Zahlen in {{duration}} Sekunden."
+        },
+        "pixel": {
+          "name": "Was ist das?",
+          "summary": "Erkennen, solange es noch verpixelt ist",
+          "rules": "Das Bild wird langsam schärfer. Je früher du weißt, was es ist, desto mehr Punkte — aber falsch geraten gibt keine. {{questionsPerRound}} Bilder in {{duration}} Sekunden."
+        },
+        "drehen": {
+          "name": "Dreh am Ring",
+          "summary": "Drehen, bis aus Buchstabensalat Wörter werden",
+          "rules": "In dem Buchstabensalat steckt ein deutscher Satz. Dreh am Ring, bis du ihn lesen kannst. {{questionsPerRound}} Sätze in {{duration}} Sekunden."
+        },
+        "kabel": {
+          "name": "Kabelsalat",
+          "summary": "Punkte ziehen, bis sich nichts mehr kreuzt",
+          "rules": "Zieh die Punkte, bis kein Kabel mehr ein anderes kreuzt. Es geht immer auf — und jedes entwirrte Kabel zählt, auch wenn du nicht ganz fertig wirst. {{questionsPerRound}} Knäuel in {{duration}} Sekunden."
+        },
+        "weg": {
+          "name": "Welcher Weg?",
+          "summary": "Die schnellste Route über die Karte",
+          "rules": "An jeder Straße steht, wie lange sie dauert. Tippe dich vom grünen zum roten Punkt — der schnellste Weg ist selten der, der am kürzesten aussieht. {{questionsPerRound}} Karten in {{duration}} Sekunden."
+        },
+        "nachbarn": {
+          "name": "Nur Nachbarn",
+          "summary": "Sortieren mit möglichst wenigen Zügen",
+          "rules": "Bring die Karten der Größe nach in eine Reihe. Tauschen darfst du aber immer nur zwei, die nebeneinander liegen — und je weniger Züge, desto mehr Punkte. {{questionsPerRound}} Reihen in {{duration}} Sekunden."
+        }
+      }
     }
   },
   "settings": {
@@ -855,7 +955,23 @@
     "sortTasks": "Aufgabentypen",
     "sortTasksMixed": "Gemischt",
     "sortTasksSearch": "Nur lineare Suche",
-    "sortTasksSort": "Nur Sortierverfahren"
+    "sortTasksSort": "Nur Sortierverfahren",
+    "colorPrecision": "Regler",
+    "colorPrecisionGrob": "Grobe Stufen (leichter)",
+    "colorPrecisionFein": "Feine Stufen",
+    "lampValues": "Was die Lampen wert sind",
+    "lampValuesMixed": "Gemischt",
+    "lampValuesDouble": "1, 2, 4, 8 …",
+    "lampValuesCoins": "Wie Münzen (1, 2, 5, 10 …)",
+    "lampCount": "Anzahl der Lampen",
+    "revealSpeed": "Wie schnell das Bild scharf wird",
+    "revealSpeedLangsam": "Langsam",
+    "revealSpeedNormal": "Normal",
+    "revealSpeedSchnell": "Schnell",
+    "withFrequencyHint": "Häufigsten Buchstaben verraten",
+    "nodeCount": "Anzahl der Punkte",
+    "mapSize": "Größe der Karte",
+    "cardCount": "Anzahl der Karten"
   },
   "auth": {
     "title": "Anmeldung für Lehrkräfte",

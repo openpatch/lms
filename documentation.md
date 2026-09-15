@@ -55,6 +55,9 @@ framework and is the same for every game.
 | `shared/java-code.ts`, `shared/java-structogram.ts` | How Java prints a value and what `/` and `%` do to two ints; the Struktogramm both sides draw |
 | `src/components/CodeBlock.tsx` | A listing, optionally numbered and clickable line by line. A `Language` — one per game, in `src/games/<game>/components/CodeBlock.tsx` — says how to split a line and which token gets which colour |
 | `src/games/java/components/Structogram.tsx` | A Struktogramm drawn with borders: statement, Verzweigung, kopf- and fußgesteuerte Schleife |
+| `shared/intuition-graph.ts`, `shared/intuition-cipher.ts` | The little graph two stations are drawn on — crossings, a planar generator, a shortest path — and the ring of letters a third one turns |
+| `src/games/intuition/components/Board.tsx` | The 100x100 square both map stations draw on: edges, nodes, and whatever a node does when it is touched |
+| `src/games/intuition/components/PixelPicture.tsx` | A glyph squeezed through an n-by-n canvas and blown back up, so a blocky picture needs no image file |
 | `scripts/check-games.ts` | `pnpm check:games` — smoke test for every registered game |
 | `src/lib/auth.ts`, `src/pages/Login.tsx`, `src/components/RequireTeacher.tsx` | Signing a teacher in, and the screens that need one |
 | `scripts/check-server.ts` | `pnpm check:server` — signs in, opens a lobby, plays a round, restarts the server |
@@ -418,6 +421,65 @@ Two things from those pages are deliberately left out: the Rechenbaum and the
 Termtyp of "Bist du fit?" Aufgabe 1, which need a tree editor rather than a term
 field. The `fraction` stage also only asks for a single excluded value, so the
 Hauptnenner shape — which excludes two — is always asked to be solved.
+
+## The game with no vorhaben
+
+`intuition` ("Bauchgefühl") is not in that table and carries no `grades`, and
+both are on purpose.
+
+Every other game asks the player to know something, which means every other
+game is only playable by a class that has had the lesson. This one asks them to
+look. Match the colour, switch the lamps until the number comes out, say what
+the blurry picture is, turn the ring until there are words, pull the wires
+apart, find the quickest way across the map, sort the cards by swapping
+neighbours — each rule is one sentence, none of them contains a technical term,
+and the first question of a round teaches the rule by being played. So it works
+in the first lesson of Jahrgang 5, in a Q2 course, and on the parents' evening,
+and a badge reading "5, 6" would only tell the wrong half of the school to stay
+away.
+
+Underneath, each station is one idea from the subject with the vocabulary taken
+off: place value (`lampen`), resolution (`pixel`), a shift cipher (`drehen`), a
+planar drawing (`kabel`), a shortest path (`weg`), sorting by adjacent swaps
+(`nachbarn`). That is meant to be useful rather than a joke at the player's
+expense — a class that has spent ten minutes flicking lamps worth 1, 2, 4 and 8
+has somewhere to stand when the word *Dualsystem* turns up later.
+
+Three rules hold across its stations, and they are what make it the game that
+gets asked for again:
+
+- **Partial credit almost everywhere.** A colour that is nearly right, six of
+  eight wires pulled apart, the second-best route, a row sorted the long way
+  round — all of those score. `closenessPoints` exists for exactly this. A
+  round where half the class ends on nothing is a round nobody replays.
+- **The feedback is on screen while you work**, not afterwards: the running
+  total under the lamps, the crossings still left, the minutes so far, the
+  sentence coming apart as the ring turns.
+- **Nothing ships.** The pictures are emoji the system already has, drawn to a
+  canvas and squeezed down (`PixelPicture`), so a station about resolution
+  needs no image files in the repository.
+
+Two of the generators are tuned rather than merely correct, and the numbers are
+worth keeping:
+
+- `weg` makes about a third of its roads slow ones (`SLOW_ROAD_CHANCE`,
+  `SLOW_ROAD_FACTOR`). Without that, minutes follow the drawn length closely
+  enough that the route which *looks* shortest is already the quickest four
+  times out of five, and there is nothing on the map worth reading. With it, a
+  glance is right about half the time — often enough that a gut feeling is
+  worth having, wrong often enough that the numbers are worth a look.
+- `pixel` scores with `speedPoints(seconds, 6, 30)`. Steeper than that and
+  stabbing at one of the four options straight away pays as well as waiting to
+  actually see the thing: a blind guess is worth a quarter of 100, so
+  recognising it a few seconds in has to be worth clearly more.
+
+`kabel` is the one station whose generator has a real obligation: thirty people
+must never be handed a tangle that cannot be undone. `buildPlanarGraph` earns
+that by construction rather than by checking — it sorts every possible edge by
+length and keeps one only when it crosses nothing already kept and passes no
+third node closely enough to look like it does, so the drawing it is born in has
+no crossings at all. The puzzle is that drawing with its positions dealt out
+again, and putting them back is always a solution.
 
 ## Writing a term
 
