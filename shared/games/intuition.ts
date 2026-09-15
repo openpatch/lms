@@ -271,6 +271,14 @@ export interface Target {
  *  moments of it would be unhittable rather than merely hard. */
 export const SHRINK_TO = 0.35;
 
+/**
+ * Under this, nobody saw the target: they were already on their way down when
+ * it appeared, or they are tapping the board like a drum. The server refuses
+ * such a tap, and the board says so where it happened — otherwise the fastest
+ * taps of the round are the ones that silently score nothing.
+ */
+export const MIN_REACTION_MS = 120;
+
 /** What a live round of the shooting gallery keeps in `extra`, beside the tally. */
 export interface TargetRoundExtra {
   targets: Target[];

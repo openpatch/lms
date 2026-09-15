@@ -7,7 +7,7 @@
 // done the thinking the station is about, and a round where half the class
 // scores nothing is a round nobody asks to play again.
 
-import { intuitionSpec } from "../../shared/games/intuition";
+import { MIN_REACTION_MS, intuitionSpec } from "../../shared/games/intuition";
 import type {
   ColorQuestion,
   DialQuestion,
@@ -556,7 +556,7 @@ const nachbarnStage: StageHandler<SwapQuestion> = {
  * Faster than this and nobody reacted to anything — they either guessed where
  * the next one would be or they are not a person. Either way it is not a hit.
  */
-const MIN_REACTION_MS = 120;
+
 
 /** Most events one report may carry, so a bad client cannot flood the round. */
 const MAX_BATCH = 50;

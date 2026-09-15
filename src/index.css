@@ -158,6 +158,44 @@ label,
   outline-offset: 2px;
 }
 
+/*
+ * The shooting gallery's marks: what just happened, where it happened.
+ *
+ * A ring that opens and fades for a tap that landed (and for one that came too
+ * soon to count, in its own colour), and one that closes and fades where a
+ * target got away. `transform` rather than the `r` attribute, so the animation
+ * runs on the compositor while thirty of these a minute go past.
+ */
+.animate-target-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: target-spark 0.5s ease-out forwards;
+}
+@keyframes target-spark {
+  0%   { transform: scale(0.55); opacity: 0.95; }
+  100% { transform: scale(1.9);  opacity: 0; }
+}
+
+.animate-target-ghost {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: target-ghost 0.65s ease-out forwards;
+}
+@keyframes target-ghost {
+  0%   { transform: scale(1);    opacity: 0.8; }
+  60%  { transform: scale(0.75); opacity: 0.55; }
+  100% { transform: scale(0.6);  opacity: 0; }
+}
+
+/* The reaction time, drifting off the target it belongs to. */
+.animate-target-count {
+  animation: target-count 0.5s ease-out forwards;
+}
+@keyframes target-count {
+  0%   { transform: translateY(0);    opacity: 0.95; }
+  100% { transform: translateY(-4px); opacity: 0; }
+}
+
 @keyframes feedback-flash {
   0%   { opacity: 0.7; }
   100% { opacity: 0; }
