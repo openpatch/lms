@@ -32,6 +32,18 @@ export interface GameHandler {
   onMessage?: (state: LobbyState, payload: unknown, sender: Conn) => unknown;
 
   /**
+   * Called the moment the round actually starts being played — after the rules
+   * screen and after the countdown.
+   *
+   * The round itself is built much earlier, when the rules go up, because that
+   * is when the client needs the questions to show them. Anything in it that
+   * is a reading of the clock is therefore wrong by however long the host
+   * spent explaining, and a host can spend as long as they like. This is where
+   * that is put right. Should return the updated game data.
+   */
+  onRoundBegin?: (state: LobbyState, now: number) => unknown;
+
+  /**
    * Called to determine if the current round is finished.
    * Should return GameResult[] if the round is done, or undefined if still in progress.
    */

@@ -87,6 +87,13 @@ export interface StageHandler<Q extends StageQuestion = StageQuestion> {
   live?: boolean;
 
   /**
+   * Called when the round actually starts being played. The runner has already
+   * put `startTime` right; this is for anything else a stage stamped with the
+   * clock when the round was built, which was while the host was still talking.
+   */
+  onBegin?(data: StageRoundData<Q>, now: number, ctx: StageContext): void;
+
+  /**
    * Called on the room's tick while this stage is being played, so a stage can
    * move on by itself. Mutate `data` and return true when something changed.
    */
@@ -210,6 +217,8 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
           ? { tally: Object.fromEntries(ctx.players.map((p) => [p.id, emptyTally()])) }
           : {}),
       },
+      // Provisional: the round is being built while the rules are still on
+      // screen, and onRoundBegin stamps the real one when play starts.
       startTime: Date.now(),
       duration,
       finished: false,
@@ -242,6 +251,18 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
     onRoundStart(state: LobbyState) {
       const previous = state.gameData as StageRoundData | null;
       return buildRound(state, (previous?.currentRound ?? 0) + 1);
+    },
+
+    onRoundBegin(state: LobbyState, now: number) {
+      const data = state.gameData as StageRoundData | null;
+      const stage = spec.stages.find((s) => s.id === data?.stageId);
+      if (!data || !stage) return undefined;
+      // The round was built when the rules went up. Everything timed — the
+      // clock in the header, when the round runs out, how long the first
+      // answer took, and the timeline of a live stage — counts from here.
+      data.startTime = now;
+      handlerFor(data)?.onBegin?.(data, now, contextFor(state, stage, data.currentRound));
+      return { ...data };
     },
 
     onMessage(state: LobbyState, payload: unknown, sender: Conn) {

@@ -172,12 +172,17 @@ export class Room {
 
     this.setPhase("playing");
     this.state.countdownEndsAt = null;
+
+    const handler = gameHandlers[this.state.gameId];
+    // The round has been sitting built behind the rules screen for as long as
+    // the host wanted; its clock starts now, before anyone is told to play.
+    const begun = handler?.onRoundBegin?.(this.state, Date.now());
+    if (begun) this.state.gameData = begun;
     this.save();
 
     this.broadcast({ type: "game-start", gameData: this.state.gameData, serverNow: Date.now() });
     this.broadcastLobbyState();
 
-    const handler = gameHandlers[this.state.gameId];
     clearTimeout(this.roundTimer);
     if (handler?.getDurationMs) {
       this.roundTimer = setTimeout(() => this.endRound(), handler.getDurationMs(this.state));

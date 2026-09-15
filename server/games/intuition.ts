@@ -696,6 +696,12 @@ const ampelStage: StageHandler = {
 
   evaluate: () => ({ correct: false, points: 0 }),
 
+  onBegin(data, now) {
+    // The first light has been counting down behind the rules screen, so
+    // without this it turns green the instant the round starts.
+    (data.extra as unknown as LightRoundExtra).since = now;
+  },
+
   onTick(data, now, ctx) {
     const extra = data.extra as unknown as LightRoundExtra;
 

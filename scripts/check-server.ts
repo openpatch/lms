@@ -246,10 +246,22 @@ async function main() {
     );
 
     host.send({ type: "start" });
-    await new Promise((r) => setTimeout(r, 200));
+    // A host explains for as long as they like before starting the countdown,
+    // and the round is built the moment the rules go up. Long enough here that
+    // a round which started counting behind them would show it.
+    await new Promise((r) => setTimeout(r, 1_500));
     host.send({ type: "begin-countdown" });
     check("countdown is broadcast", !!(await player.waitFor("countdown")));
-    check("round starts after the countdown", !!(await player.waitFor("game-start")));
+    const started = (await player.waitFor("game-start")) as
+      | { serverNow: number; gameData: { startTime: number; duration: number } }
+      | undefined;
+    check("round starts after the countdown", !!started);
+    const alreadyGone = started ? started.serverNow - started.gameData.startTime : -1;
+    check(
+      "the round's clock starts when play does, not when the rules went up",
+      alreadyGone >= 0 && alreadyGone < 500,
+      `${alreadyGone}ms of the round was already spent`,
+    );
 
     const stray = new TestClient(code, randomUUID());
     await stray.ready();

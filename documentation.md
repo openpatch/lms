@@ -23,7 +23,17 @@ framework and is the same for every game.
 ```
  lobby ──► explanation ──► countdown ──► playing ──► round-finished ──► … ──► finished
            (stage rules)     (3, 2, 1)   (stage UI)   (next stage)
+                                          ▲
+                                          the round's clock starts here
 ```
+
+A round is **built** when the rules go up, because that is when the client
+needs its questions, and it is **begun** when play starts — which can be a long
+time later, since the host holds the rules screen for as long as they want to
+talk. Everything timed therefore counts from `onRoundBegin` and not from the
+build: the clock in the header, when the round runs out, how long the first
+answer took, and the timeline of a live stage. A stage that stamped a clock
+reading of its own while it was being built puts it right in `onBegin`.
 
 ## Where things live
 
