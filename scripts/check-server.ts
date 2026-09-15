@@ -409,6 +409,54 @@ async function main() {
     const strangerList = await fetch(`${BASE}/parties/sessions`);
     check("and a stranger cannot list any", strangerList.status === 401, `got ${strangerList.status}`);
 
+    // Deleting is the one thing here that cannot be taken back, so the same
+    // scoping is checked the other way round: the wrong teacher must not be
+    // able to throw away a lesson they cannot even read.
+    const wrongDelete = await fetch(`${BASE}/parties/sessions/${lesson2Code}`, {
+      method: "DELETE",
+      headers: { cookie: otherCookie! },
+    });
+    check("another teacher cannot delete it", wrongDelete.status === 404, `got ${wrongDelete.status}`);
+
+    const stillThere = await fetch(`${BASE}/parties/sessions/${lesson2Code}`, {
+      headers: { cookie: reviewCookie! },
+    });
+    check("and it is still there after they try", stillThere.status === 200);
+
+    const removed = await fetch(`${BASE}/parties/sessions/${lesson2Code}`, {
+      method: "DELETE",
+      headers: { cookie: reviewCookie! },
+    });
+    check("the teacher whose lesson it is can", removed.status === 200, `got ${removed.status}`);
+
+    const afterDelete = await fetch(`${BASE}/parties/sessions/${lesson2Code}`, {
+      headers: { cookie: reviewCookie! },
+    });
+    check("and then it is gone", afterDelete.status === 404, `got ${afterDelete.status}`);
+
+    // Gone from the table, not merely hidden: names and answers are the whole
+    // reason somebody presses this.
+    const swept = new DatabaseSync(DB_PATH, { readOnly: true });
+    const leftovers = swept
+      .prepare(`select
+                  (select count(*) from rounds where code = ?)  as rounds,
+                  (select count(*) from results where code = ?) as results`)
+      .get(lesson2Code, lesson2Code) as { rounds: number; results: number };
+    swept.close();
+    check(
+      "with nothing of it left in the database",
+      leftovers.rounds === 0 && leftovers.results === 0,
+      `${leftovers.rounds} round(s), ${leftovers.results} result(s)`,
+    );
+
+    const goneList = await fetch(`${BASE}/parties/sessions`, { headers: { cookie: reviewCookie! } });
+    const goneBody = (await goneList.json()) as { sessions: { code: string }[] };
+    check(
+      "and off the list",
+      !goneBody.sessions.some((entry) => entry.code === lesson2Code),
+      `${goneBody.sessions.length} session(s) left`,
+    );
+
     console.log("a demo lobby");
     // A teacher rehearsing alone: one seat, opened with the lobby, that their
     // own host connection plays from. Everything the class version does, with

@@ -443,10 +443,20 @@ a name gives that student's round in words — every question, what they wrote,
 whether it was right — which is the thing that was not recoverable at all
 before, because the lobby took it with it.
 
-**Both endpoints are scoped by teacher id in the SQL**, not by the code. A code
+**Every endpoint is scoped by teacher id in the SQL**, not by the code. A code
 is six characters and guessable, and it must not be a key to somebody else's
 classroom: another teacher asking for it gets a 404, which `check:server`
-verifies by asking as the wrong teacher.
+verifies by asking as the wrong teacher — for the delete as well as the reads,
+where being wrong would cost somebody their lesson rather than merely leak it.
+
+**Deleting** takes the rounds and the scores together, and there is no undo and
+no copy kept — which is the point, since a teacher who wants a class's answers
+gone wants them gone. The screen therefore asks twice, and puts the second
+question somewhere the first click cannot reach: arming it turns the trigger
+into "cancel" and the destructive button appears on its own row underneath. The
+first arrangement had them overlapping, so a double click deleted the lesson;
+the trigger's centre landing inside the confirm button is the kind of thing
+that has to be measured rather than eyeballed.
 
 ## Trying it out first
 

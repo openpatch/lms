@@ -135,6 +135,26 @@ const httpServer = createServer((req, res) => {
     return;
   }
 
+  // Throw one away. Scoped by teacher like the reads are, so this can only
+  // ever delete the caller's own lesson; a code belonging to somebody else
+  // deletes nothing and reads as 404 rather than as success.
+  if (req.method === "DELETE" && session) {
+    void (async () => {
+      const teacher = await teacherFrom(req.headers);
+      if (!teacher) {
+        json(res, 401, { error: "Not authorised" });
+        return;
+      }
+      const gone = store.deleteSession(teacher.id, session[1]);
+      if (gone === 0) {
+        json(res, 404, { error: "No such session" });
+        return;
+      }
+      json(res, 200, { deleted: gone });
+    })();
+    return;
+  }
+
   res.writeHead(404);
   res.end();
 });

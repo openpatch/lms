@@ -12,6 +12,7 @@
     "loading": "Loading...",
     "error": "Error",
     "close": "Close",
+    "cancel": "Cancel",
     "builtBy": "Built with",
     "byOpenPatch": "by OpenPatch",
     "github": "GitHub"
@@ -129,6 +130,10 @@
     "notFound": "There is no review for that code.",
     "roundCount_one": "1 round",
     "roundCount_other": "{{count}} rounds",
+    "delete": "Delete this review",
+    "deleteSure": "Sure? This cannot be undone.",
+    "deleteYes": "Delete for good",
+    "deleting": "Deleting…",
     "student": "Name"
   },
   "demo": {

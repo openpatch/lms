@@ -12,6 +12,7 @@
     "loading": "Laden...",
     "error": "Fehler",
     "close": "Schließen",
+    "cancel": "Abbrechen",
     "builtBy": "Entwickelt mit",
     "byOpenPatch": "von OpenPatch",
     "github": "GitHub"
@@ -129,6 +130,10 @@
     "notFound": "Zu diesem Code gibt es keine Auswertung.",
     "roundCount_one": "1 Runde",
     "roundCount_other": "{{count}} Runden",
+    "delete": "Diese Auswertung löschen",
+    "deleteSure": "Wirklich? Das lässt sich nicht rückgängig machen.",
+    "deleteYes": "Endgültig löschen",
+    "deleting": "Wird gelöscht…",
     "student": "Name"
   },
   "demo": {

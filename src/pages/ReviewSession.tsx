@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import AnswerGrid from "../components/AnswerGrid";
 import RoundDebrief from "../components/RoundDebrief";
 import { serverUrl } from "../lib/connection";
@@ -38,8 +38,29 @@ interface Session {
 export default function ReviewSession() {
   const { t } = useTranslation();
   const { code } = useParams();
+  const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [failed, setFailed] = useState<"missing" | "error" | null>(null);
+  // Asked twice, because there is no undo and nothing keeps a copy — and the
+  // second question is put somewhere the first click cannot reach. Arming it
+  // turns the trigger into "cancel" and puts the destructive button on its own
+  // row underneath, so a double click, or a second click at the same spot by
+  // somebody who did not notice the first landed, cancels rather than deletes.
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const remove = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch(serverUrl(`/parties/sessions/${code}`), { method: "DELETE" });
+      if (!response.ok) throw new Error(String(response.status));
+      void navigate("/review", { replace: true });
+    } catch {
+      setDeleting(false);
+      setConfirming(false);
+      setFailed("error");
+    }
+  };
 
   const game = session?.rounds[0] ? getGame(session.rounds[0].gameId) : undefined;
   useActiveGame(game);
@@ -103,7 +124,28 @@ export default function ReviewSession() {
             })}
           </p>
         </div>
+        {/* The same slot either way: the trigger, or the way out of it. */}
+        <button
+          onClick={() => setConfirming(!confirming)}
+          disabled={deleting}
+          className="shrink-0 text-sm font-medium text-game-ink/70 transition-colors hover:text-red-600 disabled:text-gray-400"
+        >
+          {confirming ? t("common.cancel") : t("review.delete")}
+        </button>
       </div>
+
+      {confirming && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-red-200 bg-red-50 px-5 py-4">
+          <p className="min-w-0 text-sm font-medium text-red-800">{t("review.deleteSure")}</p>
+          <button
+            onClick={() => void remove()}
+            disabled={deleting}
+            className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:bg-gray-300"
+          >
+            {deleting ? t("review.deleting") : t("review.deleteYes")}
+          </button>
+        </div>
+      )}
 
       {session.scores.length > 0 && (
         <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-4">

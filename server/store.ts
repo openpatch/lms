@@ -111,6 +111,9 @@ const sessionRounds = db.prepare(`
    order by round_number
 `);
 
+const dropSessionRounds = db.prepare(`delete from rounds where teacher_id = ? and code = ?`);
+const dropSessionResults = db.prepare(`delete from results where teacher_id = ? and code = ?`);
+
 const sessionScores = db.prepare(`
   select player_name, score
     from results
@@ -258,6 +261,24 @@ export function loadSession(
     score: row.score as number,
   }));
   return { rounds, scores };
+}
+
+/**
+ * Forget one lesson: its rounds and its scores, both.
+ *
+ * Scoped by teacher the same way reading is, so this can only ever throw away
+ * the caller's own. Returns how many rounds went, which is how the endpoint
+ * tells "deleted" from "there was nothing there" without reading first.
+ *
+ * There is no undo and nothing keeps a copy. That is the point of the button —
+ * a teacher who wants a class's answers gone wants them gone — so the screen
+ * asks twice before it calls this.
+ */
+export function deleteSession(teacherId: string, code: string): number {
+  if (closed) return 0;
+  const gone = dropSessionRounds.run(teacherId, code);
+  dropSessionResults.run(teacherId, code);
+  return Number(gone.changes ?? 0);
 }
 
 export function close(): void {
