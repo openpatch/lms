@@ -251,9 +251,11 @@ Optional per stage:
 | --- | --- |
 | `RulesExample` | A small illustration shown with the rules |
 | `questionless` | `true` for stages without questions, so the component renders anyway |
+| `revealMs` | Holds the question just answered on screen for this long, with `revealed` set, so the stage can show the answer where the answer was given. The shell owns the timing and the clock keeps running; the stage only draws itself differently (`squareroot` numberline is the worked example) |
 | `HostView` | Replaces the default progress list the host sees |
 | `scorePlayer` | Client-side mirror of the handler's `scorePlayer` |
 | `Review` | One row of the round review on the players' devices |
+| `ClassAnswers` | The class's answers to one question, for the host's debrief — see "Talking the round through" |
 
 Once a round is over, every player sees their own answers on their own device:
 each question of the round with a tick or a cross, what they answered and what it
@@ -402,13 +404,24 @@ Two optional hooks let a game say more, and the screen is useful without either:
 | --- | --- |
 | `Solution` | The right answer on its own. For the case the data cannot cover: the question *nobody* got, where the answer appears nowhere on the board |
 | `answerLabel` | What a stored answer means. A stage that takes typed text needs nothing; one whose answers are `"2"` or a line number does, or the class's answers read as a column of indices |
+| `ClassAnswers` | The class's answers drawn the way the question was, replacing both the question as asked and the list under it. It gets `{ question, answers, data }`. For a stage whose answers are *positions* or *shapes*: twenty decimals in a column say nothing that twenty marks on a number line — or twenty curves over the right one — say at a glance |
 
-Only `java` has both so far (`src/games/java/stages/solutions.tsx` and
-`answer-labels.ts`), which is five components between eleven stations because
-the stations share their components. Every other game still gets the question,
-the ranking and the distribution — and its `Review` already renders the right
-answer for the player, so a `Solution` for it is mostly a matter of lifting
-that half out.
+`java` has both (`src/games/java/stages/solutions.tsx` and `answer-labels.ts`),
+which is five components between eleven stations because the stations share
+their components. Every other game still gets the question, the ranking and the
+distribution — and its `Review` already renders the right answer for the
+player, so a `Solution` for it is mostly a matter of lifting that half out.
+
+**A stage whose answers are not words needs one of the two.** Without an
+`answerLabel` the list prints the answer as it was stored, which for a station
+that sends JSON is a column of truncated `{"min":2.75,…` — and for a
+continuous answer, one such row per player. Either give it a label (`chance`
+and `intuition` do, in their own `answer-labels.ts`) or give it a
+`ClassAnswers` that replaces the list with the picture: the marks on a number
+line (`squareroot` numberline and bisect, `rational` arrange, `extremum`
+optimize), the class's curves over the right one (`analysis`), every route
+taken across the map (`intuition` weg), or the colours they mixed (`intuition`
+farbe).
 
 ## After the lesson
 

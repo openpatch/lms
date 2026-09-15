@@ -2,7 +2,12 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { StageQuestion, StageRoundData } from "../../shared/framework";
 import type { LobbyState } from "../../shared/types";
-import { getStage, type GameDefinition, type StageProps } from "../lib/game-registry";
+import {
+  getStage,
+  type ClassAnswer,
+  type GameDefinition,
+  type StageProps,
+} from "../lib/game-registry";
 import { ActionBarContext } from "./action-bar";
 
 /**
@@ -21,20 +26,13 @@ import { ActionBarContext } from "./action-bar";
  * in the document, so nothing on it can be pressed into doing anything.
  */
 
-interface Given {
-  answer: string;
-  label: string;
-  count: number;
-  correct: boolean;
-}
-
 interface Stat {
   question: StageQuestion;
   index: number;
   correct: number;
   answered: number;
   missing: number;
-  given: Given[];
+  given: ClassAnswer[];
 }
 
 function statsFor(
@@ -46,7 +44,7 @@ function statsFor(
   const guests = players.filter((p) => !p.isHost);
 
   return data.questions.map((question, index) => {
-    const tally = new Map<string, Given>();
+    const tally = new Map<string, ClassAnswer>();
     let correct = 0;
     let answered = 0;
 
@@ -94,6 +92,8 @@ function AsAsked({ game, data, question }: { game: GameDefinition; data: StageRo
     data,
     question,
     answeredCount: 0,
+    // The question as the class saw it while answering, not as it was answered.
+    revealed: false,
     submit: () => {},
     sendAction: () => {},
     settings: data.settings,
@@ -154,6 +154,7 @@ export default function RoundDebrief({
   }
 
   const Solution = stage.Solution;
+  const ClassAnswers = stage.ClassAnswers;
 
   return (
     <section className="w-full max-w-2xl">
@@ -192,7 +193,14 @@ export default function RoundDebrief({
 
               {showing && (
                 <div className="space-y-4 border-t border-gray-100 px-4 py-4">
-                  <AsAsked game={game} data={data} question={stat.question} />
+                  {/* A stage with a `ClassAnswers` draws the question and what
+                      the class said as one picture; the list below would only
+                      repeat it, in the form it was brought here to avoid. */}
+                  {ClassAnswers ? (
+                    <ClassAnswers question={stat.question} answers={stat.given} data={data} />
+                  ) : (
+                    <AsAsked game={game} data={data} question={stat.question} />
+                  )}
 
                   {Solution && (
                     <div className="flex flex-wrap items-baseline gap-2 text-sm">
@@ -204,20 +212,24 @@ export default function RoundDebrief({
                   )}
 
                   <div className="space-y-1">
-                    <p className="text-xs text-gray-400">{t("game.debrief.whatTheySaid")}</p>
-                    {stat.given.map((given) => (
-                      <div key={given.answer} className="flex items-baseline gap-2 text-sm">
-                        <span className={given.correct ? "text-emerald-600" : "text-rose-500"}>
-                          {given.correct ? "✓" : "✗"}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate font-mono text-gray-700">
-                          {given.label}
-                        </span>
-                        <span className="shrink-0 text-gray-400 tabular-nums">
-                          {t("game.debrief.times", { count: given.count })}
-                        </span>
-                      </div>
-                    ))}
+                    {!ClassAnswers && (
+                      <>
+                        <p className="text-xs text-gray-400">{t("game.debrief.whatTheySaid")}</p>
+                        {stat.given.map((given) => (
+                          <div key={given.answer} className="flex items-baseline gap-2 text-sm">
+                            <span className={given.correct ? "text-emerald-600" : "text-rose-500"}>
+                              {given.correct ? "✓" : "✗"}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate font-mono text-gray-700">
+                              {given.label}
+                            </span>
+                            <span className="shrink-0 text-gray-400 tabular-nums">
+                              {t("game.debrief.times", { count: given.count })}
+                            </span>
+                          </div>
+                        ))}
+                      </>
+                    )}
                     {stat.missing > 0 && (
                       <div className="flex items-baseline gap-2 text-sm text-gray-400">
                         <span>–</span>

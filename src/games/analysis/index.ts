@@ -1,6 +1,6 @@
 import { analysisSpec } from "../../../shared/games/analysis";
 import { defineGame } from "../../lib/game-registry";
-import { ChoiceReview, DrawReview } from "./stages/reviews";
+import { ChoiceReview, DrawClassAnswers, DrawReview } from "./stages/reviews";
 import MultipleChoiceStage, { MultipleChoiceRulesExample } from "./stages/MultipleChoice";
 import {
   DrawDerivativeRulesExample,
@@ -15,6 +15,16 @@ export default defineGame(analysisSpec, {
     RulesExample: MultipleChoiceRulesExample,
     Review: ChoiceReview,
   },
-  "draw-graph": { Component: DrawGraphStage, RulesExample: DrawGraphRulesExample, Review: DrawReview },
-  "draw-derivative": { Component: DrawDerivativeStage, RulesExample: DrawDerivativeRulesExample, Review: DrawReview },
+  "draw-graph": {
+    Component: DrawGraphStage,
+    RulesExample: DrawGraphRulesExample,
+    Review: DrawReview,
+    ClassAnswers: DrawClassAnswers,
+  },
+  "draw-derivative": {
+    Component: DrawDerivativeStage,
+    RulesExample: DrawDerivativeRulesExample,
+    Review: DrawReview,
+    ClassAnswers: DrawClassAnswers,
+  },
 });

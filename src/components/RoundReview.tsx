@@ -59,6 +59,7 @@ export default function RoundReview({
           data={data}
           question={null}
           answeredCount={0}
+          revealed={false}
           submit={() => {}}
           sendAction={() => {}}
           settings={data.settings}

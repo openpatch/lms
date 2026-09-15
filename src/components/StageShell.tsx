@@ -92,6 +92,45 @@ function useAnswerFeedback(data: StageRoundData | null, playerId: string) {
   return feedback;
 }
 
+/**
+ * Holds the question that was just answered on screen for a moment.
+ *
+ * The trigger is the answer coming back from the server rather than the press
+ * that sent it: until the round carries the answer there is nothing to show on
+ * the question, and once it does the stage would otherwise have moved on to the
+ * next one. So the shell keeps serving the answered question — `revealed` — and
+ * lets go after `revealMs`.
+ *
+ * Nothing about the round pauses with it. The clock runs, the answer is already
+ * scored, and a player who is happy to wait loses nothing but the seconds they
+ * chose to spend looking.
+ */
+function useReveal(data: StageRoundData | null, playerId: string, revealMs: number) {
+  const answered = data ? answeredCount(data, playerId) : 0;
+  const [held, setHeld] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!revealMs) return;
+    // A round this player has not answered anything in yet has nothing to hold.
+    // Saying so rather than returning matters for the round *after* one that
+    // ended mid-reveal: the shell is remounted between rounds today, and this
+    // is what keeps that from being load-bearing.
+    if (answered === 0) {
+      setHeld(null);
+      return;
+    }
+    const answers = data?.answers[playerId] ?? {};
+    // The one that landed last, by the round's own clock rather than by id.
+    const latest = Object.entries(answers).sort((a, b) => a[1].timeMs - b[1].timeMs).pop();
+    if (!latest) return;
+    setHeld(Number(latest[0]));
+    const timer = setTimeout(() => setHeld(null), revealMs);
+    return () => clearTimeout(timer);
+  }, [answered]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return revealMs ? held : null;
+}
+
 /** Default spectator view: one row per player with progress and live score. */
 /** Height of one row and the gap under it, in pixels. */
 const ROW_STRIDE = 60;
@@ -209,6 +248,7 @@ export default function StageShell({
   const data = gameData as StageRoundData | null;
   const timeLeft = useTimer(data?.startTime ?? 0, data?.duration ?? 0, !!data && !data.finished);
   const feedback = useAnswerFeedback(data, playerId);
+  const revealing = useReveal(data, playerId, getStage(game, data?.stageId ?? "")?.revealMs ?? 0);
   // The bar at the bottom is a portal target, so it has to be an element first
   const [actionBar, setActionBar] = useState<HTMLDivElement | null>(null);
 
@@ -222,7 +262,10 @@ export default function StageShell({
   }
 
   const myAnswers = data.answers[playerId] ?? {};
-  const question = data.questions.find((q) => !myAnswers[q.id]) ?? null;
+  const held = data.questions.find((q) => q.id === revealing) ?? null;
+  // While a question is being revealed it is the one the stage is on; otherwise
+  // the stage is on the first question this player has not answered.
+  const question = held ?? data.questions.find((q) => !myAnswers[q.id]) ?? null;
   const answered = answeredCount(data, playerId);
   // Most stages score by answer points; a stage may compute its own (e.g. taps).
   const scoreOf = (id: string) => stage.scorePlayer?.(data, id) ?? playerRoundScore(data, id);
@@ -233,8 +276,10 @@ export default function StageShell({
     data,
     question,
     answeredCount: answered,
+    revealed: held != null,
     submit: (answer: string) => {
-      if (!question) return;
+      // The question on screen during a reveal has already been answered.
+      if (!question || held) return;
       sendMessage({ action: "answer", questionId: question.id, answer });
     },
     sendAction: sendMessage,
@@ -242,6 +287,10 @@ export default function StageShell({
     isHost,
     playerId,
   };
+
+  const questionNumber = question
+    ? data.questions.findIndex((q) => q.id === question.id) + 1
+    : data.questions.length;
 
   const StageComponent = stage.Component;
   const HostView = stage.HostView;
@@ -261,7 +310,12 @@ export default function StageShell({
             {!isHost && showsQuestion && data.questions.length > 0 && (
               <span className="hidden sm:inline font-normal normal-case text-game-ink/60">
                 {" · "}
-                {t("game.progress", { current: answered + 1, total: data.questions.length })}
+                {t("game.progress", {
+                  // Which question is actually on screen — during a reveal that
+                  // is the one just answered, not the one after it.
+                  current: questionNumber,
+                  total: data.questions.length,
+                })}
               </span>
             )}
           </div>

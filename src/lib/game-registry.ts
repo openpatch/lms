@@ -21,6 +21,12 @@ export interface StageProps<Q extends StageQuestion = StageQuestion> {
   question: Q | null;
   /** How many questions this player has answered so far. */
   answeredCount: number;
+  /**
+   * True while the shell is holding the question that was just answered on
+   * screen, so the stage can show the answer on it (see `revealMs`). `question`
+   * is then that question rather than the next one, and `submit` does nothing.
+   */
+  revealed: boolean;
   /** Submits an answer for `question`. */
   submit: (answer: string) => void;
   /** Escape hatch for stages that are not question based. */
@@ -45,6 +51,20 @@ export interface StageReviewProps<Q extends StageQuestion = StageQuestion> {
   playerId: string;
 }
 
+/**
+ * One answer the class gave to one question, as the round debrief counts them
+ * (`src/components/RoundDebrief.tsx`).
+ */
+export interface ClassAnswer {
+  /** The answer as it was stored. */
+  answer: string;
+  /** What it means to read — `answerLabel` applied, or the answer itself. */
+  label: string;
+  /** How many players gave it. */
+  count: number;
+  correct: boolean;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type AnyStageComponent = ComponentType<StageProps<any>>;
 
@@ -54,6 +74,20 @@ export interface StageComponents {
   Component: AnyStageComponent;
   /** Optional illustration shown with the rules before the round starts. */
   RulesExample?: ComponentType;
+  /**
+   * How long the question just answered stays on screen before the next one
+   * comes up, in milliseconds. Omit for none: the stage moves straight on, the
+   * way most of them do.
+   *
+   * An answer is only worth giving if you find out what it was an answer to,
+   * and a number in the round review ten questions later is not that. Where a
+   * station can show it — the root on the line the guess was placed on, the
+   * curve next to the one that was drawn — a beat here is the moment the
+   * learning actually happens. The shell owns it because the shell owns the
+   * clock and the question the player is on; a stage only draws itself with
+   * `revealed` set (the number line is the worked example).
+   */
+  revealMs?: number;
   /** Stages without questions (a tap round, say) render even without a question. */
   questionless?: boolean;
   /** Replaces the default progress list the host sees. */
@@ -84,6 +118,26 @@ export interface StageComponents {
    * or the class's answers read as a column of indices.
    */
   answerLabel?: (question: any, answer: string) => string;
+  /**
+   * The class's answers to one question, drawn the way the question was.
+   *
+   * The debrief's default is the question as asked with the answers listed
+   * under it, which is right for a station whose answers are words or terms.
+   * It is wrong for one whose answers are positions: twenty decimals in a
+   * column say nothing that the same twenty marks on a number line say at a
+   * glance. A stage that brings one of these replaces both halves — it draws
+   * the question *and* the answers, so the class's marks land on the same line
+   * the class put them on.
+   *
+   * It gets the round as well as the question, since how an answer is to be
+   * read can depend on the settings the round was played at (whether a curve
+   * was drawn freehand or placed point by point, say).
+   */
+  ClassAnswers?: ComponentType<{
+    question: any;
+    answers: ClassAnswer[];
+    data: StageRoundData<any>;
+  }>;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

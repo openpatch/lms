@@ -13,13 +13,16 @@ import LiveSummary from "./stages/LiveSummary";
 import { liveScore } from "../../../shared/framework";
 import {
   DrehenReview,
+  FarbeClassAnswers,
   FarbeReview,
   KabelReview,
   LampenReview,
   NachbarnReview,
   PixelReview,
+  WegClassAnswers,
   WegReview,
 } from "./stages/reviews";
+import { kabelLabel, nachbarnLabel } from "./stages/answer-labels";
 
 // The two live stations share everything a live station needs and nothing else:
 // they render whether or not there is a question to be on, they score from the
@@ -30,17 +33,35 @@ const live = { questionless: true, scorePlayer: liveScore, RoundSummary: LiveSum
 // No two stations of this game share a component: each one is a different
 // thing to look at, which is the point of it.
 export default defineGame(intuitionSpec, {
-  farbe: { Component: FarbeStage, RulesExample: FarbeRulesExample, Review: FarbeReview },
+  farbe: {
+    Component: FarbeStage,
+    RulesExample: FarbeRulesExample,
+    Review: FarbeReview,
+    ClassAnswers: FarbeClassAnswers,
+  },
   lampen: { Component: LampenStage, RulesExample: LampenRulesExample, Review: LampenReview },
   pixel: { Component: PixelStage, RulesExample: PixelRulesExample, Review: PixelReview },
   drehen: { Component: DrehenStage, RulesExample: DrehenRulesExample, Review: DrehenReview },
-  kabel: { Component: KabelStage, RulesExample: KabelRulesExample, Review: KabelReview },
-  weg: { Component: WegStage, RulesExample: WegRulesExample, Review: WegReview },
+  kabel: {
+    Component: KabelStage,
+    RulesExample: KabelRulesExample,
+    Review: KabelReview,
+    // The layout itself is the answer; the list can at least count what is
+    // still crossing instead of printing the coordinates of every dot.
+    answerLabel: kabelLabel,
+  },
+  weg: {
+    Component: WegStage,
+    RulesExample: WegRulesExample,
+    Review: WegReview,
+    ClassAnswers: WegClassAnswers,
+  },
   ziele: { ...live, Component: ZieleStage, RulesExample: ZieleRulesExample },
   ampel: { ...live, Component: AmpelStage, RulesExample: AmpelRulesExample },
   nachbarn: {
     Component: NachbarnStage,
     RulesExample: NachbarnRulesExample,
     Review: NachbarnReview,
+    answerLabel: nachbarnLabel,
   },
 });

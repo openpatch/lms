@@ -25,6 +25,12 @@ export interface PlotMarker {
 export interface PlotPath {
   points: Point[];
   style?: CurveStyle;
+  /**
+   * Drawn thin and translucent, for curves that come by the classful: a whole
+   * class's lines at full weight paint over each other and over the solution,
+   * where faint ones pile up into the shape of what the class thought.
+   */
+  faint?: boolean;
 }
 
 export interface PlotCanvasProps {
@@ -385,14 +391,15 @@ export default function PlotCanvas({
           ),
         )}
 
-          {paths.map(({ points, style = "accent" }, index) =>
+          {paths.map(({ points, style = "accent", faint }, index) =>
             points.length < 2 ? null : (
               <polyline
                 key={`path-${index}`}
                 points={points.map((p) => `${toPixelX(p.x)},${toPixelY(p.y)}`).join(" ")}
                 fill="none"
                 stroke={CURVE_COLORS[style]}
-                strokeWidth={style === "reference" ? 3 : 4}
+                strokeWidth={faint ? 2 : style === "reference" ? 3 : 4}
+                strokeOpacity={faint ? 0.35 : undefined}
                 strokeDasharray={style === "reference" ? "9 6" : undefined}
                 strokeLinecap="round"
                 strokeLinejoin="round"

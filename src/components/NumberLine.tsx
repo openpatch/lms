@@ -1,14 +1,39 @@
 import { useMemo, useRef } from "react";
 import MathTex from "./Math";
 
+/** What a mark on the line means. */
+export type MarkerTone = "accent" | "correct" | "given";
+
 export interface NumberLineMarker {
   value: number;
   /** KaTeX label shown in a chip above the line. Without one the marker is a plain pointer. */
   latex?: string;
   /** Highlights the marker, e.g. while its value is being changed. */
   active?: boolean;
+  /**
+   * Draws the mark as a tally standing on the axis instead of a pointer above
+   * the line. That is what a value someone *placed* looks like, and it leaves
+   * the space above the line free for the pointer that says where the value
+   * really is — the two never sit on top of each other, however close the
+   * guess was. A class's answers read as a cloud of tallies around it.
+   */
+  tally?: boolean;
+  /** Whose mark this is: the game's own accent, the right answer, or one
+   *  answer among many. Defaults to the accent. */
+  tone?: MarkerTone;
   /** Makes the marker clickable; the click does not reach the line below. */
   onClick?: () => void;
+}
+
+/**
+ * A stretch of the line rather than a point on it: the interval a bisection
+ * trapped a root in, say. Several drawn over each other pile up, so a class's
+ * intervals darken where they agree.
+ */
+export interface NumberLineBand {
+  min: number;
+  max: number;
+  tone?: MarkerTone;
 }
 
 export interface NumberLineProps {
@@ -20,6 +45,8 @@ export interface NumberLineProps {
   /** Distance between unlabelled guide ticks. Omit for none. */
   minorStep?: number;
   markers?: NumberLineMarker[];
+  /** Spans of the line to shade, drawn behind the ticks and marks. */
+  bands?: NumberLineBand[];
   /** Called with the clicked value. Without it the line is inert. */
   onPick?: (value: number) => void;
   disabled?: boolean;
@@ -28,6 +55,34 @@ export interface NumberLineProps {
   /** Height of the line. Tailwind class, e.g. "h-16". */
   heightClass?: string;
 }
+
+const TONES: Record<
+  MarkerTone,
+  { bar: string; pointer: string; chip: string; chipActive: string; band: string }
+> = {
+  accent: {
+    bar: "bg-game-solid",
+    pointer: "border-t-game-solid",
+    chip: "bg-game-solid",
+    chipActive: "bg-game-solid-hover",
+    band: "bg-game-solid/20",
+  },
+  correct: {
+    bar: "bg-emerald-500",
+    pointer: "border-t-emerald-500",
+    chip: "bg-emerald-500",
+    chipActive: "bg-emerald-600",
+    band: "bg-emerald-500/20",
+  },
+  given: {
+    bar: "bg-gray-400",
+    pointer: "border-t-gray-400",
+    chip: "bg-gray-400",
+    chipActive: "bg-gray-500",
+    // Fainter than the others: these come by the classful and pile up.
+    band: "bg-gray-500/15",
+  },
+};
 
 /** At most this many labelled ticks fit next to each other. */
 const MAX_LABELS = 12;
@@ -51,6 +106,7 @@ export default function NumberLine({
   majorStep = 1,
   minorStep,
   markers = [],
+  bands = [],
   onPick,
   disabled = false,
   precision = 3,
@@ -103,6 +159,18 @@ export default function NumberLine({
             : "border-gray-300 cursor-default"
         }`}
       >
+        {bands.map((band, index) => {
+          const from = Math.max(min, Math.min(band.min, band.max));
+          const to = Math.min(max, Math.max(band.min, band.max));
+          if (!(to > from)) return null;
+          return (
+            <div
+              key={`band-${index}`}
+              className={`absolute inset-y-0 ${TONES[band.tone ?? "accent"].band}`}
+              style={{ left: `${percent(from)}%`, width: `${((to - from) / span) * 100}%` }}
+            />
+          );
+        })}
         {ticks.minor.map((tick) => (
           <div
             key={`minor-${tick}`}
@@ -123,14 +191,35 @@ export default function NumberLine({
           </div>
         ))}
 
-        {markers.map((marker, index) =>
-          marker.latex == null ? (
-            <div
-              key={index}
-              className="absolute -top-3 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-game-solid animate-marker-drop"
-              style={{ left: `${percent(marker.value)}%`, transform: "translateX(-50%)" }}
-            />
-          ) : (
+        {markers.map((marker, index) => {
+          // A value off the end of the line gets no mark: a typed answer can be
+          // anything, and pinning it to the edge would draw a guess nobody made.
+          // The row says what was answered in words beside the line anyway.
+          if (!(marker.value >= min && marker.value <= max)) return null;
+          const tone = TONES[marker.tone ?? "accent"];
+          const left = `${percent(marker.value)}%`;
+
+          if (marker.tally) {
+            return (
+              <div
+                key={index}
+                className={`absolute top-1 bottom-1 w-0.5 rounded-full animate-marker-drop ${tone.bar}`}
+                style={{ left, transform: "translateX(-50%)" }}
+              />
+            );
+          }
+
+          if (marker.latex == null) {
+            return (
+              <div
+                key={index}
+                className={`absolute -top-3 w-0 h-0 border-x-8 border-x-transparent border-t-8 animate-marker-drop ${tone.pointer}`}
+                style={{ left, transform: "translateX(-50%)" }}
+              />
+            );
+          }
+
+          return (
             <button
               key={index}
               onClick={(e) => {
@@ -139,19 +228,19 @@ export default function NumberLine({
                 marker.onClick();
               }}
               className="absolute -top-2 flex flex-col items-center animate-marker-drop"
-              style={{ left: `${percent(marker.value)}%`, transform: "translateX(-50%)" }}
+              style={{ left, transform: "translateX(-50%)" }}
             >
               <span
                 className={`px-2 py-0.5 rounded-md text-white text-sm ${
-                  marker.active ? "bg-game-solid-hover" : "bg-game-solid"
+                  marker.active ? tone.chipActive : tone.chip
                 }`}
               >
                 <MathTex tex={marker.latex} />
               </span>
-              <span className="w-0.5 h-16 bg-game-solid" />
+              <span className={`w-0.5 h-16 ${tone.bar}`} />
             </button>
-          ),
-        )}
+          );
+        })}
       </div>
       {/* Room for the tick labels below the line */}
       <div className="h-6" />
