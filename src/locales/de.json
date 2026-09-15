@@ -520,7 +520,8 @@
         "endless": "Der Zähler entfernt sich vom Abbruchkriterium — die Schleife endet nie.",
         "index": "Gezählt wird ab 0: der letzte gültige Index ist len(liste) - 1.",
         "range": "Die Schleife läuft einen Schritt zu weit und greift neben die Liste.",
-        "order": "Eine Funktion muss definiert sein, bevor sie aufgerufen wird."
+        "order": "Eine Funktion muss definiert sein, bevor sie aufgerufen wird.",
+        "line": "Zeile {{line}}"
       },
       "parsons": {
         "guess": "Zahlenraten",

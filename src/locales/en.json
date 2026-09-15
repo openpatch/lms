@@ -520,7 +520,8 @@
         "endless": "The counter moves away from the condition — the loop never ends.",
         "index": "Counting starts at 0: the last valid index is len(list) - 1.",
         "range": "The loop runs one step too far and reaches past the list.",
-        "order": "A function has to be defined before it is called."
+        "order": "A function has to be defined before it is called.",
+        "line": "line {{line}}"
       },
       "parsons": {
         "guess": "Guess the number",

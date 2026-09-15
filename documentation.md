@@ -254,7 +254,12 @@ Once a round is over, every player sees their own answers on their own device:
 each question of the round with a tick or a cross, what they answered and what it
 scored (`src/components/RoundReview.tsx`). Without a `Review` a row still shows the
 answer and the points; a `Review` adds the question itself and, when the answer was
-wrong, the right one. It receives `{ question, answer, data, playerId }` — `answer`
+wrong, the right one. **Every game has one** — a row that says only "0 Punkte"
+leaves a player to work out for themselves which of ten questions that was
+about, which is the half of the round where the learning was supposed to
+happen. The frame the rows share (`game.yourAnswer`, `game.correctAnswer`, the
+"nicht beantwortet" line) is `src/components/review-parts.tsx`; only the middle
+of it is worth writing per stage. It receives `{ question, answer, data, playerId }` — `answer`
 is `undefined` for a question the round ran out on — and renders into a row the
 review draws the frame of, so keep it to a line or three and use `ReviewLine` for
 the "label: value" lines (`src/games/terme/stages/reviews.tsx` is the example).
@@ -396,7 +401,9 @@ Two optional hooks let a game say more, and the screen is useful without either:
 Only `java` has both so far (`src/games/java/stages/solutions.tsx` and
 `answer-labels.ts`), which is five components between eleven stations because
 the stations share their components. Every other game still gets the question,
-the ranking and the distribution.
+the ranking and the distribution — and its `Review` already renders the right
+answer for the player, so a `Solution` for it is mostly a matter of lifting
+that half out.
 
 ## Colour
 

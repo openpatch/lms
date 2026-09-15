@@ -6,9 +6,8 @@ import type {
   LogicQuestion,
   StructogramQuestion,
 } from "../../../../shared/games/java";
-import type { PlayerAnswer } from "../../../../shared/types";
 import type { StageReviewProps } from "../../../lib/game-registry";
-import { ReviewLine } from "../../../components/RoundReview";
+import { Given, Solution } from "../../../components/review-parts";
 import CodeBlock, { CodeLine } from "../components/CodeBlock";
 import StructogramView from "../components/Structogram";
 
@@ -18,26 +17,6 @@ import StructogramView from "../components/Structogram";
  * and the right answer are on screen together — so every station of this game
  * brings a review row rather than only its points.
  */
-
-/** "Nicht beantwortet", for the questions the round ran out on. */
-function Missing() {
-  const { t } = useTranslation();
-  return <span className="text-gray-400">{t("game.noAnswer")}</span>;
-}
-
-function Given({ answer, children }: { answer: PlayerAnswer | undefined; children?: React.ReactNode }) {
-  const { t } = useTranslation();
-  return (
-    <ReviewLine label={t("game.yourAnswer")}>
-      {answer ? (children ?? <span className="font-mono">{answer.answer}</span>) : <Missing />}
-    </ReviewLine>
-  );
-}
-
-function Solution({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
-  return <ReviewLine label={t("game.correctAnswer")}>{children}</ReviewLine>;
-}
 
 /** The six stations that take a typed value: listing, answer, right answer. */
 export function TraceReview({ question, answer }: StageReviewProps<CodeAnswerQuestion>) {

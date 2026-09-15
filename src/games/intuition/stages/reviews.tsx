@@ -13,7 +13,7 @@ import type {
 } from "../../../../shared/games/intuition";
 import type { PlayerAnswer } from "../../../../shared/types";
 import type { StageReviewProps } from "../../../lib/game-registry";
-import { ReviewLine } from "../../../components/RoundReview";
+import { Given, Missing, Solution } from "../../../components/review-parts";
 import { countCrossings } from "../../../../shared/intuition-graph";
 import { shiftText } from "../../../../shared/intuition-cipher";
 import { css } from "../components/color";
@@ -27,21 +27,6 @@ import PixelPicture from "../components/PixelPicture";
  * size it finally reached, the sentence that was hiding in the letters. A row
  * that only said "0 Punkte" would throw away the best part of the round.
  */
-
-function Missing() {
-  const { t } = useTranslation();
-  return <span className="text-gray-400">{t("game.noAnswer")}</span>;
-}
-
-function Given({ answer, children }: { answer: PlayerAnswer | undefined; children: React.ReactNode }) {
-  const { t } = useTranslation();
-  return <ReviewLine label={t("game.yourAnswer")}>{answer ? children : <Missing />}</ReviewLine>;
-}
-
-function Solution({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
-  return <ReviewLine label={t("game.correctAnswer")}>{children}</ReviewLine>;
-}
 
 function parse<T>(answer: PlayerAnswer | undefined): T | null {
   if (!answer) return null;
