@@ -395,8 +395,29 @@ always has at least one round.
 
 `shared/framework.ts` holds the scoring rules so that games stay comparable:
 
+**Every stage is worth the same.** A round of any station scores `ROUND_POINTS`
+— a hundred — before the combo bonus, and the score is the player's **average**
+over the questions the round put in front of them rather than the sum of them.
+
+That is not a detail. The host picks which stations a session plays, and they
+are not the same size: fifteen quick true-or-false questions used to be worth
+five times three untangling puzzles, so the station with the most questions
+decided the game before anybody had answered anything. Averaging also means the
+number each answer carries can stay what it always was — nought to a hundred
+for that one question — so the round review still reads as "how did I do on
+this one" while the round total reads as "how did I do", like a percentage. A
+question nobody reached counts as a zero, which is what it cost before.
+
+A live stage is averaged the same way, over `extra.offered` — how many events
+the round has put on the table, which has to come from the round and not from
+the player: counting only the events somebody got round to would score a player
+who hit three targets and then put the tablet down a perfect hundred.
+
+`scripts/check-games.ts` holds the line, playing a flawless round of every
+stage and failing if it does not come to exactly `ROUND_POINTS`.
+
 - A stage returns `{ correct, points }` from `evaluate()`; `points` is the base
-  score, normally 0–100.
+  score for that one question, normally 0–100.
 - `speedPoints(seconds, perSecond?, floor?)` turns the time a player needed into
   points, measured per question rather than from the round start.
 - `closenessPoints(relativeError, zeroAt?)` scores "how close did you get" —
@@ -404,8 +425,11 @@ always has at least one round.
   places, draws or tunes something instead of typing an exact answer.
 - The framework applies the combo bonus for consecutive correct answers:
   +10% per step, capped at +50% (`comboMultiplier`).
-- A round's score is the sum of the awarded points, unless the stage defines
-  `scorePlayer`. Round scores add up to the player's total across rounds.
+- A round's score is the average of the awarded points, unless the stage
+  defines `scorePlayer` — and one that does still owes the same cap, as the tap
+  stage of the example game shows. Round scores add up to the player's total
+  across rounds, and after each round the players see that total with what the
+  round just added beside it.
 
 ## Drawing a graph
 

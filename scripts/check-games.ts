@@ -9,7 +9,16 @@
 import { readFileSync } from "node:fs";
 import { gameHandlers } from "../server/games";
 import { gameSpecs, validateGameSpecs } from "../shared/games";
-import { defaultGameSettings, type GameSpec, type StageRoundData } from "../shared/framework";
+import {
+  ROUND_POINTS,
+  defaultGameSettings,
+  emptyTally,
+  liveOffered,
+  liveScore,
+  playerRoundScore,
+  type GameSpec,
+  type StageRoundData,
+} from "../shared/framework";
 import type { LobbyState } from "../shared/types";
 
 const LOCALES = ["en", "de"] as const;
@@ -53,6 +62,32 @@ function lobbyFor(spec: GameSpec, stageId: string): LobbyState {
     settings: { ...settings, stages: [stageId] },
     countdownEndsAt: null,
   };
+}
+
+/**
+ * What this stage pays for a round where nothing went wrong and no streak was
+ * running, or null when the stage scores in a way this cannot synthesise.
+ */
+function perfectRoundScore(round: StageRoundData, live: boolean): number | null {
+  if (live) {
+    const offered = liveOffered(round) || 10;
+    const extra = round.extra as { offered?: number; tally?: Record<string, unknown> };
+    extra.offered = offered;
+    extra.tally = { player: { ...emptyTally(), points: 100 * offered } };
+    return liveScore(round, "player");
+  }
+  if (round.questions.length === 0) return null;
+  round.answers.player = {};
+  for (const question of round.questions) {
+    round.answers.player[question.id] = {
+      answer: "",
+      timeMs: 0,
+      correct: true,
+      points: 100,
+      streak: 1,
+    };
+  }
+  return playerRoundScore(round, "player");
 }
 
 validateGameSpecs();
@@ -147,6 +182,16 @@ for (const spec of Object.values(gameSpecs)) {
       if (!tally || !("player" in tally)) {
         fail(`${spec.id}/${stage.id}: a live round starts every player on the board`);
       }
+    }
+
+    // Every stage is worth the same, or the host's choice of stations decides
+    // the game before anybody has answered anything. A flawless round is
+    // ROUND_POINTS; the combo bonus is what may go above it.
+    const flawless = perfectRoundScore(round, live);
+    if (flawless == null) {
+      console.log(`  ~ ${spec.id}/${stage.id}: scores its own way, cap not checked`);
+    } else if (flawless !== ROUND_POINTS) {
+      fail(`${spec.id}/${stage.id}: a flawless round is ${flawless}, not ${ROUND_POINTS}`);
     }
 
     console.log(

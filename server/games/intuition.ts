@@ -594,10 +594,11 @@ const zieleStage: StageHandler = {
   createExtra({ settings }) {
     const life = TARGET_LIFE[String(settings.targetLife)] ?? TARGET_LIFE.normal;
     const radius = TARGET_SIZE[String(settings.targetSize)] ?? TARGET_SIZE.normal;
-    const extra: TargetRoundExtra = {
-      targets: buildTimeline(Number(settings.duration), life, radius),
-    };
-    return { ...extra };
+    const targets = buildTimeline(Number(settings.duration), life, radius);
+    const extra: TargetRoundExtra = { targets };
+    // Every target of the timeline appears inside the round, so the round
+    // offers all of them from the start.
+    return { ...extra, offered: targets.length };
   },
 
   // Nothing is answered question by question here; everything arrives as a
@@ -730,6 +731,10 @@ const ampelStage: StageHandler = {
       recordLiveEvent(data, player.id, { correct: false, points: 0 });
     }
     extra.light += 1;
+    // Counted as offered only now that it is settled for everybody. A light
+    // still in the air would drag every score down until it lands, and one
+    // the clock cuts short was never really offered at all.
+    (data.extra as { offered?: number }).offered = extra.light;
     extra.phase = "wait";
     extra.since = now;
     extra.waitMs = nextWait(ctx.settings);

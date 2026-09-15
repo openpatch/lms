@@ -1,4 +1,4 @@
-import { exampleSpec } from "../../shared/games/example";
+import { exampleSpec, tapScore } from "../../shared/games/example";
 import type { StageHandler } from "../framework";
 import { createStageGame } from "../framework";
 
@@ -17,10 +17,7 @@ const tapStage: StageHandler = {
     return true;
   },
 
-  scorePlayer(data, playerId) {
-    const clicks = data.extra.clicks as Record<string, number>;
-    return clicks[playerId] ?? 0;
-  },
+  scorePlayer: tapScore,
 };
 
 export default createStageGame(exampleSpec, [tapStage]);

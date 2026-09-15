@@ -234,6 +234,20 @@ export interface LiveTally {
   totalMs: number;
 }
 
+/**
+ * How many events a live round has put on the table so far, kept in `extra`
+ * beside the tallies.
+ *
+ * It is what a live round is averaged over, and it has to come from the round
+ * rather than from the player: counting only the events a player got round to
+ * would score somebody who hit three targets and then put the tablet down a
+ * perfect hundred.
+ */
+export function liveOffered(data: StageRoundData): number {
+  const extra = data.extra as { offered?: number };
+  return Math.max(0, Number(extra.offered ?? 0));
+}
+
 export function emptyTally(): LiveTally {
   return { points: 0, hits: 0, misses: 0, streak: 0, bestStreak: 0, totalMs: 0 };
 }
@@ -248,9 +262,14 @@ export function liveTally(data: StageRoundData, playerId: string): LiveTally {
   return liveTallies(data)[playerId] ?? emptyTally();
 }
 
-/** Score of one player in a live round — the client mirror of the same sum. */
+/**
+ * Score of one player in a live round — averaged over what the round offered,
+ * so a minute of tapping is worth what a round of ten questions is worth.
+ */
 export function liveScore(data: StageRoundData, playerId: string): number {
-  return Math.round(liveTally(data, playerId).points);
+  const offered = liveOffered(data);
+  if (offered === 0) return 0;
+  return Math.round((liveTally(data, playerId).points / offered) * (ROUND_POINTS / 100));
 }
 
 /** Mean reaction over the hits, or null when there were none. */
@@ -258,15 +277,38 @@ export function liveAverageMs(tally: LiveTally): number | null {
   return tally.hits > 0 ? Math.round(tally.totalMs / tally.hits) : null;
 }
 
-/** Score of one player in the current round. */
+/**
+ * What one round of any stage is worth, before the combo bonus.
+ *
+ * Every stage is worth the same, because the host picks which ones a session
+ * plays and they are not the same size: fifteen quick true-or-false questions
+ * against three untangling puzzles used to be a five-to-one advantage before
+ * anybody had answered anything, and the station with the most questions
+ * decided the game.
+ */
+export const ROUND_POINTS = 100;
+
+/**
+ * Score of one player in the current round: their average over the questions
+ * the round put in front of them.
+ *
+ * The average, not the sum — that is what makes every stage worth `ROUND_POINTS`
+ * however many questions it asks. A question nobody reached counts as a zero,
+ * which is the same thing it cost before.
+ *
+ * The number each answer carries stays what it always was, nought to a hundred
+ * for that one question, so the round review still reads as "how did I do on
+ * this one" and the round total reads as "how did I do", like a percentage.
+ */
 export function playerRoundScore(data: StageRoundData, playerId: string): number {
+  if (data.questions.length === 0) return 0;
   const answers = data.answers[playerId] ?? {};
   let total = 0;
   for (const question of data.questions) {
     const answer = answers[question.id];
     if (answer?.points != null) total += answer.points;
   }
-  return total;
+  return Math.round((total / data.questions.length) * (ROUND_POINTS / 100));
 }
 
 /** How many questions a player has answered in the current round. */
