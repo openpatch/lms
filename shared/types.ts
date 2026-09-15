@@ -14,6 +14,13 @@ export type GameStatus = "live" | "coming-soon";
  * The palette a game is painted in. Every game owns exactly one, so a glance at
  * the screen says which game a class is in — the shades themselves live in
  * src/lib/game-theme.ts.
+ *
+ * Seventeen, and that is close to as many as this list can hold. They have to
+ * be told apart across a room, and the seven added after the first ten were
+ * picked by measuring: each one is at least as far from every colour already
+ * here as the closest existing pair (amber and orange) are from each other. A
+ * colour nearer than that would not be a new colour, it would be a second
+ * amber. `scripts/check-games.ts` holds that line.
  */
 export type GameColor =
   | "violet"
@@ -25,7 +32,14 @@ export type GameColor =
   | "orange"
   | "rose"
   | "fuchsia"
-  | "teal";
+  | "teal"
+  | "red"
+  | "green"
+  | "yellow"
+  | "blue"
+  | "purple"
+  | "pink"
+  | "slate";
 
 export const GAME_COLORS: GameColor[] = [
   "violet",
@@ -38,6 +52,13 @@ export const GAME_COLORS: GameColor[] = [
   "rose",
   "fuchsia",
   "teal",
+  "red",
+  "green",
+  "yellow",
+  "blue",
+  "purple",
+  "pink",
+  "slate",
 ];
 
 export type LobbyPhase =
@@ -134,6 +155,13 @@ export interface GameMeta {
   /** This game's colour, unique across the registry. */
   color: GameColor;
   status: GameStatus;
+  /**
+   * Kept out of the arena. For the example game, which exists to be copied
+   * when adding a new one and has no business in a teacher's list of things to
+   * play — it is still registered, still checked, and still reachable by its
+   * own URL for anyone working on it.
+   */
+  hidden?: boolean;
   minPlayers: number;
   maxPlayers: number;
 }

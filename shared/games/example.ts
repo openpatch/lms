@@ -14,6 +14,9 @@ export const exampleSpec: GameSpec = {
   icon: "🎯",
   color: "teal",
   status: "live",
+  // The template, not something a class plays: kept out of the arena but still
+  // registered, still checked, and still reachable at its own URL.
+  hidden: true,
   minPlayers: 1,
   maxPlayers: 50,
   stages: [

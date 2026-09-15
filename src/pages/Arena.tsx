@@ -9,7 +9,7 @@ type Filter = "all" | GameCategory;
 export default function Arena() {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<Filter>("all");
-  const games = getAllGames();
+  const games = getAllGames().filter((game) => !game.hidden);
 
   const filtered = filter === "all" ? games : games.filter((g) => g.category === filter);
 

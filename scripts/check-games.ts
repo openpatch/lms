@@ -9,6 +9,8 @@
 import { readFileSync } from "node:fs";
 import { gameHandlers } from "../server/games";
 import { gameSpecs, validateGameSpecs } from "../shared/games";
+import { GAME_COLORS } from "../shared/types";
+import { GAME_PALETTES } from "../src/lib/game-theme";
 import {
   ROUND_POINTS,
   defaultGameSettings,
@@ -88,6 +90,61 @@ function perfectRoundScore(round: StageRoundData, live: boolean): number | null 
     };
   }
   return playerRoundScore(round, "player");
+}
+
+/**
+ * How far apart two colours look, in OKLab, with lightness counting for less
+ * than hue: a game's colour is recognised as a hue on somebody else's screen
+ * across the room, not as a shade.
+ */
+function colourDistance(a: string, b: string): number {
+  const oklab = (hex: string) => {
+    const channel = (at: number) => {
+      const c = parseInt(hex.slice(at, at + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    const [r, g, bl] = [channel(1), channel(3), channel(5)];
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * bl);
+    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * bl);
+    const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * bl);
+    return [
+      0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+      1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+      0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+    ];
+  };
+  const [la, aa, ba] = oklab(a);
+  const [lb, ab, bb] = oklab(b);
+  return Math.sqrt(0.5 * (la - lb) ** 2 + (aa - ab) ** 2 + (ba - bb) ** 2) * 100;
+}
+
+/**
+ * The closest two game colours may be.
+ *
+ * Amber and orange were already this close when there were ten, so this is not
+ * a standard imposed after the fact — it is the standard the list already met,
+ * written down so the eleventh colour cannot quietly be a second amber. The
+ * whole point of the colours is that a teacher and thirty students can each
+ * check at a glance that they are in the same game.
+ */
+const MIN_COLOUR_DISTANCE = 4.0;
+
+{
+  const solids = GAME_COLORS.map((name) => [name, GAME_PALETTES[name].solid] as const);
+  let closest = Infinity;
+  for (let i = 0; i < solids.length; i++) {
+    for (let j = i + 1; j < solids.length; j++) {
+      const apart = colourDistance(solids[i][1], solids[j][1]);
+      closest = Math.min(closest, apart);
+      if (apart < MIN_COLOUR_DISTANCE) {
+        fail(
+          `colours "${solids[i][0]}" and "${solids[j][0]}" are ${apart.toFixed(1)} apart, ` +
+            `under ${MIN_COLOUR_DISTANCE} — a class could not tell them apart`,
+        );
+      }
+    }
+  }
+  console.log(`${GAME_COLORS.length} colours, closest pair ${closest.toFixed(1)} apart`);
 }
 
 validateGameSpecs();

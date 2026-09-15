@@ -70,6 +70,7 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `server/games/<game>.ts` | One stage handler per stage: generate questions, grade an answer |
 | `src/lib/game-registry.ts` | `defineGame()` — joins a spec with its React components |
 | `src/lib/game-theme.ts` | The colour palettes and the `--game-*` variables that paint a game's screens |
+| `GameMeta.hidden` | Keeps a game out of the arena while leaving it registered, checked and reachable by URL — the example game, which is a template rather than something a class plays |
 | `src/games/<game>/stages/*.tsx` | One component per stage: render the current question |
 | `src/components/StageShell.tsx` | The bars around a stage: round, score and clock pinned under the app header, the stage's action pinned to the bottom edge (`StageActionBar`) — or the host's, through `hostAction` — plus the ranked host view and feedback |
 | `src/components/StageRules.tsx` | The rules screen before a round |
@@ -411,6 +412,20 @@ Every game owns one colour from `GameColor` (`shared/types.ts`), and no two game
 may share one — `validateGameSpecs()` rejects a duplicate. The point is practical:
 in a lesson the teacher and thirty students each hold their own screen, and the
 colour is how they check at a glance that they are all in the same game.
+
+There are seventeen, and that is close to as many as the list can hold. Two
+rules keep a new one honest, and `check:games` enforces the second:
+
+- **A `solid` is the lightest shade of its hue that still carries white text at
+  4.5:1.** That is not a new rule — computing it reproduces every one of the
+  first ten exactly. Where that shade lands too near a colour already in use,
+  go one step darker; `red` is a step darker than `pink` or `blue` for exactly
+  that reason.
+- **No two colours may look closer than the closest pair already does.** Amber
+  and orange were 4.1 apart in OKLab when there were ten of them, so that is
+  the floor — not a standard imposed after the fact, but the standard the list
+  already met, written down so the eighteenth colour cannot quietly be a second
+  amber. `emerald` fails it at 3.9 against teal, which is why it is not here.
 
 The shades live in `src/lib/game-theme.ts`. A page announces its game with
 `useActiveGame(game)`; `Layout` then puts that palette's `--game-*` variables on
