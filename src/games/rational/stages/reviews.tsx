@@ -52,7 +52,7 @@ export function ArrangeReview({ question, answer }: StageReviewProps<ArrangeQues
   const marks: NumberLineMarker[] = question.items.flatMap((item, index) => {
     const value = placed?.[index];
     const truth: NumberLineMarker = { value: toValue(item), tone: "correct" };
-    return value == null ? [truth] : [{ value, tally: true }, truth];
+    return value == null ? [truth] : [{ value, tally: true, tone: "mine" }, truth];
   });
 
   return (
@@ -221,7 +221,11 @@ export function ChangeReview({ question, answer }: StageReviewProps<ChangeQuesti
           heightClass="h-10"
           markers={[
             { value: question.start, tally: true, tone: "given" },
-            ...(landed == null || landed === truth ? [] : [{ value: landed, tally: true } as const]),
+            // Drawn even when it lands on the right answer. Suppressing it
+            // there left the start state as the only tally on the line, and a
+            // player who had got it right read that pale mark as their own —
+            // "I said −9 and the review marks −7".
+            ...(landed == null ? [] : [{ value: landed, tally: true, tone: "mine" } as const]),
             { value: truth, tone: "correct" },
           ]}
         />

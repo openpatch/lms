@@ -1,8 +1,11 @@
 import { useMemo, useRef } from "react";
 import MathTex from "./Math";
 
-/** What a mark on the line means. */
-export type MarkerTone = "accent" | "correct" | "given";
+/**
+ * What a mark on the line means: the game's own accent, the right answer, one
+ * answer among many, or the answer of whoever is reading.
+ */
+export type MarkerTone = "accent" | "correct" | "given" | "mine";
 
 export interface NumberLineMarker {
   value: number;
@@ -18,8 +21,8 @@ export interface NumberLineMarker {
    * guess was. A class's answers read as a cloud of tallies around it.
    */
   tally?: boolean;
-  /** Whose mark this is: the game's own accent, the right answer, or one
-   *  answer among many. Defaults to the accent. */
+  /** Whose mark this is. Defaults to the accent. A "mine" mark is drawn
+   *  louder than the rest — see the tone table. */
   tone?: MarkerTone;
   /** Makes the marker clickable; the click does not reach the line below. */
   onClick?: () => void;
@@ -81,6 +84,18 @@ const TONES: Record<
     chipActive: "bg-gray-500",
     // Fainter than the others: these come by the classful and pile up.
     band: "bg-gray-500/15",
+  },
+  // The reader's own answer. Same accent it was placed in, so the review line
+  // looks like the line it was played on — the difference is the weight, which
+  // `tally` below gives it. A review line already carries the start state and
+  // the right answer, and a hairline among those reads as scenery rather than
+  // as "this is what you said".
+  mine: {
+    bar: "bg-game-solid",
+    pointer: "border-t-game-solid",
+    chip: "bg-game-solid",
+    chipActive: "bg-game-solid-hover",
+    band: "bg-game-solid/20",
   },
 };
 
@@ -200,6 +215,22 @@ export default function NumberLine({
           const left = `${percent(marker.value)}%`;
 
           if (marker.tally) {
+            // The reader's own mark stands taller than the line and carries a
+            // head, so it is the first thing found among the class's tallies
+            // and the pale start state — and stays findable when it lands on
+            // the right answer, where the two marks sit on the same spot.
+            if (marker.tone === "mine") {
+              return (
+                <div
+                  key={index}
+                  className="absolute -top-2 -bottom-1 flex flex-col items-center animate-marker-drop"
+                  style={{ left, transform: "translateX(-50%)" }}
+                >
+                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${tone.bar}`} />
+                  <span className={`w-1.5 flex-1 rounded-full ${tone.bar}`} />
+                </div>
+              );
+            }
             return (
               <div
                 key={index}

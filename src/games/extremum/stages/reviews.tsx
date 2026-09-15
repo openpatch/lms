@@ -105,7 +105,9 @@ export function OptimizeReview({ question, answer }: StageReviewProps<OptimizeQu
               max={question.xMax}
               heightClass="h-10"
               markers={[
-                ...(chosen == null ? [] : [{ value: chosen, tally: true } as NumberLineMarker]),
+                ...(chosen == null
+                  ? []
+                  : [{ value: chosen, tally: true, tone: "mine" } as NumberLineMarker]),
                 { value: best, tone: "correct" },
               ]}
             />

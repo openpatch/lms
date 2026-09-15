@@ -57,7 +57,9 @@ export function NumberLineReview({ question, answer }: StageReviewProps<NumberLi
           max={question.lineMax}
           heightClass="h-10"
           markers={[
-            ...(isFinite(given) ? [{ value: given, tally: true } as NumberLineMarker] : []),
+            ...(isFinite(given)
+              ? [{ value: given, tally: true, tone: "mine" } as NumberLineMarker]
+              : []),
             { value: question.numericAnswer, tone: "correct" },
           ]}
         />
