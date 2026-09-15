@@ -48,7 +48,11 @@ export default function AmpelStage({ data, sendAction }: StageProps) {
 
   useEffect(() => {
     const fresh = extra.phase === "go" && serverTime() - extra.since <= FRESH_MS;
-    greenAt.current = fresh ? Date.now() : null;
+    // performance.now() rather than Date.now(): both ends of this measurement
+    // are on this device, and a clock that the system quietly corrects between
+    // them would produce a reaction of minus forty milliseconds — which the
+    // server would throw out, costing the player a light they had won.
+    greenAt.current = fresh ? performance.now() : null;
   }, [extra.phase, extra.light, extra.since]);
 
   const green = extra.phase === "go";
@@ -69,7 +73,7 @@ export default function AmpelStage({ data, sendAction }: StageProps) {
 
     // Tapping while it is red is a false start, and the server is told so
     // rather than being left to notice that nothing arrived.
-    const ms = green && since != null ? Date.now() - since : null;
+    const ms = green && since != null ? Math.round(performance.now() - since) : null;
     setAnswered({ light: extra.light, ms });
     sendAction({ action: "tap", light: extra.light, ms });
   };

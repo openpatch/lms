@@ -646,9 +646,19 @@ const zieleStage: StageHandler = {
 /** How long a green light waits to be hit before it counts as missed. */
 const GO_WINDOW_MS = 2000;
 
-/** Reaction worth everything, and reaction worth nothing. */
-const PERFECT_MS = 180;
-const HOPELESS_MS = 620;
+/**
+ * Reaction worth everything, and reaction worth nothing.
+ *
+ * Both are set for a finger on a touchscreen, not for a thumb on a switch. A
+ * measurement here is a true reaction plus the time the display takes to show
+ * the green and the panel takes to report the touch — together most of a tenth
+ * of a second, and none of it the player's. A class lands around 330ms, and a
+ * quick one gets near 250. Anything under 250 as the top of the scale is a top
+ * nobody in the room can reach, which wastes the half of the scale where the
+ * difference between a fast player and a very fast one would show.
+ */
+const PERFECT_MS = 250;
+const HOPELESS_MS = 650;
 
 const WAIT_SPREAD: Record<string, [number, number]> = {
   kurz: [1000, 2500],
@@ -747,7 +757,11 @@ const ampelStage: StageHandler = {
     recordLiveEvent(data, playerId, {
       correct: real,
       points: real
-        ? Math.max(10, closenessPoints((ms - PERFECT_MS) / (HOPELESS_MS - PERFECT_MS)))
+        ? // Clamped at zero: closenessPoints treats a negative error as
+          // nonsense input and scores it zero, so a reaction quicker than
+          // PERFECT_MS would land on the floor instead of the ceiling —
+          // exactly backwards, and aimed at the fastest player in the room.
+          Math.max(10, closenessPoints(Math.max(0, (ms - PERFECT_MS) / (HOPELESS_MS - PERFECT_MS))))
         : 0,
       ms: real ? ms : undefined,
     });
