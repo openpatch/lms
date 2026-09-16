@@ -176,10 +176,12 @@ function basicArithmeticTask(): Task {
       };
     }
     case "negative": {
+      // The sign is the lesson, so both sides stay inside the tables: a
+      // difference no wider than a dozen, times a sum no bigger than one.
       const a = randomInt(2, 12);
-      const b = randomInt(a + 1, 20);
-      const c = randomInt(2, 12);
-      const d = randomInt(2, 12);
+      const b = randomInt(a + 1, a + 12);
+      const c = randomInt(2, 6);
+      const d = randomInt(2, 6);
       return {
         code: main(`IO.println((${a} - ${b}) * (${c} + ${d}));`),
         ask: "output",
@@ -509,14 +511,25 @@ function assignmentTask(withShorthand: boolean): Task {
   // Two or three steps, at least one of them overwriting a variable with itself.
   const steps = randomInt(2, 3);
   const touched = new Set<string>();
+  // One multiplying step per task. Each on its own is small — times two, three
+  // or four — but three of them in a row compound into the hundreds, and then
+  // what the question measures is whether the reader can hold a running product
+  // rather than whether they can follow an assignment.
+  let multiplied = false;
   for (let i = 0; i < steps; i++) {
     const target = pick([first, second]);
     touched.add(target);
     const other = target === first ? second : first;
-    const forms = withShorthand
-      ? (["self", "other", "plusEquals", "increment", "timesEquals"] as const)
-      : (["self", "other", "double"] as const);
-    switch (pick(forms)) {
+    const growing = withShorthand ? (["timesEquals"] as const) : (["double"] as const);
+    const forms = [
+      "self",
+      "other",
+      ...(withShorthand ? (["plusEquals", "increment"] as const) : []),
+      ...(multiplied ? [] : growing),
+    ] as const;
+    const form = pick(forms);
+    if (form === "timesEquals" || form === "double") multiplied = true;
+    switch (form) {
       case "self": {
         const delta = randomInt(2, 15);
         const op = pick(["+", "-"] as const);
@@ -1130,8 +1143,11 @@ function forTask(): Task {
       };
     }
     case "product": {
-      const upTo = randomInt(3, 7);
-      const from = randomInt(1, 4);
+      // 7! is 5040, and with a starting factor on top of it this asked a class
+      // with a stopwatch running to do long multiplication. The loop is the
+      // question; every step here stays inside the times tables.
+      const upTo = randomInt(3, 5);
+      const from = randomInt(1, 3);
       let product = from;
       for (let i = 1; i <= upTo; i++) product *= i;
       return {
@@ -1166,7 +1182,10 @@ function forTask(): Task {
 function whileTask(): Task {
   switch (pick(["double", "countdown", "count", "halve", "digits"] as const)) {
     case "double": {
-      const limit = randomInt(20, 1000);
+      // Each doubling is easy and nine of them in a row are not: the reader is
+      // holding a four-digit running value by the end, for a question about
+      // when a while-loop stops.
+      const limit = randomInt(20, 200);
       const from = pick([1, 1, 1, 2, 3]);
       let value = from;
       while (value < limit) value = value * 2;
@@ -1204,7 +1223,10 @@ function whileTask(): Task {
       // Halving with integer division always lands on 1, whatever it started
       // from, so the value at the end is no question at all — how many passes
       // it took is, and that is what the listing prints.
-      const start = randomInt(20, 500);
+      // Halving is the same bargain as doubling: cheap per step, and the step
+      // count is what is being asked for, so the run stays short enough to
+      // count on one hand and a bit.
+      const start = randomInt(20, 200);
       let value = start;
       let runs = 0;
       while (value > 1) {
@@ -1690,7 +1712,7 @@ function returnTask(): Task {
       };
     }
     case "square": {
-      const argument = randomInt(3, 15);
+      const argument = randomInt(3, 12);
       const offset = randomInt(1, 12);
       return {
         code: [
@@ -1719,9 +1741,11 @@ function returnTask(): Task {
       };
     }
     case "twoParams": {
-      const a = randomInt(2, 12);
-      const b = randomInt(2, 12);
-      const c = randomInt(2, 6);
+      // Small enough that flaeche() lands inside the tables and volumen() is
+      // then that by a single digit: the nesting is what is being read here.
+      const a = randomInt(2, 9);
+      const b = randomInt(2, 9);
+      const c = randomInt(2, 5);
       return {
         code: [
           `int flaeche(int pBreite, int pHoehe) {`,

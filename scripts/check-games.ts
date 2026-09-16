@@ -260,6 +260,57 @@ for (const spec of Object.values(gameSpecs)) {
   }
 }
 
+/**
+ * How big an answer a code-tracing question may ask for.
+ *
+ * These stations ask what a listing does, not what a sum comes to, and they are
+ * played against a clock. A round where the loop was read correctly and the
+ * arithmetic ran out of time measures the arithmetic. The ceiling is the point
+ * where a value stops being holdable in the head — roughly the times tables and
+ * a bit — and it is checked rather than written in a comment because the way
+ * this goes wrong is somebody widening a range for variety's sake and nobody
+ * noticing until a class does.
+ *
+ * `output` is exempt: that station is the arithmetic, `/` and `%` included.
+ */
+const TRACING_BUDGET = 500;
+const TRACING_STAGES = ["variables", "loops", "methods", "arrays", "sorting", "structogram"];
+
+{
+  const java = gameSpecs.java;
+  const handler = java && gameHandlers.java;
+  if (java && handler) {
+    for (const stage of java.stages.filter((s) => TRACING_STAGES.includes(s.id))) {
+      let worst = 0;
+      let listing: string[] = [];
+      for (let attempt = 0; attempt < 400; attempt++) {
+        const state = lobbyFor(java, stage.id);
+        const round = handler.onStart!(state) as StageRoundData;
+        for (const question of round.questions as unknown as {
+          code?: string[];
+          expected?: string[];
+        }[]) {
+          for (const value of question.expected ?? []) {
+            const size = Math.abs(Number(String(value).trim()));
+            if (Number.isFinite(size) && size > worst) {
+              worst = size;
+              listing = question.code ?? [];
+            }
+          }
+        }
+      }
+      if (worst > TRACING_BUDGET) {
+        fail(
+          `java/${stage.id}: a traced answer reaches ${worst}, over ${TRACING_BUDGET} — ` +
+            `the arithmetic is the question now:\n${listing.join("\n")}`,
+        );
+      } else {
+        console.log(`  ✓ java/${stage.id}: traced answers stay under ${worst + 1}`);
+      }
+    }
+  }
+}
+
 if (problems > 0) {
   console.error(`\n${problems} problem(s) found`);
   process.exit(1);
