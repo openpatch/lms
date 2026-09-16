@@ -163,6 +163,20 @@ export const javaSpec: GameSpec = {
       ],
     },
     {
+      id: "trail",
+      nameKey: "games.java.stages.trail.name",
+      summaryKey: "games.java.stages.trail.summary",
+      rulesKey: "games.java.stages.trail.rules",
+      settings: [questionsPerRound([5, 8, 12], 8), duration(120), toggle("withNestedRobot", true)],
+    },
+    {
+      id: "parsons",
+      nameKey: "games.java.stages.parsons.name",
+      summaryKey: "games.java.stages.parsons.summary",
+      rulesKey: "games.java.stages.parsons.rules",
+      settings: [questionsPerRound([4, 6, 8], 6), duration(150)],
+    },
+    {
       id: "structogram",
       nameKey: "games.java.stages.structogram.name",
       summaryKey: "games.java.stages.structogram.summary",
@@ -241,6 +255,23 @@ export type AskKind =
  * sorting all ask the player to run the code in their head and write down what
  * comes out.
  */
+/**
+ * One moment while the program runs: which line is about to go, what the
+ * variables hold, and what has been printed so far.
+ *
+ * Recorded as the question is generated, not replayed from an interpreter the
+ * game does not have — the generator already walks the loop to work out the
+ * answer, so the steps are what it was throwing away.
+ */
+export interface TraceStep {
+  /** 0-based index into `code`. */
+  line: number;
+  /** The variables worth watching, already as text. */
+  vars: Record<string, string>;
+  /** Everything printed up to and including this step. */
+  out: string[];
+}
+
 export interface CodeAnswerQuestion extends StageQuestion {
   code: string[];
   ask: AskKind;
@@ -251,6 +282,12 @@ export interface CodeAnswerQuestion extends StageQuestion {
   /** Shown above the listing, e.g. what the user typed into `IO.readln`. */
   noteKey?: string;
   noteArg?: string;
+  /**
+   * The run, step by step, for the review to walk through afterwards. Only the
+   * stations whose generator already simulates carry it; a question without it
+   * simply shows no walk.
+   */
+  steps?: TraceStep[];
 }
 
 /** Read the listing, pick what it produces — or pick the type that fits. */
@@ -348,6 +385,32 @@ export interface RobotQuestion extends StageQuestion {
   /** Every cell it stood on, start included — drawn in the review. */
   path: RobotCell[];
 }
+
+/**
+ * Which route does the program drive?
+ *
+ * The robot station asks where a program stops; this one asks how it got
+ * there, which is a different reading — the whole route rather than its last
+ * square. The three wrong routes are not invented: each is what the program
+ * does after one plausible misreading, a turn taken the other way or a loop
+ * counted once too often, so picking one says which mistake was made.
+ */
+export interface RobotTrailQuestion extends StageQuestion {
+  code: string[];
+  width: number;
+  height: number;
+  start: RobotCell;
+  facing: RobotFacing;
+  /** Four routes, each a list of squares stood on. */
+  options: RobotCell[][];
+  answerIndex: number;
+}
+
+// The Parsons puzzle is shared with the Python game — see shared/parsons.ts.
+// Java's differs in what it hands over: the indentation comes already set,
+// because here the braces carry the block and the indentation is only manners.
+// Where the closing brace goes is the question.
+export type { ParsonsQuestion } from "../parsons";
 
 /** One line is broken. Which one? */
 export interface BugQuestion extends StageQuestion {

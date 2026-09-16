@@ -12,6 +12,8 @@
 import { javaSpec, ROBOT_FACINGS, robotStep, sameCell, turn } from "../../shared/games/java";
 import type {
   BugQuestion,
+  RobotTrailQuestion,
+  TraceStep,
   CodeAnswerQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
@@ -21,6 +23,8 @@ import type {
   StructogramQuestion,
 } from "../../shared/games/java";
 import { answerMatches, sequenceMatches, sequenceScore } from "../../shared/code-answer";
+import { parsonsQuestion, parsonsScore } from "../../shared/parsons";
+import type { ParsonsQuestion, ParsonsTemplate } from "../../shared/parsons";
 import {
   intDiv,
   intMod,
@@ -1108,17 +1112,25 @@ function forTask(): Task {
     case "sum": {
       const name = pick(["summe", "gesamt"]);
       const total = values.reduce((a, b) => a + b, 0);
-      return {
-        code: main(
-          `int ${name} = 0;`,
-          header,
-          `    ${name} = ${name} + i;`,
-          `}`,
-          `IO.println(${name});`,
-        ),
-        ask: "output",
-        expected: [javaInt(total)],
-      };
+      const code = main(
+        `int ${name} = 0;`,
+        header,
+        `    ${name} = ${name} + i;`,
+        `}`,
+        `IO.println(${name});`,
+      );
+      // The walk the review plays back. The loop is being run here anyway to
+      // work out the answer; these are the steps that were being thrown away.
+      const steps: TraceStep[] = [{ line: 1, vars: { [name]: "0" }, out: [] }];
+      let running = 0;
+      for (const i of values) {
+        steps.push({ line: 2, vars: { i: javaInt(i), [name]: javaInt(running) }, out: [] });
+        running += i;
+        steps.push({ line: 3, vars: { i: javaInt(i), [name]: javaInt(running) }, out: [] });
+      }
+      steps.push({ line: 5, vars: { [name]: javaInt(total) }, out: [javaInt(total)] });
+
+      return { code, ask: "output", expected: [javaInt(total)], steps };
     }
     case "down": {
       // Counting the other way: the head reads backwards and so does the output
@@ -1255,11 +1267,19 @@ function whileTask(): Task {
       const start = randomInt(7, 999999);
       let rest = start;
       let digits = 0;
+      const steps: TraceStep[] = [{ line: 1, vars: { rest: javaInt(start), stellen: "0" }, out: [] }];
       while (rest > 0) {
         rest = Math.floor(rest / 10);
         digits++;
+        steps.push({
+          line: 4,
+          vars: { rest: javaInt(rest), stellen: javaInt(digits) },
+          out: [],
+        });
       }
+      steps.push({ line: 7, vars: { rest: "0", stellen: javaInt(digits) }, out: [javaInt(digits)] });
       return {
+        steps,
         code: main(
           `int rest = ${start};`,
           `int stellen = 0;`,
@@ -1865,6 +1885,225 @@ const robotStage: StageHandler<RobotQuestion> = {
     const correct =
       Number.isInteger(x) && Number.isInteger(y) && sameCell({ x, y }, question.answer);
     return { correct, points: correct ? speedPoints(timing.questionMs / 1000, 2, 40) : 0 };
+  },
+};
+
+/** One plausible misreading of a program, as a program. */
+function misread(body: RobotCmd[]): RobotCmd[] | null {
+  // Every spot a mutation could land on, so one is chosen fairly across the
+  // whole program rather than always in the first loop it finds.
+  const spots: (() => RobotCmd[])[] = [];
+
+  const walk = (nodes: RobotCmd[], put: (next: RobotCmd[]) => RobotCmd[]): void => {
+    nodes.forEach((node, index) => {
+      const replace = (next: RobotCmd | null): RobotCmd[] =>
+        put(next ? [...nodes.slice(0, index), next, ...nodes.slice(index + 1)]
+                 : [...nodes.slice(0, index), ...nodes.slice(index + 1)]);
+
+      if (node.kind === "links" || node.kind === "rechts") {
+        // Turned the other way
+        spots.push(() => replace({ kind: node.kind === "links" ? "rechts" : "links" }));
+      }
+      if (node.kind === "vor") {
+        // One step too many, and one too few
+        spots.push(() => put([...nodes.slice(0, index), node, node, ...nodes.slice(index + 1)]));
+        spots.push(() => replace(null));
+      }
+      if (node.kind === "loop") {
+        // The classic: the body run once more, or once less, than it says
+        spots.push(() => replace({ ...node, times: node.times + 1 }));
+        if (node.times > 1) spots.push(() => replace({ ...node, times: node.times - 1 }));
+        walk(node.body, (next) => replace({ ...node, body: next }));
+      }
+    });
+  };
+
+  walk(body, (next) => next);
+  return spots.length === 0 ? null : pick(spots)();
+}
+
+const trailStage: StageHandler<RobotTrailQuestion> = {
+  id: "trail",
+
+  createQuestions({ settings }) {
+    const nested = settings.withNestedRobot !== false;
+    const kinds: ("straight" | "loops" | "nested")[] = nested
+      ? ["straight", "loops", "loops", "nested"]
+      : ["straight", "loops", "loops"];
+
+    return build(Number(settings.questionsPerRound), () => {
+      const width = 6;
+      const height = 6;
+
+      for (let attempt = 0; attempt < 300; attempt++) {
+        const body = robotProgram(pick(kinds));
+        const start = { x: randomInt(0, width - 1), y: randomInt(0, height - 1) };
+        const facing = pick(ROBOT_FACINGS);
+        const run = runRobot(body, start, facing, width, height);
+        if (!run.onGrid || run.path.length < 3 || robotSteps(body) > 14) continue;
+
+        const shape = (path: RobotCell[]) => path.map((c) => `${c.x},${c.y}`).join(" ");
+        const routes = [run.path];
+        const seen = new Set([shape(run.path)]);
+
+        for (let tries = 0; tries < 60 && routes.length < 4; tries++) {
+          const wrong = misread(body);
+          if (!wrong) break;
+          const other = runRobot(wrong, start, facing, width, height);
+          // A wrong route still has to be a route: on the grid, and its own
+          if (!other.onGrid || other.path.length < 2) continue;
+          if (seen.has(shape(other.path))) continue;
+          seen.add(shape(other.path));
+          routes.push(other.path);
+        }
+        if (routes.length < 4) continue;
+
+        const options = shuffle(routes);
+        return {
+          code: ["void main() {", ...robotLines(body), "}"],
+          width,
+          height,
+          start,
+          facing,
+          options,
+          answerIndex: options.findIndex((route) => shape(route) === shape(run.path)),
+        };
+      }
+
+      // A walk with three readable misreadings, for the run of luck that fails
+      const start = { x: 2, y: 4 };
+      const body: RobotCmd[] = [
+        { kind: "loop", times: 2, body: [{ kind: "vor" }, { kind: "rechts" }] },
+      ];
+      const right = runRobot(body, start, "north", width, height).path;
+      const others: RobotCmd[][] = [
+        [{ kind: "loop", times: 3, body: [{ kind: "vor" }, { kind: "rechts" }] }],
+        [{ kind: "loop", times: 2, body: [{ kind: "vor" }, { kind: "links" }] }],
+        [{ kind: "loop", times: 2, body: [{ kind: "vor" }, { kind: "vor" }, { kind: "rechts" }] }],
+      ];
+      const options = [right, ...others.map((o) => runRobot(o, start, "north", width, height).path)];
+      return {
+        code: ["void main() {", ...robotLines(body), "}"],
+        width,
+        height,
+        start,
+        facing: "north" as RobotFacing,
+        options,
+        answerIndex: 0,
+      };
+    });
+  },
+
+  evaluate: (question, answer, timing) =>
+    gradeChoice(question.answerIndex, answer, timing),
+};
+
+// ---------------------------------------------------------------------------
+// parsons — the lines of a program, shuffled, braces and all
+// ---------------------------------------------------------------------------
+
+/**
+ * Programs worth reassembling.
+ *
+ * Every one of them has a closing brace to place, because that is the line
+ * people put in the wrong spot — a `}` says which block just ended, and there
+ * is nothing else in the line to say which. The indentation comes already set:
+ * in Java it is manners, not meaning, and asking for it would be asking for
+ * the one part that does not matter.
+ */
+function javaParsonsTemplates(): ParsonsTemplate[] {
+  const bound = randomInt(3, 9);
+  const limit = randomInt(5, 12);
+  const values = arrayValues(4);
+
+  return [
+    {
+      captionKey: "games.java.parsons.sum",
+      lines: [
+        { text: `int summe = 0;`, indent: 1 },
+        { text: `for (int i = 1; i <= ${bound}; i++) {`, indent: 1 },
+        { text: `summe = summe + i;`, indent: 2 },
+        { text: `}`, indent: 1 },
+        { text: `IO.println(summe);`, indent: 1 },
+      ],
+    },
+    {
+      captionKey: "games.java.parsons.branch",
+      lines: [
+        { text: `int punkte = ${randomInt(0, 100)};`, indent: 1 },
+        { text: `if (punkte >= 50) {`, indent: 1 },
+        { text: `IO.println("bestanden");`, indent: 2 },
+        { text: `} else {`, indent: 1 },
+        { text: `IO.println("nicht bestanden");`, indent: 2 },
+        { text: `}`, indent: 1 },
+      ],
+    },
+    {
+      captionKey: "games.java.parsons.countdown",
+      lines: [
+        { text: `int rest = ${limit};`, indent: 1 },
+        { text: `while (rest > 0) {`, indent: 1 },
+        { text: `IO.println(rest);`, indent: 2 },
+        { text: `rest--;`, indent: 2 },
+        { text: `}`, indent: 1 },
+        { text: `IO.println("fertig");`, indent: 1 },
+      ],
+    },
+    {
+      captionKey: "games.java.parsons.method",
+      lines: [
+        { text: `int verdoppeln(int pZahl) {`, indent: 0 },
+        { text: `return pZahl * 2;`, indent: 1 },
+        { text: `}`, indent: 0 },
+        { text: `void main() {`, indent: 0 },
+        { text: `IO.println(verdoppeln(${randomInt(2, 12)}));`, indent: 1 },
+        { text: `}`, indent: 0 },
+      ],
+    },
+    {
+      captionKey: "games.java.parsons.array",
+      lines: [
+        { text: `int[] werte = ${literal(values)};`, indent: 1 },
+        { text: `int summe = 0;`, indent: 1 },
+        { text: `for (int wert : werte) {`, indent: 1 },
+        { text: `summe = summe + wert;`, indent: 2 },
+        { text: `}`, indent: 1 },
+        { text: `IO.println(summe);`, indent: 1 },
+      ],
+    },
+    {
+      captionKey: "games.java.parsons.nested",
+      lines: [
+        { text: `for (int i = 0; i < ${randomInt(2, 4)}; i++) {`, indent: 1 },
+        { text: `for (int j = 0; j < ${randomInt(2, 4)}; j++) {`, indent: 2 },
+        { text: `IO.print("*");`, indent: 3 },
+        { text: `}`, indent: 2 },
+        { text: `IO.println();`, indent: 2 },
+        { text: `}`, indent: 1 },
+      ],
+    },
+  ];
+}
+
+const parsonsStage: StageHandler<ParsonsQuestion> = {
+  id: "parsons",
+
+  createQuestions({ settings }) {
+    const count = Number(settings.questionsPerRound);
+    const templates = pickN(javaParsonsTemplates(), count);
+    return build(count, (index) =>
+      // Java never hands the indentation over, so `withIndent` is always false
+      parsonsQuestion(templates[index], false, shuffle(templates[index].lines.map((_, i) => i))),
+    );
+  },
+
+  evaluate(question, answer, timing) {
+    const share = parsonsScore(question, answer);
+    if (share >= 1) {
+      return { correct: true, points: speedPoints(timing.questionMs / 1000, 1, 60) };
+    }
+    // Most of the lines in the right place is most of the thinking done
+    return { correct: false, points: Math.round(share * 60) };
   },
 };
 
@@ -2895,6 +3134,8 @@ export default createStageGame(javaSpec, [
   branchStage,
   loopsStage,
   robotStage,
+  trailStage,
+  parsonsStage,
   structogramStage,
   methodsStage,
   arraysStage,

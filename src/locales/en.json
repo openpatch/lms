@@ -575,15 +575,7 @@
         "age": "Of age?",
         "dots": "A chain of dots",
         "max": "The largest element",
-        "count": "Counting values",
-        "plain": "Put the lines back in the right order.",
-        "withIndent": "Set both the order and the indentation.",
-        "empty": "Tap a line below to put it into the program.",
-        "up": "move up",
-        "down": "move down",
-        "back": "put back",
-        "indent": "indent",
-        "outdent": "outdent"
+        "count": "Counting values"
       },
       "stages": {
         "output": {
@@ -787,6 +779,16 @@
           "summary": "Follow the program and say where the robot stops",
           "rules": "Follow {{questionsPerRound}} programs and tap the square the robot comes to rest on. vor() moves it one square, links() and rechts() turn it where it stands. Nothing here has to be worked out. You have {{duration}} seconds."
         },
+        "trail": {
+          "name": "Trail",
+          "summary": "Spot which route the program drives",
+          "rules": "For {{questionsPerRound}} programs: which of the four trails does the robot drive? The wrong ones are not random — each comes from one misreading, a turn the other way or a loop run once too often. You have {{duration}} seconds."
+        },
+        "parsons": {
+          "name": "Order the Lines",
+          "summary": "Rebuild a program from its shuffled lines",
+          "rules": "Rebuild {{questionsPerRound}} programs from their lines. Watch the braces — a closing brace says which block has just ended. Every line in the right place counts. You have {{duration}} seconds."
+        },
         "structogram": {
           "name": "Structograms",
           "summary": "Match a program to its structogram",
@@ -815,6 +817,21 @@
       },
       "robot": {
         "ask": "Which square does the robot stop on?"
+      },
+      "trail": {
+        "ask": "Which trail does the robot drive?"
+      },
+      "parsons": {
+        "sum": "Summing in a loop",
+        "branch": "Passed?",
+        "countdown": "Countdown with while",
+        "method": "A method that returns",
+        "array": "Summing an array",
+        "nested": "Stars in rows"
+      },
+      "walk": {
+        "printed": "printed:",
+        "step": "Step"
       }
     },
     "intuition": {
@@ -1115,6 +1132,16 @@
     "waitSpreadKurz": "Short (1–2.5 s)",
     "waitSpreadNormal": "Normal (1.5–4 s)",
     "waitSpreadLang": "Long (2–6 s)"
+  },
+  "parsons": {
+    "plain": "Put the lines back in the right order.",
+    "withIndent": "Set both the order and the indentation.",
+    "empty": "Tap a line below to put it into the program.",
+    "up": "move up",
+    "down": "move down",
+    "back": "put back",
+    "indent": "indent",
+    "outdent": "outdent"
   },
   "auth": {
     "title": "Teacher sign-in",

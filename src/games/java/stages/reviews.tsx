@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type {
   BugQuestion,
   RobotQuestion,
+  RobotTrailQuestion,
   CodeAnswerQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
@@ -12,6 +13,7 @@ import { Given, Solution } from "../../../components/review-parts";
 import CodeBlock, { CodeLine } from "../components/CodeBlock";
 import StructogramView from "../components/Structogram";
 import RobotGrid from "../components/RobotGrid";
+import CodeWalk from "../components/CodeWalk";
 import { cellName, readCell } from "./answer-labels";
 
 /**
@@ -23,9 +25,17 @@ import { cellName, readCell } from "./answer-labels";
 
 /** The six stations that take a typed value: listing, answer, right answer. */
 export function TraceReview({ question, answer }: StageReviewProps<CodeAnswerQuestion>) {
+  // A question whose generator simulated the run carries the run with it, and
+  // then the listing is worth walking rather than reprinting: being told the
+  // total is being told the one thing you already suspected.
+  const walk = question.steps && question.steps.length > 1;
   return (
     <>
-      <CodeBlock lines={question.code} compact />
+      {walk ? (
+        <CodeWalk code={question.code} steps={question.steps!} />
+      ) : (
+        <CodeBlock lines={question.code} compact />
+      )}
       <Given answer={answer} />
       {!answer?.correct && (
         <Solution>
@@ -144,6 +154,41 @@ export function RobotReview({ question, answer }: StageReviewProps<RobotQuestion
           <span className="font-mono">{cellName(question.answer)}</span>
         </Solution>
       )}
+    </>
+  );
+}
+
+/** The route the program drives, beside the one that was picked. */
+export function TrailReview({ question, answer }: StageReviewProps<RobotTrailQuestion>) {
+  const { t } = useTranslation();
+  const picked = answer ? Number(answer.answer) : null;
+  const shown = [
+    { label: t("game.correctAnswer"), route: question.options[question.answerIndex], right: true },
+    ...(picked != null && picked !== question.answerIndex && question.options[picked]
+      ? [{ label: t("game.yourAnswer"), route: question.options[picked], right: false }]
+      : []),
+  ];
+  return (
+    <>
+      <CodeBlock lines={question.code} compact />
+      <div className="flex flex-wrap gap-3 pt-1">
+        {shown.map((entry) => (
+          <div key={entry.label} className="w-28">
+            <p className={`mb-1 text-xs ${entry.right ? "text-emerald-600" : "text-rose-500"}`}>
+              {entry.label}
+            </p>
+            <RobotGrid
+              width={question.width}
+              height={question.height}
+              start={question.start}
+              facing={question.facing}
+              path={entry.route}
+              answer={entry.route[entry.route.length - 1]}
+            />
+          </div>
+        ))}
+      </div>
+      {!answer && <Given answer={answer} />}
     </>
   );
 }

@@ -1,6 +1,7 @@
 import type {
   BugQuestion,
   RobotQuestion,
+  RobotTrailQuestion,
   CodeAnswerQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
@@ -60,6 +61,22 @@ export function RobotSolution({ question }: { question: RobotQuestion }) {
         />
       </div>
       <span className="font-mono text-sm">{cellName(question.answer)}</span>
+    </div>
+  );
+}
+
+export function TrailSolution({ question }: { question: RobotTrailQuestion }) {
+  const route = question.options[question.answerIndex];
+  return (
+    <div className="w-32">
+      <RobotGrid
+        width={question.width}
+        height={question.height}
+        start={question.start}
+        facing={question.facing}
+        path={route}
+        answer={route[route.length - 1]}
+      />
     </div>
   );
 }

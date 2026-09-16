@@ -228,26 +228,9 @@ export interface TurtleQuestion extends StageQuestion {
   answerIndex: number;
 }
 
-/** The lines of a program, shuffled; put them back in order. */
-export interface ParsonsQuestion extends StageQuestion {
-  /** Line texts in the order they are offered, never the order they belong in. */
-  lines: string[];
-  /** Indentation of each offered line, or null when the player has to set it. */
-  indents: number[] | null;
-  /** For each position in the finished program: which offered line goes there. */
-  solution: number[];
-  /** The indent each position needs. Only graded when `indents` is null. */
-  solutionIndents: number[];
-  captionKey: string;
-}
-
-/** What the player submits for a Parsons puzzle. */
-export interface ParsonsAnswer {
-  /** Offered line indices, in the order the player put them. */
-  order: number[];
-  /** The indent the player chose for each placed line. */
-  indents: number[];
-}
+// The puzzle itself is not a Python idea — see shared/parsons.ts, which Java
+// uses too. Re-exported here so the stations that already name it keep working.
+export type { ParsonsAnswer, ParsonsQuestion } from "../parsons";
 
 /** One line is broken. Which one? */
 export interface BugQuestion extends StageQuestion {

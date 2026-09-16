@@ -18,11 +18,14 @@ import StructogramStage, {
 } from "./stages/Structogram";
 import BugsStage, { BugsRulesExample } from "./stages/Bugs";
 import RobotStage, { RobotRulesExample } from "./stages/Robot";
+import TrailStage, { TrailRulesExample } from "./stages/Trail";
+import JavaParsonsStage, { JavaParsonsRulesExample } from "./stages/Parsons";
 import {
   BugSolution,
   ChoiceSolution,
   LogicSolution,
   RobotSolution,
+  TrailSolution,
   StructogramSolution,
   TypedSolution,
 } from "./stages/solutions";
@@ -38,6 +41,7 @@ import {
   ChoiceReview,
   LogicReview,
   RobotReview,
+  TrailReview,
   StructogramReview,
   TraceReview,
 } from "./stages/reviews";
@@ -90,6 +94,16 @@ export default defineGame(javaSpec, {
     Review: RobotReview,
     Solution: RobotSolution,
     answerLabel: robotLabel,
+  },
+  trail: {
+    Component: TrailStage,
+    RulesExample: TrailRulesExample,
+    Review: TrailReview,
+    Solution: TrailSolution,
+  },
+  parsons: {
+    Component: JavaParsonsStage,
+    RulesExample: JavaParsonsRulesExample,
   },
   structogram: {
     Component: StructogramStage,

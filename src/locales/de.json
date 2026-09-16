@@ -575,15 +575,7 @@
         "age": "Volljährig?",
         "dots": "Punktekette",
         "max": "Das größte Element",
-        "count": "Werte zählen",
-        "plain": "Bringe die Zeilen in die richtige Reihenfolge.",
-        "withIndent": "Lege Reihenfolge und Einrückung fest.",
-        "empty": "Tippe unten auf eine Zeile, um sie ins Programm zu setzen.",
-        "up": "nach oben",
-        "down": "nach unten",
-        "back": "zurücklegen",
-        "indent": "einrücken",
-        "outdent": "ausrücken"
+        "count": "Werte zählen"
       },
       "stages": {
         "output": {
@@ -787,6 +779,16 @@
           "summary": "Dem Programm folgen und sagen, wo der Roboter landet",
           "rules": "Verfolge {{questionsPerRound}} Programme und tippe das Feld an, auf dem der Roboter stehen bleibt. vor() geht ein Feld weiter, links() und rechts() drehen ihn auf der Stelle. Gerechnet wird hier nichts. Du hast {{duration}} Sekunden."
         },
+        "trail": {
+          "name": "Spur",
+          "summary": "Erkennen, welchen Weg das Programm fährt",
+          "rules": "Bei {{questionsPerRound}} Programmen: welche der vier Spuren fährt der Roboter? Die falschen sind keine Zufallswege — jede entsteht aus einem Lesefehler, einer Drehung in die andere Richtung oder einer Schleife, die einmal zu oft läuft. Du hast {{duration}} Sekunden."
+        },
+        "parsons": {
+          "name": "Zeilen ordnen",
+          "summary": "Ein Programm aus durcheinandergeratenen Zeilen zusammensetzen",
+          "rules": "Setze {{questionsPerRound}} Programme aus ihren Zeilen zusammen. Achte auf die geschweiften Klammern — eine schließende Klammer sagt, welcher Block gerade zu Ende ist. Jede richtig gesetzte Zeile zählt. Du hast {{duration}} Sekunden."
+        },
         "structogram": {
           "name": "Struktogramme",
           "summary": "Programm und Struktogramm einander zuordnen",
@@ -815,6 +817,21 @@
       },
       "robot": {
         "ask": "Auf welchem Feld bleibt der Roboter stehen?"
+      },
+      "trail": {
+        "ask": "Welche Spur fährt der Roboter?"
+      },
+      "parsons": {
+        "sum": "Summe einer Schleife",
+        "branch": "Bestanden?",
+        "countdown": "Countdown mit while",
+        "method": "Methode mit Rückgabe",
+        "array": "Summe eines Feldes",
+        "nested": "Sterne in Zeilen"
+      },
+      "walk": {
+        "printed": "ausgegeben:",
+        "step": "Schritt"
       }
     },
     "intuition": {
@@ -1115,6 +1132,16 @@
     "waitSpreadKurz": "Kurz (1–2,5 s)",
     "waitSpreadNormal": "Normal (1,5–4 s)",
     "waitSpreadLang": "Lang (2–6 s)"
+  },
+  "parsons": {
+    "plain": "Bringe die Zeilen in die richtige Reihenfolge.",
+    "withIndent": "Lege Reihenfolge und Einrückung fest.",
+    "empty": "Tippe unten auf eine Zeile, um sie ins Programm zu setzen.",
+    "up": "nach oben",
+    "down": "nach unten",
+    "back": "zurücklegen",
+    "indent": "einrücken",
+    "outdent": "ausrücken"
   },
   "auth": {
     "title": "Anmeldung für Lehrkräfte",
