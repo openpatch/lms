@@ -3,8 +3,10 @@ import type {
   ArrangeQuestion,
   CalculateQuestion,
   ChangeQuestion,
+  OrderQuestion,
   SignsQuestion,
 } from "../../../../shared/games/rational";
+import { orderSolution, readOrderAnswer } from "../../../../shared/games/rational";
 import { operatorLatex, toValue } from "../../../../shared/rational-math";
 import type { ClassAnswer, StageReviewProps } from "../../../lib/game-registry";
 import { Given, Solution } from "../../../components/review-parts";
@@ -144,6 +146,83 @@ export function ArrangeClassAnswers({
         />
       </div>
     </div>
+  );
+}
+
+/** The numbers of one ordering, written out as the line the exercise asks for.
+ *  `broken` marks the links where the sequence turns back on itself. */
+function OrderChain({
+  question,
+  order,
+  mark,
+}: {
+  question: OrderQuestion;
+  order: number[];
+  /** Whether a step that goes the wrong way is called out. Off for the
+   *  solution, which by definition has no such step. */
+  mark: boolean;
+}) {
+  const relation = question.direction === "asc" ? "<" : ">";
+  const sign = question.direction === "asc" ? 1 : -1;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      {order.map((index, slot) => {
+        const value = toValue(question.items[index]);
+        const previous = slot > 0 ? toValue(question.items[order[slot - 1]]) : null;
+        const broken = mark && previous != null && sign * (value - previous) < 0;
+        return (
+          <span key={slot} className="flex items-center gap-2">
+            {slot > 0 && (
+              <span className={broken ? "font-bold text-rose-500" : "text-gray-300"}>
+                {relation}
+              </span>
+            )}
+            <MathTex
+              tex={question.items[index].latex}
+              className={broken ? "text-rose-500" : "text-gray-800"}
+            />
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * An ordering, reviewed as the line it was meant to be.
+ *
+ * The station scores the pairs that stand the right way round, so "wrong" here
+ * is almost never the whole line — it is one number in the wrong place, and a
+ * row that said nothing but a cross would hide exactly the thing worth seeing.
+ * So the player's own line goes back on screen with the steps that turn back on
+ * themselves marked, which points at the number that was misread rather than at
+ * the answer. Usually that is a Betrag sorted where its minus sign said, or two
+ * negative fractions put the way round they would go if they were positive.
+ */
+export function OrderReview({ question, answer }: StageReviewProps<OrderQuestion>) {
+  const order = readOrderAnswer(answer?.answer, question.items.length);
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-gray-500">
+        {question.items.map((item, index) => (
+          <MathTex key={index} tex={item.latex} />
+        ))}
+      </div>
+      {order == null ? (
+        <Given answer={answer} />
+      ) : (
+        <Given answer={answer}>
+          <OrderChain question={question} order={order} mark />
+        </Given>
+      )}
+      {!answer?.correct && (
+        <Solution>
+          <OrderChain question={question} order={orderSolution(question)} mark={false} />
+        </Solution>
+      )}
+    </>
   );
 }
 

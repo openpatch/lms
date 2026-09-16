@@ -662,7 +662,7 @@ serves in `grades`; this table says which vorhaben a stage was built for.
 
 | UV | Titel | Spiel | Stationen |
 | --- | --- | --- | --- |
-| `UV-MAT-SEK1-07-01` | Rationale Zahlen | `rational` | arrange (Anordnung), calculate (Grundrechenarten), signs (Vorzeichenregeln), change (Zustandsänderungen, Zeitzonen) |
+| `UV-MAT-SEK1-07-01` | Rationale Zahlen | `rational` | arrange (Anordnung), order (Ordnen der Größe nach, Betrag), calculate (Grundrechenarten), signs (Vorzeichenregeln), change (Zustandsänderungen, Zeitzonen) |
 | `UV-MAT-SEK1-07-06` / `08-01` | Zufallsexperimente | `chance` | laplace (einstufig), tree (zweistufig, Pfadregeln) |
 | `UV-MAT-SEK1-08-02` | Terme mit mehreren Variablen | `terme` | build (Terme aufstellen), evaluate (Termwert, wertgleiche Terme), collect (Zusammenfassen), expand (Klammern auflösen), factor (Ausklammern), binomial (binomische Formeln), zero (Satz vom Nullprodukt), fraction (Bruchgleichungen), rearrange (Formeln umstellen), inequality (Ungleichungen) |
 | `UV-MAT-SEK1-09-01` | Quadratwurzeln und reelle Zahlen | `squareroot` | speed, numberline, classify (Zahlbereiche), simplify (Wurzelgesetze), bisect (Intervallhalbierung) |

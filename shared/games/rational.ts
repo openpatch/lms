@@ -1,5 +1,6 @@
 import type { GameSpec, SettingsField, StageQuestion, StageSettings } from "../framework";
 import type { RationalOperator, RationalValue } from "../rational-math";
+import { toValue } from "../rational-math";
 
 const ALL_OPERATORS: RationalOperator[] = ["+", "-", "*", "/"];
 
@@ -56,6 +57,36 @@ const operations: SettingsField = {
     { value: "/", labelKey: "settings.operationDivide" },
   ],
   default: ["+", "-", "*", "/"],
+};
+
+/** Which way a round of the "order" stage runs. */
+export type OrderDirection = "asc" | "desc";
+
+const orderDirection: SettingsField = {
+  type: "choice",
+  key: "orderDirection",
+  labelKey: "settings.orderDirection",
+  options: [
+    { value: "both", labelKey: "settings.orderDirectionBoth" },
+    { value: "asc", labelKey: "settings.orderDirectionAsc" },
+    { value: "desc", labelKey: "settings.orderDirectionDesc" },
+  ],
+  default: "both",
+};
+
+const withAbsolute: SettingsField = {
+  type: "toggle",
+  key: "withAbsolute",
+  labelKey: "settings.withAbsolute",
+  default: true,
+};
+
+const itemCount: SettingsField = {
+  type: "select",
+  key: "itemCount",
+  labelKey: "settings.itemCount",
+  options: [4, 5, 6],
+  default: 5,
 };
 
 /** How the "signs" stage wants the answer: the value, or only its sign. */
@@ -118,6 +149,37 @@ function isOperator(value: unknown): value is RationalOperator {
   return value === "+" || value === "-" || value === "*" || value === "/";
 }
 
+/**
+ * What one player sent for the "order" stage: every item's index, in the order
+ * they tapped them. Anything that is not a full permutation of the items is not
+ * an ordering at all, so it is graded as one that got nothing in order.
+ */
+export function readOrderAnswer(raw: string | undefined, count: number): number[] | null {
+  if (raw == null) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || parsed.length !== count) return null;
+  // Numbers, not things that coerce to one: a nested array reads as its only
+  // element, so [[0],1,2] would come back a valid ordering of three items.
+  const order: number[] = parsed.map((index) => (typeof index === "number" ? index : NaN));
+  if (order.some((index) => !Number.isInteger(index) || index < 0 || index >= count)) return null;
+  return new Set(order).size === count ? order : null;
+}
+
+/** The items' indices in the order the question asks for. Two items of equal
+ *  value — a number beside its own absolute value — keep the order they were
+ *  shown in, which is one of the orders the stage marks correct. */
+export function orderSolution(question: OrderQuestion): number[] {
+  const sign = question.direction === "asc" ? 1 : -1;
+  return question.items
+    .map((_, index) => index)
+    .sort((a, b) => sign * (toValue(question.items[a]) - toValue(question.items[b])));
+}
+
 /** Reads the answer mode of the "signs" stage. */
 export function readAnswerMode(settings: StageSettings): SignsAnswerMode {
   return settings.answerMode === "sign" ? "sign" : "value";
@@ -141,6 +203,13 @@ export const rationalSpec: GameSpec = {
       summaryKey: "games.rational.stages.arrange.summary",
       rulesKey: "games.rational.stages.arrange.rules",
       settings: [questionsPerRound, duration, notation, allowNegatives],
+    },
+    {
+      id: "order",
+      nameKey: "games.rational.stages.order.name",
+      summaryKey: "games.rational.stages.order.summary",
+      rulesKey: "games.rational.stages.order.rules",
+      settings: [questionsPerRound, duration, itemCount, orderDirection, withAbsolute, notation],
     },
     {
       id: "calculate",
@@ -175,6 +244,20 @@ export interface ArrangeQuestion extends StageQuestion {
   items: RationalValue[];
   lineMin: number;
   lineMax: number;
+}
+
+/** One number as the player reads it. A barred item is written |x| with a
+ *  negative x, so what it is worth is the magnitude — n/d is that value, not
+ *  the number between the bars. */
+export interface OrderItem extends RationalValue {
+  absolute: boolean;
+}
+
+export interface OrderQuestion extends StageQuestion {
+  /** The numbers to order, in the order they are shown. */
+  items: OrderItem[];
+  /** "asc": smallest first. "desc": largest first. */
+  direction: OrderDirection;
 }
 
 export interface CalculateQuestion extends StageQuestion {

@@ -3,12 +3,16 @@ import {
   readAnswerMode,
   readNotation,
   readOperations,
+  readOrderAnswer,
 } from "../../shared/games/rational";
 import type {
   ArrangeQuestion,
   CalculateQuestion,
   ChangeAsk,
   ChangeQuestion,
+  OrderDirection,
+  OrderItem,
+  OrderQuestion,
   RationalNotation,
   SignsQuestion,
 } from "../../shared/games/rational";
@@ -64,6 +68,12 @@ const CHANGE_FREE_UNITS = 0.3;
 const CHANGE_ZERO_AT_UNITS = 1.5;
 /** A placement counts as correct from this score upwards. */
 const CHANGE_PASS_MARK = 60;
+/** The largest number the "order" stage deals out, either side of zero. */
+const ORDER_MAX = 3;
+/** How large a share of the pairs may stand the wrong way round before the
+ *  question is worth nothing. Tapping at random gets half of them right, so
+ *  that is where the points have to run out. */
+const ORDER_ZERO_AT = 0.5;
 
 function randomInt(min: number, max: number): number {
   return min + Math.floor(Math.random() * (max - min + 1));
@@ -169,6 +179,137 @@ const arrangeStage: StageHandler<ArrangeQuestion> = {
 
     const points = Math.round(total / question.items.length);
     return { correct: points >= ARRANGE_PASS_MARK, points };
+  },
+};
+
+// ---------------------------------------------------------------------------
+// order — comparing and ordering rational numbers, and the Betrag (EdM 4.1)
+// ---------------------------------------------------------------------------
+
+/** A number for the ordering stage: never 0, magnitude at most ORDER_MAX. */
+function randomOrderValue(denominators: number[]): Fraction {
+  const d = Math.random() < 0.25 ? 1 : pick(denominators);
+  const n = randomInt(1, d * ORDER_MAX);
+  return reduce({ n: (Math.random() < 0.5 ? -1 : 1) * n, d });
+}
+
+/**
+ * One number as the player reads it.
+ *
+ * Inside the bars the number is always negative. |3| is a pair of bars around
+ * nothing to do — the item a student has to stop and think about is |-3|, which
+ * sorts with the positives however much it looks like it belongs at the far
+ * left. So a barred item is worth the magnitude of what is written in it.
+ */
+function orderItem(f: Fraction, absolute: boolean, display: RationalDisplay): OrderItem {
+  if (!absolute) return { ...makeValue(f, display), absolute: false };
+  const inside = makeValue(reduce({ n: -Math.abs(f.n), d: f.d }), display);
+  return {
+    ...reduce({ n: Math.abs(f.n), d: f.d }),
+    latex: `\\left|${inside.latex}\\right|`,
+    absolute: true,
+  };
+}
+
+/**
+ * A set of numbers worth ordering.
+ *
+ * Two of them may come out equal — |-3/4| next to 3/4 is the whole point of the
+ * Betrag, and the stage marks either order of such a pair correct — but only
+ * one such pair, or the row stops reading as a sequence. Something has to be
+ * negative as well: if every negative ended up inside bars the round is just
+ * comparing positive fractions, which is a year-6 exercise.
+ */
+function makeOrderItems(
+  count: number,
+  withAbsolute: boolean,
+  notation: RationalNotation,
+): OrderItem[] {
+  const denominators = denominatorsFor(notation);
+
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const sources: Fraction[] = [];
+    for (let guard = 0; guard < 200 && sources.length < count; guard++) {
+      const f = randomOrderValue(denominators);
+      if (!sources.some((s) => equals(s, f))) sources.push(f);
+    }
+    if (sources.length < count) continue;
+
+    const barred = new Set<number>();
+    if (withAbsolute) {
+      const wanted = randomInt(1, Math.max(1, Math.floor(count / 2)));
+      for (const index of shuffle(sources.map((_, i) => i)).slice(0, wanted)) barred.add(index);
+    }
+    const items = sources.map((f, index) =>
+      orderItem(f, barred.has(index), pickDisplay(notation)),
+    );
+
+    let ties = 0;
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        if (equals(items[i], items[j])) ties++;
+      }
+    }
+    if (ties <= 1 && items.some((item) => toValue(item) < 0)) return items;
+  }
+
+  // A set that keeps every rule above, for the run of luck that does not
+  const fallback: [Fraction, boolean][] = [
+    [{ n: -5, d: 2 }, false],
+    [{ n: 3, d: 4 }, true],
+    [{ n: -1, d: 1 }, false],
+    [{ n: 2, d: 1 }, false],
+    [{ n: 1, d: 2 }, false],
+    [{ n: -7, d: 3 }, true],
+  ];
+  return fallback.slice(0, count).map(([f, absolute]) => orderItem(f, absolute, "fraction"));
+}
+
+function readDirection(raw: unknown): OrderDirection {
+  if (raw === "asc" || raw === "desc") return raw;
+  return Math.random() < 0.5 ? "asc" : "desc";
+}
+
+const orderStage: StageHandler<OrderQuestion> = {
+  id: "order",
+
+  createQuestions({ settings }) {
+    const withAbsolute = Boolean(settings.withAbsolute);
+    const notation = readNotation(settings);
+    const count = Number(settings.itemCount);
+
+    return Array.from({ length: Number(settings.questionsPerRound) }, (_, id) => ({
+      id,
+      items: shuffle(makeOrderItems(count, withAbsolute, notation)),
+      direction: readDirection(settings.orderDirection),
+    }));
+  },
+
+  /**
+   * Scored on the pairs that stand the right way round rather than on the
+   * sequence as a whole, so a player who had it but for one number does not
+   * come out level with one who tapped along the row. Half the pairs is what
+   * tapping at random comes to, which is why that is where the points end.
+   */
+  evaluate(question, answer) {
+    const order = readOrderAnswer(answer, question.items.length);
+    if (!order || order.length < 2) return { correct: false, points: 0 };
+
+    const sign = question.direction === "asc" ? 1 : -1;
+    let pairs = 0;
+    let inOrder = 0;
+    for (let i = 0; i < order.length; i++) {
+      for (let j = i + 1; j < order.length; j++) {
+        pairs++;
+        const earlier = toValue(question.items[order[i]]);
+        const later = toValue(question.items[order[j]]);
+        // Equal values — a number beside its own Betrag — go either way round
+        if (sign * (later - earlier) >= 0) inOrder++;
+      }
+    }
+
+    const points = Math.round(closenessPoints(1 - inOrder / pairs, ORDER_ZERO_AT));
+    return { correct: inOrder === pairs, points };
   },
 };
 
@@ -408,5 +549,11 @@ const changeStage: StageHandler<ChangeQuestion> = {
   },
 };
 
-export default createStageGame(rationalSpec, [arrangeStage, calculateStage, signsStage, changeStage]);
+export default createStageGame(rationalSpec, [
+  arrangeStage,
+  orderStage,
+  calculateStage,
+  signsStage,
+  changeStage,
+]);
 

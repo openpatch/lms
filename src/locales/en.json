@@ -256,6 +256,8 @@
       "description": "Place rational numbers on the number line and calculate with them.",
       "arrangePrompt": "Pick a number, then click on the number line",
       "arrangePromptSelected": "Click on the number line to place the selected number",
+      "orderPromptAsc": "Tap the numbers one after another — smallest first",
+      "orderPromptDesc": "Tap the numbers one after another — largest first",
       "numerator": "Numerator",
       "denominator": "Denominator",
       "result": "Result",
@@ -278,6 +280,11 @@
           "name": "Arrange on the Number Line",
           "summary": "Place fractions and decimals at the right spot",
           "rules": "Place {{questionsPerRound}} sets of rational numbers on the number line. The closer each number sits to its real position, the more points you get. You have {{duration}} seconds."
+        },
+        "order": {
+          "name": "Put in Order",
+          "summary": "Tap rational numbers and absolute values in order of size",
+          "rules": "Put {{questionsPerRound}} sets of numbers in order of size — tap them one after another in the order asked for. An absolute value like |−3| counts for what it is worth. The more numbers that stand the right way round, the more points you get. You have {{duration}} seconds."
         },
         "calculate": {
           "name": "Calculate",
@@ -912,6 +919,12 @@
     "duration": "Time per round",
     "targetScore": "Target score",
     "allowNegatives": "Include negative numbers",
+    "itemCount": "Numbers per question",
+    "orderDirection": "Order",
+    "orderDirectionBoth": "Mixed",
+    "orderDirectionAsc": "Ascending (smallest first)",
+    "orderDirectionDesc": "Descending (largest first)",
+    "withAbsolute": "Include absolute values like |−3|",
     "notation": "Number notation",
     "notationFraction": "Fractions only",
     "notationDecimal": "Decimals only",

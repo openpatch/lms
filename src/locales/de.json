@@ -256,6 +256,8 @@
       "description": "Rationale Zahlen am Zahlenstrahl einordnen und mit ihnen rechnen.",
       "arrangePrompt": "Zahl auswählen und dann auf den Zahlenstrahl klicken",
       "arrangePromptSelected": "Klicke auf den Zahlenstrahl, um die gewählte Zahl zu setzen",
+      "orderPromptAsc": "Tippe die Zahlen nacheinander an — die kleinste zuerst",
+      "orderPromptDesc": "Tippe die Zahlen nacheinander an — die größte zuerst",
       "numerator": "Zähler",
       "denominator": "Nenner",
       "result": "Ergebnis",
@@ -278,6 +280,11 @@
           "name": "Am Zahlenstrahl einordnen",
           "summary": "Brüche und Dezimalzahlen an die richtige Stelle setzen",
           "rules": "Ordne {{questionsPerRound}} Zahlengruppen am Zahlenstrahl ein. Je näher jede Zahl an ihrer echten Position liegt, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
+        },
+        "order": {
+          "name": "Der Größe nach ordnen",
+          "summary": "Rationale Zahlen und Beträge der Größe nach antippen",
+          "rules": "Ordne {{questionsPerRound}} Zahlengruppen der Größe nach — tippe die Zahlen in der verlangten Reihenfolge nacheinander an. Ein Betrag wie |−3| zählt so viel, wie er wert ist. Je mehr Zahlen richtig zueinander stehen, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
         },
         "calculate": {
           "name": "Rechnen",
@@ -912,6 +919,12 @@
     "duration": "Zeit pro Runde",
     "targetScore": "Zielpunktzahl",
     "allowNegatives": "Negative Zahlen einbeziehen",
+    "itemCount": "Anzahl der Zahlen",
+    "orderDirection": "Reihenfolge",
+    "orderDirectionBoth": "Gemischt",
+    "orderDirectionAsc": "Aufsteigend (kleinste zuerst)",
+    "orderDirectionDesc": "Absteigend (größte zuerst)",
+    "withAbsolute": "Auch Beträge wie |−3|",
     "notation": "Zahlendarstellung",
     "notationFraction": "Nur Brüche",
     "notationDecimal": "Nur Dezimalzahlen",
