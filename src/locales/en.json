@@ -683,7 +683,12 @@
         "index": "An index is a whole number — int.",
         "open": "Open or shut — boolean.",
         "city": "A string of characters — String.",
-        "seconds": "Seconds are counted whole — int."
+        "seconds": "Seconds are counted whole — int.",
+        "temperature": "A temperature has decimal places — double.",
+        "letter": "A single letter is a char.",
+        "logged": "Logged in or not — that is a boolean.",
+        "email": "An email address is text, so a String.",
+        "floor": "A floor is counted in whole numbers — int."
       },
       "why": {
         "widening": "As soon as a double is involved Java keeps the decimals — and prints them with a .0.",
@@ -723,7 +728,21 @@
         "intDivision": "Both values are int, so this divides as whole numbers — the average is wrong.",
         "concat": "The plus glues to a text here instead of adding; the sum belongs in brackets.",
         "shadow": "An inner block cannot declare a variable that already exists outside — the second int is one too many.",
-        "noReturn": "The value is computed but never handed back — return is missing."
+        "noReturn": "The value is computed but never handed back — return is missing.",
+        "forCommas": "The three parts of a for head are separated by semicolons, not by commas.",
+        "stringQuotes": "A String goes in double quotes; single ones are for a single character.",
+        "intDecimal": "The right-hand side is a decimal — an int holds whole numbers only.",
+        "typeMismatch": "The quotes turn the number into text, and there is no arithmetic on text.",
+        "charMulti": "A char holds exactly one character, not two.",
+        "undeclared": "That name is never declared — only what has been declared may be used.",
+        "elseCondition": "else takes no condition; else if is the one that does.",
+        "arrayNew": "An array is created with square brackets, not round ones.",
+        "elseIfOrder": "The second branch can never run — anything meeting its condition was caught by the first.",
+        "counterReset": "The sum is set back to 0 on every pass, so only the last value is left.",
+        "offByOneStart": "Counting starts at 0 — starting at 1 leaves the first value of the array unread.",
+        "maxInitZero": "Every value is negative; with 0 as the starting value the starting value wins, not the array.",
+        "alwaysTrue": "With || the condition is always true — && is what was meant.",
+        "swapNoTemp": "This assignment overwrites erste before the old value is saved; a swap needs a helper variable."
       },
       "stages": {
         "output": {

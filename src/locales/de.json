@@ -683,7 +683,12 @@
         "index": "Ein Index ist eine ganze Zahl — int.",
         "open": "Offen oder zu — boolean.",
         "city": "Eine Zeichenkette — String.",
-        "seconds": "Sekunden werden ganzzahlig gezählt — int."
+        "seconds": "Sekunden werden ganzzahlig gezählt — int.",
+        "temperature": "Eine Temperatur hat Nachkommastellen — double.",
+        "letter": "Ein einzelner Buchstabe ist ein char.",
+        "logged": "Angemeldet oder nicht — das ist ein boolean.",
+        "email": "Eine E-Mail-Adresse ist Text, also ein String.",
+        "floor": "Ein Stockwerk wird in ganzen Zahlen gezählt — int."
       },
       "why": {
         "widening": "Sobald ein double beteiligt ist, rechnet Java als Kommazahl — und gibt sie mit .0 aus.",
@@ -723,7 +728,21 @@
         "intDivision": "Beide Werte sind int, also wird ganzzahlig geteilt — der Schnitt stimmt nicht.",
         "concat": "Das Plus hängt hier an einen Text an, statt zu addieren; die Summe gehört in eine Klammer.",
         "shadow": "Ein innerer Block darf keine Variable anlegen, die es außen schon gibt — das zweite int ist zu viel.",
-        "noReturn": "Der Wert wird berechnet, aber nicht zurückgegeben — es fehlt return."
+        "noReturn": "Der Wert wird berechnet, aber nicht zurückgegeben — es fehlt return.",
+        "forCommas": "Die drei Teile des for-Kopfes werden durch Semikolons getrennt, nicht durch Kommas.",
+        "stringQuotes": "Eine Zeichenkette steht in doppelten Anführungszeichen; einfache sind für ein einzelnes Zeichen.",
+        "intDecimal": "Rechts steht eine Kommazahl — in ein int passt nur eine ganze Zahl.",
+        "typeMismatch": "Die Anführungszeichen machen aus der Zahl einen Text; damit lässt sich nicht rechnen.",
+        "charMulti": "In ein char passt genau ein Zeichen, nicht zwei.",
+        "undeclared": "Dieser Name wird nirgends angelegt — benutzt werden darf nur, was vorher deklariert wurde.",
+        "elseCondition": "else bekommt keine Bedingung; dafür gibt es else if.",
+        "arrayNew": "Ein Feld wird mit eckigen Klammern erzeugt, nicht mit runden.",
+        "elseIfOrder": "Der zweite Zweig kann nie laufen — wer seine Bedingung erfüllt, ist schon im ersten gelandet.",
+        "counterReset": "Die Summe wird in jedem Durchlauf auf 0 zurückgesetzt; am Ende bleibt nur der letzte Wert.",
+        "offByOneStart": "Gezählt wird ab 0 — so bleibt der erste Wert des Feldes ungelesen.",
+        "maxInitZero": "Alle Werte sind negativ; mit 0 als Startwert gewinnt der Startwert und nicht das Feld.",
+        "alwaysTrue": "Mit || ist die Bedingung immer wahr — gemeint war &&.",
+        "swapNoTemp": "Diese Zuweisung überschreibt erste, bevor der alte Wert gesichert ist; Tauschen braucht eine Hilfsvariable."
       },
       "stages": {
         "output": {

@@ -75,9 +75,37 @@ function main(...body: string[]): string[] {
   return ["void main() {", ...body.map((line) => (line === "" ? "" : `    ${line}`)), "}"];
 }
 
-const INT_NAMES = ["zahl", "wert", "punkte", "anzahl", "laenge", "breite", "hoehe", "alter"];
-const ARRAY_NAMES = ["punkte", "werte", "zeiten", "preise", "noten"];
-const FLAG_NAMES = ["istFertig", "hatTicket", "sonneScheint", "istOffen", "bestanden"];
+const INT_NAMES = [
+  "zahl",
+  "wert",
+  "punkte",
+  "anzahl",
+  "laenge",
+  "breite",
+  "hoehe",
+  "alter",
+  "summe",
+  "rest",
+  "runde",
+  "treffer",
+  "gewicht",
+  "abstand",
+  "menge",
+  "schritte",
+];
+const ARRAY_NAMES = ["punkte", "werte", "zeiten", "preise", "noten", "messungen", "hoehen", "stimmen", "gewichte", "abstaende"];
+const FLAG_NAMES = [
+  "istFertig",
+  "hatTicket",
+  "sonneScheint",
+  "istOffen",
+  "bestanden",
+  "istLeer",
+  "hatZeit",
+  "wurdeGeprueft",
+  "istGueltig",
+  "darfFahren",
+];
 
 // ---------------------------------------------------------------------------
 // Grading shared by the six "read it and type the answer" stations
@@ -424,6 +452,11 @@ const TYPE_CASES: { key: string; type: string }[] = [
   { key: "open", type: "boolean" },
   { key: "city", type: "String" },
   { key: "seconds", type: "int" },
+  { key: "temperature", type: "double" },
+  { key: "letter", type: "char" },
+  { key: "logged", type: "boolean" },
+  { key: "email", type: "String" },
+  { key: "floor", type: "int" },
 ];
 
 const ALL_TYPES = ["int", "double", "boolean", "char", "String"];
@@ -597,45 +630,53 @@ const variablesStage: StageHandler<CodeAnswerQuestion> = {
 // logic — Kapitel 3.2: &&, ||, ! und ihre Rangfolge
 // ---------------------------------------------------------------------------
 
+/**
+ * Shapes a literal expression can take, each with the value it comes to.
+ *
+ * The pool has to be wide: a round of this station is up to twenty questions,
+ * and two literals joined by one operator only ever make eight different
+ * expressions, so the old three shapes could not fill a round without saying
+ * the same thing twice. Every shape here is one the Rangfolge has something to
+ * say about — ! before && before ||, and a bracket that overrides it.
+ */
+const LITERAL_SHAPES: {
+  render: (a: string, b: string, c: string) => string;
+  value: (a: boolean, b: boolean, c: boolean) => boolean;
+}[] = [
+  { render: (a, b) => `${a} && ${b}`, value: (a, b) => a && b },
+  { render: (a, b) => `${a} || ${b}`, value: (a, b) => a || b },
+  { render: (a, b) => `!${a} && ${b}`, value: (a, b) => !a && b },
+  { render: (a, b) => `!${a} || ${b}`, value: (a, b) => !a || b },
+  { render: (a, b) => `${a} && !${b}`, value: (a, b) => a && !b },
+  { render: (a, b) => `${a} || !${b}`, value: (a, b) => a || !b },
+  { render: (a, b) => `!(${a} && ${b})`, value: (a, b) => !(a && b) },
+  { render: (a, b) => `!(${a} || ${b})`, value: (a, b) => !(a || b) },
+  { render: (a, b) => `!${a} && !${b}`, value: (a, b) => !a && !b },
+  { render: (a, b) => `!${a} || !${b}`, value: (a, b) => !a || !b },
+  // Three literals: && binds tighter than ||, and a bracket says otherwise
+  { render: (a, b, c) => `${a} || ${b} && ${c}`, value: (a, b, c) => a || (b && c) },
+  { render: (a, b, c) => `${a} && ${b} || ${c}`, value: (a, b, c) => (a && b) || c },
+  { render: (a, b, c) => `(${a} || ${b}) && ${c}`, value: (a, b, c) => (a || b) && c },
+  { render: (a, b, c) => `${a} && (${b} || ${c})`, value: (a, b, c) => a && (b || c) },
+  { render: (a, b, c) => `!${a} || ${b} && ${c}`, value: (a, b, c) => !a || (b && c) },
+  { render: (a, b, c) => `!(${a} || ${b}) && ${c}`, value: (a, b, c) => !(a || b) && c },
+  { render: (a, b, c) => `${a} && ${b} && ${c}`, value: (a, b, c) => a && b && c },
+  { render: (a, b, c) => `${a} || ${b} || ${c}`, value: (a, b, c) => a || b || c },
+];
+
 const literalLogicTask: LogicTask = (id) => {
   const value = () => Math.random() < 0.5;
 
-  switch (pick(["pair", "notPair", "triple", "compare"] as const)) {
-    case "pair": {
-      const a = value();
-      const b = value();
-      const op = pick(["&&", "||"] as const);
+  switch (pick(["shape", "shape", "shape", "compare"] as const)) {
+    case "shape": {
+      const [a, b, c] = [value(), value(), value()];
+      const shape = pick(LITERAL_SHAPES);
       return {
         id,
         kind: "value",
         code: [],
-        expression: `${javaBoolean(a)} ${op} ${javaBoolean(b)}`,
-        answer: op === "&&" ? a && b : a || b,
-      };
-    }
-    case "notPair": {
-      const a = value();
-      const b = value();
-      const op = pick(["&&", "||"] as const);
-      return {
-        id,
-        kind: "value",
-        code: [],
-        expression: `!${javaBoolean(a)} ${op} ${javaBoolean(b)}`,
-        answer: op === "&&" ? !a && b : !a || b,
-      };
-    }
-    case "triple": {
-      const a = value();
-      const b = value();
-      const c = value();
-      // `&&` binds tighter than `||` — the whole point of the Rangfolge.
-      return {
-        id,
-        kind: "value",
-        code: [],
-        expression: `${javaBoolean(a)} || ${javaBoolean(b)} && ${javaBoolean(c)}`,
-        answer: a || (b && c),
+        expression: shape.render(javaBoolean(a), javaBoolean(b), javaBoolean(c)),
+        answer: shape.value(a, b, c),
       };
     }
     default: {
@@ -736,6 +777,28 @@ const BRACKET_PATTERNS: { expression: string; correct: string; wrong: string[] }
     expression: "a || b && !c",
     correct: "a || (b && (!c))",
     wrong: ["(a || b) && (!c)", "a || !(b && c)", "((a || b) && b) && !c"],
+  },
+  {
+    expression: "a && b || !c",
+    correct: "(a && b) || (!c)",
+    wrong: ["a && (b || (!c))", "!((a && b) || c)", "(a && (b || c))"],
+  },
+  {
+    expression: "!a && b || !c",
+    correct: "((!a) && b) || (!c)",
+    wrong: ["!(a && b) || (!c)", "(!a) && (b || (!c))", "!((a && b) || c)"],
+  },
+  {
+    expression: "a || !b && !c",
+    correct: "a || ((!b) && (!c))",
+    wrong: ["(a || (!b)) && (!c)", "a || !(b && (!c))", "!((a || b) && c)"],
+  },
+  {
+    // The one with a bracket already in it: ! takes the name next to it, not
+    // the bracket after the &&.
+    expression: "!a && (b || c)",
+    correct: "(!a) && (b || c)",
+    wrong: ["!(a && (b || c))", "!((a && b) || c)", "((!a) && b) || c"],
   },
 ];
 
@@ -838,6 +901,54 @@ const BRANCH_TOPICS: BranchTopic[] = [
     elseText: "gesperrt",
     min: 0,
     max: 250,
+  },
+  {
+    variable: "akku",
+    levels: [
+      { at: 80, text: "voll" },
+      { at: 50, text: "reicht" },
+      { at: 20, text: "bald laden" },
+      { at: 5, text: "gleich leer" },
+    ],
+    elseText: "leer",
+    min: 0,
+    max: 100,
+  },
+  {
+    variable: "geschwindigkeit",
+    levels: [
+      { at: 130, text: "viel zu schnell" },
+      { at: 100, text: "zu schnell" },
+      { at: 80, text: "zuegig" },
+      { at: 50, text: "in Ordnung" },
+    ],
+    elseText: "langsam",
+    min: 0,
+    max: 160,
+  },
+  {
+    variable: "windstaerke",
+    levels: [
+      { at: 10, text: "Sturm" },
+      { at: 8, text: "stuermisch" },
+      { at: 5, text: "frisch" },
+      { at: 2, text: "leichte Brise" },
+    ],
+    elseText: "windstill",
+    min: 0,
+    max: 12,
+  },
+  {
+    variable: "gewicht",
+    levels: [
+      { at: 20, text: "Spedition" },
+      { at: 10, text: "Paket XL" },
+      { at: 5, text: "Paket L" },
+      { at: 2, text: "Paket M" },
+    ],
+    elseText: "Paeckchen",
+    min: 0,
+    max: 25,
   },
 ];
 
@@ -955,7 +1066,7 @@ function forTask(): Task {
   const values: number[] = [];
   for (let i = from; i < to; i++) values.push(i);
 
-  switch (pick(["plain", "scaled", "shifted", "sum", "count"] as const)) {
+  switch (pick(["plain", "scaled", "shifted", "sum", "count", "down", "stride", "product"] as const)) {
     case "plain":
       return {
         code: main(header, `    IO.println(i);`, `}`),
@@ -993,6 +1104,48 @@ function forTask(): Task {
         expected: [javaInt(total)],
       };
     }
+    case "down": {
+      // Counting the other way: the head reads backwards and so does the output
+      const from = randomInt(6, 14);
+      const to = from - randomInt(3, 5);
+      const out: number[] = [];
+      for (let i = from; i >= to; i--) out.push(i);
+      return {
+        code: main(`for (int i = ${from}; i >= ${to}; i--) {`, `    IO.println(i);`, `}`),
+        ask: "output",
+        expected: out.map(javaInt),
+      };
+    }
+    case "stride": {
+      // A step other than 1, where counting the passes is the work
+      const step = pick([2, 3, 4, 5]);
+      const from = randomInt(0, 3);
+      const to = from + step * randomInt(3, 6) + randomInt(0, step - 1);
+      const out: number[] = [];
+      for (let i = from; i <= to; i += step) out.push(i);
+      return {
+        code: main(`for (int i = ${from}; i <= ${to}; i = i + ${step}) {`, `    IO.println(i);`, `}`),
+        ask: "output",
+        expected: out.map(javaInt),
+      };
+    }
+    case "product": {
+      const upTo = randomInt(3, 7);
+      const from = randomInt(1, 4);
+      let product = from;
+      for (let i = 1; i <= upTo; i++) product *= i;
+      return {
+        code: main(
+          `int produkt = ${from};`,
+          `for (int i = 1; i <= ${upTo}; i++) {`,
+          `    produkt = produkt * i;`,
+          `}`,
+          `IO.println(produkt);`,
+        ),
+        ask: "output",
+        expected: [javaInt(product)],
+      };
+    }
     default: {
       // A counting head with a "<=", which runs one pass more than it looks.
       const start = randomInt(1, 8);
@@ -1011,14 +1164,15 @@ function forTask(): Task {
 }
 
 function whileTask(): Task {
-  switch (pick(["double", "countdown", "count"] as const)) {
+  switch (pick(["double", "countdown", "count", "halve", "digits"] as const)) {
     case "double": {
-      const limit = pick([20, 50, 100, 200, 1000]);
-      let value = 1;
+      const limit = randomInt(20, 1000);
+      const from = pick([1, 1, 1, 2, 3]);
+      let value = from;
       while (value < limit) value = value * 2;
       return {
         code: main(
-          `int zahl = 1;`,
+          `int zahl = ${from};`,
           `while (zahl < ${limit}) {`,
           `    zahl = zahl * 2;`,
           `}`,
@@ -1044,6 +1198,54 @@ function whileTask(): Task {
         ),
         ask: "output",
         expected: [javaInt(value)],
+      };
+    }
+    case "halve": {
+      // Halving with integer division always lands on 1, whatever it started
+      // from, so the value at the end is no question at all — how many passes
+      // it took is, and that is what the listing prints.
+      const start = randomInt(20, 500);
+      let value = start;
+      let runs = 0;
+      while (value > 1) {
+        value = Math.floor(value / 2);
+        runs++;
+      }
+      return {
+        code: main(
+          `int wert = ${start};`,
+          `int schritte = 0;`,
+          `while (wert > 1) {`,
+          `    wert = wert / 2;`,
+          `    schritte++;`,
+          `}`,
+          `IO.println(schritte);`,
+        ),
+        ask: "output",
+        expected: [javaInt(runs)],
+      };
+    }
+    case "digits": {
+      // Peeling digits off with / 10 — Kapitel 3.4's standard while
+      const start = randomInt(7, 999999);
+      let rest = start;
+      let digits = 0;
+      while (rest > 0) {
+        rest = Math.floor(rest / 10);
+        digits++;
+      }
+      return {
+        code: main(
+          `int rest = ${start};`,
+          `int stellen = 0;`,
+          `while (rest > 0) {`,
+          `    rest = rest / 10;`,
+          `    stellen++;`,
+          `}`,
+          `IO.println(stellen);`,
+        ),
+        ask: "output",
+        expected: [javaInt(digits)],
       };
     }
     default: {
@@ -1111,8 +1313,8 @@ function doWhileTask(): Task {
 }
 
 function nestedTask(): Task {
-  const outer = randomInt(2, 5);
-  const inner = randomInt(2, 6);
+  const outer = randomInt(2, 7);
+  const inner = randomInt(2, 8);
   if (Math.random() < 0.5) {
     return {
       code: main(
@@ -1125,6 +1327,25 @@ function nestedTask(): Task {
       ),
       ask: "count",
       expected: [javaInt(outer * inner)],
+    };
+  }
+  if (Math.random() < 0.35) {
+    // The inner bound follows the outer, so the passes are a sum and not a
+    // product — the one nested shape counting cannot be guessed from.
+    const rows = randomInt(3, 8);
+    let passes = 0;
+    for (let i = 1; i <= rows; i++) passes += i;
+    return {
+      code: main(
+        `for (int i = 1; i <= ${rows}; i++) {`,
+        `    for (int j = 1; j <= i; j++) {`,
+        `        IO.print("*");`,
+        `    }`,
+        `    IO.println();`,
+        `}`,
+      ),
+      ask: "count",
+      expected: [javaInt(passes)],
     };
   }
   // The multiplication in numbers, not in stars.
@@ -1453,9 +1674,9 @@ const structogramStage: StageHandler<StructogramQuestion> = {
 // ---------------------------------------------------------------------------
 
 function returnTask(): Task {
-  switch (pick(["double", "square", "nested", "twoParams", "max"] as const)) {
+  switch (pick(["double", "square", "nested", "twoParams", "max", "sumTo", "chain", "earlyReturn"] as const)) {
     case "double": {
-      const argument = randomInt(3, 40);
+      const argument = randomInt(3, 60);
       return {
         code: [
           `int verdoppeln(int pZahl) {`,
@@ -1469,8 +1690,8 @@ function returnTask(): Task {
       };
     }
     case "square": {
-      const argument = randomInt(3, 12);
-      const offset = randomInt(1, 9);
+      const argument = randomInt(3, 15);
+      const offset = randomInt(1, 12);
       return {
         code: [
           `int rechne(int pZahl) {`,
@@ -1484,7 +1705,7 @@ function returnTask(): Task {
       };
     }
     case "nested": {
-      const argument = randomInt(2, 9);
+      const argument = randomInt(2, 25);
       return {
         code: [
           `int verdoppeln(int pZahl) {`,
@@ -1515,6 +1736,65 @@ function returnTask(): Task {
         ],
         ask: "call",
         expected: [javaInt(a * b * c)],
+      };
+    }
+    case "sumTo": {
+      const upTo = randomInt(4, 13);
+      let total = 0;
+      for (let i = 1; i <= upTo; i++) total += i;
+      return {
+        code: [
+          `int summeBis(int pGrenze) {`,
+          `    int summe = 0;`,
+          `    for (int i = 1; i <= pGrenze; i++) {`,
+          `        summe = summe + i;`,
+          `    }`,
+          `    return summe;`,
+          `}`,
+          ``,
+          ...main(`IO.println(summeBis(${upTo}));`),
+        ],
+        ask: "call",
+        expected: [javaInt(total)],
+      };
+    }
+    case "chain": {
+      // One method calling another: the inner result is the outer argument
+      const argument = randomInt(2, 12);
+      const offset = randomInt(1, 9);
+      return {
+        code: [
+          `int plus(int pZahl) {`,
+          `    return pZahl + ${offset};`,
+          `}`,
+          ``,
+          `int mal(int pZahl) {`,
+          `    return pZahl * 3;`,
+          `}`,
+          ``,
+          ...main(`IO.println(mal(plus(${argument})));`),
+        ],
+        ask: "call",
+        expected: [javaInt((argument + offset) * 3)],
+      };
+    }
+    case "earlyReturn": {
+      // The first return ends the method, so the line after it never runs
+      const argument = randomInt(1, 30);
+      const bound = randomInt(10, 20);
+      return {
+        code: [
+          `int pruefe(int pZahl) {`,
+          `    if (pZahl > ${bound}) {`,
+          `        return ${bound};`,
+          `    }`,
+          `    return pZahl * 2;`,
+          `}`,
+          ``,
+          ...main(`IO.println(pruefe(${argument}));`),
+        ],
+        ask: "call",
+        expected: [javaInt(argument > bound ? bound : argument * 2)],
       };
     }
     default: {
@@ -2166,6 +2446,205 @@ const BUG_TEMPLATES: BugTemplate[] = [
         errorLine: 1,
         reasonKey: "games.java.bugs.noReturn",
       };
+    },
+  },
+  {
+    kind: "syntax",
+    build: () =>
+      inMain(
+        [`for (int i = 0, i < ${randomInt(3, 9)}, i++) {`, `    IO.println(i);`, `}`],
+        0,
+        "games.java.bugs.forCommas",
+      ),
+  },
+  {
+    kind: "syntax",
+    build: () =>
+      inMain(
+        [`String name = '${pick(["Ada", "Alan", "Grace"])}';`, `IO.println(name);`],
+        0,
+        "games.java.bugs.stringQuotes",
+      ),
+  },
+  {
+    kind: "syntax",
+    build: () =>
+      inMain(
+        [`int preis = ${randomInt(2, 40)}.${randomInt(1, 9)}0;`, `IO.println(preis);`],
+        0,
+        "games.java.bugs.intDecimal",
+      ),
+  },
+  {
+    kind: "syntax",
+    build: () => {
+      const name = pick(INT_NAMES);
+      return inMain(
+        [`int ${name} = "${randomInt(2, 40)}";`, `IO.println(${name} * 2);`],
+        0,
+        "games.java.bugs.typeMismatch",
+      );
+    },
+  },
+  {
+    kind: "syntax",
+    build: () =>
+      inMain(
+        [`char zeichen = '${pick(["ab", "ja", "ok"])}';`, `IO.println(zeichen);`],
+        0,
+        "games.java.bugs.charMulti",
+      ),
+  },
+  {
+    kind: "syntax",
+    build: () => {
+      // Two names, and they have to differ: drawing the same one twice would
+      // print a listing that declares exactly what it goes on to use, which is
+      // a question with no answer.
+      const name = pick(INT_NAMES);
+      const missing = pick(INT_NAMES.filter((other) => other !== name));
+      return inMain(
+        [`int ${name} = ${randomInt(2, 30)};`, `IO.println(${missing});`],
+        1,
+        "games.java.bugs.undeclared",
+      );
+    },
+  },
+  {
+    kind: "syntax",
+    build: () => {
+      const bound = randomInt(3, 20);
+      return inMain(
+        [
+          `int zahl = ${randomInt(1, 30)};`,
+          `if (zahl > ${bound}) {`,
+          `    IO.println("groesser");`,
+          `} else (zahl < ${bound}) {`,
+          `    IO.println("kleiner");`,
+          `}`,
+        ],
+        3,
+        "games.java.bugs.elseCondition",
+      );
+    },
+  },
+  {
+    kind: "syntax",
+    build: () => {
+      const name = pick(ARRAY_NAMES);
+      return inMain(
+        [`int[] ${name} = new int(${randomInt(3, 8)});`, `${name}[0] = ${randomInt(1, 9)};`],
+        0,
+        "games.java.bugs.arrayNew",
+      );
+    },
+  },
+  {
+    kind: "semantic",
+    build: () => {
+      const low = randomInt(30, 50);
+      const high = randomInt(70, 90);
+      return inMain(
+        [
+          `int punkte = ${randomInt(0, 100)};`,
+          `if (punkte > ${low}) {`,
+          `    IO.println("bestanden");`,
+          `} else if (punkte > ${high}) {`,
+          `    IO.println("sehr gut");`,
+          `}`,
+        ],
+        3,
+        "games.java.bugs.elseIfOrder",
+      );
+    },
+  },
+  {
+    kind: "semantic",
+    build: () => {
+      const bound = randomInt(4, 9);
+      return inMain(
+        [
+          `int summe = 0;`,
+          `for (int i = 1; i <= ${bound}; i++) {`,
+          `    summe = 0;`,
+          `    summe = summe + i;`,
+          `}`,
+          `IO.println(summe);`,
+        ],
+        2,
+        "games.java.bugs.counterReset",
+      );
+    },
+  },
+  {
+    kind: "semantic",
+    build: () => {
+      const name = pick(ARRAY_NAMES);
+      return inMain(
+        [
+          `int[] ${name} = ${literal(arrayValues(5))};`,
+          `for (int i = 1; i < ${name}.length; i++) {`,
+          `    IO.println(${name}[i]);`,
+          `}`,
+        ],
+        1,
+        "games.java.bugs.offByOneStart",
+      );
+    },
+  },
+  {
+    kind: "semantic",
+    build: () => {
+      // Every value below zero, so the starting value wins and stays
+      const values = Array.from({ length: 4 }, () => -randomInt(2, 20));
+      return inMain(
+        [
+          `int[] werte = ${literal(values)};`,
+          `int groesster = 0;`,
+          `for (int wert : werte) {`,
+          `    if (wert > groesster) {`,
+          `        groesster = wert;`,
+          `    }`,
+          `}`,
+          `IO.println(groesster);`,
+        ],
+        1,
+        "games.java.bugs.maxInitZero",
+      );
+    },
+  },
+  {
+    kind: "semantic",
+    build: () => {
+      const bound = randomInt(5, 20);
+      return inMain(
+        [
+          `int zahl = ${randomInt(1, 30)};`,
+          `if (zahl > 0 || zahl < ${bound}) {`,
+          `    IO.println("im Bereich");`,
+          `}`,
+        ],
+        1,
+        "games.java.bugs.alwaysTrue",
+      );
+    },
+  },
+  {
+    kind: "semantic",
+    build: () => {
+      const a = randomInt(2, 20);
+      const b = randomInt(21, 40);
+      return inMain(
+        [
+          `int erste = ${a};`,
+          `int zweite = ${b};`,
+          `erste = zweite;`,
+          `zweite = erste;`,
+          `IO.println(erste + " " + zweite);`,
+        ],
+        2,
+        "games.java.bugs.swapNoTemp",
+      );
     },
   },
 ];
