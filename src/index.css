@@ -66,6 +66,18 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* A round lost to a thumb. Swiping down while the page is already at the top
+   is pull-to-refresh on both mobile engines, and a station whose numbers sit
+   near the top of the screen is played with exactly that motion — so a student
+   reaching for a number reloaded the page instead, mid-round. `contain` stops
+   the gesture without taking the ordinary rubber-band feel away with it, and
+   it is set on both elements because which one owns the viewport's overscroll
+   is not something every engine agrees on. */
+html,
+body {
+  overscroll-behavior-y: contain;
+}
+
 button,
 a,
 input,
