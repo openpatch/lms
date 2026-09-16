@@ -51,6 +51,50 @@ function Field({ field, value, onChange }: FieldProps) {
     );
   }
 
+  if (field.type === "multi") {
+    const picked = Array.isArray(value) ? value : field.default;
+    // The last option stays checked: a stage with nothing selected has nothing
+    // to ask, and the server would silently put every option back anyway.
+    const toggle = (option: string) => {
+      const on = picked.includes(option);
+      if (on && picked.length === 1) return;
+      onChange(
+        field.options
+          .map((o) => o.value)
+          .filter((v) => (v === option ? !on : picked.includes(v))),
+      );
+    };
+
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-600 mb-1">{t(field.labelKey)}</label>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {field.options.map((option) => {
+            const on = picked.includes(option.value);
+            const isOnlyPicked = on && picked.length === 1;
+            return (
+              <label
+                key={option.value}
+                className={`flex items-center gap-2 ${
+                  isOnlyPicked ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  disabled={isOnlyPicked}
+                  onChange={() => toggle(option.value)}
+                  className="accent-game-solid"
+                />
+                <span className="text-sm text-gray-600">{t(option.labelKey)}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   if (field.type === "select") {
     return (
       <div>

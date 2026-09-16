@@ -558,22 +558,27 @@ at 500, which is exactly why `solid` exists.
 ## Settings schema
 
 Settings are declarative so that one schema drives both the host UI and the
-server-side validation. Four field types exist:
+server-side validation. Five field types exist:
 
 ```ts
 { type: "select", key, labelKey, options: number[], default }
 { type: "range",  key, labelKey, min, max, step, default, unit?: "s" }
 { type: "toggle", key, labelKey, default }
 { type: "choice", key, labelKey, options: { value: string, labelKey }[], default }
+{ type: "multi",  key, labelKey, options: { value: string, labelKey }[], default: string[] }
 ```
 
 `select` picks a number and shows it as is; `choice` picks a named value and shows
 the translation of its `labelKey` (see the notation setting of the rational game).
+`multi` is `choice` with checkboxes instead of a dropdown: the host picks any
+combination and the value is a `string[]` in spec order (see the operations setting
+of the rational game's calculate stage). The form keeps the last box checked, and
+the server puts the whole default back if an empty selection arrives anyway.
 
 The server never trusts what the client sends: `resolveGameSettings()` drops unknown
 stages and keys, clamps ranges to `[min, max]` and snaps them to `step`, rejects
-select and choice values outside `options`, and fills in defaults for anything missing. The
-same function renders the lobby form, so both sides always agree.
+select, choice and multi values outside `options`, and fills in defaults for anything
+missing. The same function renders the lobby form, so both sides always agree.
 
 The stage selection is normalized the same way: unknown ids are dropped, the order
 follows the spec, and an empty selection falls back to every stage — a session

@@ -1,4 +1,9 @@
-import { rationalSpec, readAnswerMode, readNotation } from "../../shared/games/rational";
+import {
+  rationalSpec,
+  readAnswerMode,
+  readNotation,
+  readOperations,
+} from "../../shared/games/rational";
 import type {
   ArrangeQuestion,
   CalculateQuestion,
@@ -174,6 +179,7 @@ const calculateStage: StageHandler<CalculateQuestion> = {
     const allowNegatives = Boolean(settings.allowNegatives);
     const notation = readNotation(settings);
     const denominators = denominatorsFor(notation);
+    const operators = readOperations(settings);
     // Operands may be written either way, the result is what the player types
     const resultDisplay: RationalDisplay = notation === "decimal" ? "decimal" : "fraction";
     // A result students can write down — and one they can actually type as a
@@ -188,14 +194,14 @@ const calculateStage: StageHandler<CalculateQuestion> = {
     return Array.from({ length: Number(settings.questionsPerRound) }, (_, id) => {
       let left = randomOperand(allowNegatives, denominators);
       let right = randomOperand(allowNegatives, denominators);
-      let operator = pick(OPERATORS);
+      let operator = pick(operators);
       let result = applyOperator(left, operator, right);
 
       for (let attempt = 0; attempt < 50; attempt++) {
         if (usable(result)) break;
         left = randomOperand(allowNegatives, denominators);
         right = randomOperand(allowNegatives, denominators);
-        operator = pick(OPERATORS);
+        operator = pick(operators);
         result = applyOperator(left, operator, right);
       }
 

@@ -82,7 +82,12 @@ export function validateGameSpecs(specs: Record<string, GameSpec> = gameSpecs): 
             ? field.options.includes(field.default)
             : field.type === "choice"
               ? field.options.some((option) => option.value === field.default)
-              : true;
+              : field.type === "multi"
+                ? field.default.length > 0 &&
+                  field.default.every((value) =>
+                    field.options.some((option) => option.value === value),
+                  )
+                : true;
         if (!selectable) {
           throw new Error(
             `Setting "${spec.id}/${stage.id}/${field.key}" defaults to ` +

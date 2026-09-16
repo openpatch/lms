@@ -13,7 +13,7 @@ import type { GameMeta, PlayerAnswer } from "./types";
 // ---------------------------------------------------------------------------
 
 /** A single value a host can configure for a stage. */
-export type SettingsValue = number | boolean | string;
+export type SettingsValue = number | boolean | string | string[];
 
 /** Declarative description of one setting. The same schema renders the host UI
  *  and validates what the server accepts, so a client cannot smuggle in junk. */
@@ -49,6 +49,15 @@ export type SettingsField =
       /** Each option carries the stored value and the i18n key of its label. */
       options: { value: string; labelKey: string }[];
       default: string;
+    }
+  | {
+      type: "multi";
+      key: string;
+      labelKey: string;
+      /** Each option carries the stored value and the i18n key of its label. */
+      options: { value: string; labelKey: string }[];
+      /** Never empty — an empty selection falls back to it. */
+      default: string[];
     };
 
 export type StageSettings = Record<string, SettingsValue>;
@@ -92,7 +101,7 @@ export interface GameSettings {
 export function defaultStageSettings(stage: StageSpec): StageSettings {
   const values: StageSettings = {};
   for (const field of stage.settings) {
-    values[field.key] = field.default;
+    values[field.key] = Array.isArray(field.default) ? [...field.default] : field.default;
   }
   return values;
 }
@@ -104,6 +113,15 @@ function resolveField(field: SettingsField, raw: unknown): SettingsValue {
       return typeof raw === "boolean" ? raw : field.default;
     case "choice":
       return field.options.some((option) => option.value === raw) ? (raw as string) : field.default;
+    case "multi": {
+      const requested = Array.isArray(raw) ? raw : [];
+      // Spec order, no unknown values, no duplicates — and never empty, because
+      // a stage with nothing selected has nothing to ask.
+      const picked = field.options
+        .map((option) => option.value)
+        .filter((value) => requested.includes(value));
+      return picked.length > 0 ? picked : [...field.default];
+    }
     case "select": {
       const value = Number(raw);
       return field.options.includes(value) ? value : field.default;

@@ -1,6 +1,8 @@
 import type { GameSpec, SettingsField, StageQuestion, StageSettings } from "../framework";
 import type { RationalOperator, RationalValue } from "../rational-math";
 
+const ALL_OPERATORS: RationalOperator[] = ["+", "-", "*", "/"];
+
 const questionsPerRound: SettingsField = {
   type: "select",
   key: "questionsPerRound",
@@ -40,6 +42,20 @@ const notation: SettingsField = {
     { value: "both", labelKey: "settings.notationBoth" },
   ],
   default: "both",
+};
+
+/** Which of the four operations the "calculate" stage draws from. */
+const operations: SettingsField = {
+  type: "multi",
+  key: "operations",
+  labelKey: "settings.operations",
+  options: [
+    { value: "+", labelKey: "settings.operationAdd" },
+    { value: "-", labelKey: "settings.operationSubtract" },
+    { value: "*", labelKey: "settings.operationMultiply" },
+    { value: "/", labelKey: "settings.operationDivide" },
+  ],
+  default: ["+", "-", "*", "/"],
 };
 
 /** How the "signs" stage wants the answer: the value, or only its sign. */
@@ -91,6 +107,17 @@ export function readNotation(settings: StageSettings): RationalNotation {
   return value === "fraction" || value === "decimal" ? value : "both";
 }
 
+/** Reads the operations a "calculate" round may use. Never empty. */
+export function readOperations(settings: StageSettings): RationalOperator[] {
+  const raw = settings.operations;
+  const picked = Array.isArray(raw) ? raw.filter(isOperator) : [];
+  return picked.length > 0 ? picked : ALL_OPERATORS;
+}
+
+function isOperator(value: unknown): value is RationalOperator {
+  return value === "+" || value === "-" || value === "*" || value === "/";
+}
+
 /** Reads the answer mode of the "signs" stage. */
 export function readAnswerMode(settings: StageSettings): SignsAnswerMode {
   return settings.answerMode === "sign" ? "sign" : "value";
@@ -120,7 +147,7 @@ export const rationalSpec: GameSpec = {
       nameKey: "games.rational.stages.calculate.name",
       summaryKey: "games.rational.stages.calculate.summary",
       rulesKey: "games.rational.stages.calculate.rules",
-      settings: [questionsPerRound, duration, notation, allowNegatives],
+      settings: [questionsPerRound, duration, operations, notation, allowNegatives],
     },
     {
       id: "signs",
