@@ -39,6 +39,15 @@ export default function ArrangeStage({ question, submit }: StageProps<ArrangeQue
     setDraft({ ...current, placements: next, selected: nextOpen === -1 ? null : nextOpen });
   };
 
+  /** Nudging a mark that is already down. The selection is left alone: once
+   *  everything is placed there is nothing selected, and while something is
+   *  still waiting it must not lose its turn because a neighbour was tidied. */
+  const handleDrag = (index: number, value: number) => {
+    const next = [...placements];
+    next[index] = value;
+    setDraft({ ...current, placements: next });
+  };
+
   const allPlaced = items.length > 0 && placements.every((p) => p != null);
 
   return (
@@ -46,7 +55,9 @@ export default function ArrangeStage({ question, submit }: StageProps<ArrangeQue
       <div className="text-gray-500 text-center">
         {selected != null
           ? t("games.rational.arrangePromptSelected")
-          : t("games.rational.arrangePrompt")}
+          : allPlaced
+            ? t("games.rational.arrangePromptAdjust")
+            : t("games.rational.arrangePrompt")}
       </div>
 
       <div key={question.id} className="flex flex-wrap justify-center gap-3 animate-question-in">
@@ -87,6 +98,7 @@ export default function ArrangeStage({ question, submit }: StageProps<ArrangeQue
                     latex: items[index].latex,
                     active: selected === index,
                     onClick: () => setDraft({ ...current, selected: index }),
+                    onDrag: (value: number) => handleDrag(index, value),
                   },
                 ],
           )}

@@ -77,7 +77,16 @@ export default function ChangeStage({ question, submit }: StageProps<ChangeQuest
           onPick={asksChange ? undefined : (value) => setPlaced({ questionId: question.id, value })}
           markers={[
             { value: question.start, latex: String(question.start) },
-            ...(current == null ? [] : [{ value: current, latex: String(current), active: true }]),
+            ...(current == null
+              ? []
+              : [
+                  {
+                    value: current,
+                    latex: String(current),
+                    active: true,
+                    onDrag: (value: number) => setPlaced({ questionId: question.id, value }),
+                  },
+                ]),
           ]}
         />
       </div>

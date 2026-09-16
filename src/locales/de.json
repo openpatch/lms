@@ -256,6 +256,7 @@
       "description": "Rationale Zahlen am Zahlenstrahl einordnen und mit ihnen rechnen.",
       "arrangePrompt": "Zahl auswählen und dann auf den Zahlenstrahl klicken",
       "arrangePromptSelected": "Klicke auf den Zahlenstrahl, um die gewählte Zahl zu setzen",
+      "arrangePromptAdjust": "Marken verschieben, um sie genauer zu setzen",
       "orderPromptAsc": "Tippe die Zahlen nacheinander an — die kleinste zuerst",
       "orderPromptDesc": "Tippe die Zahlen nacheinander an — die größte zuerst",
       "numerator": "Zähler",

@@ -256,6 +256,7 @@
       "description": "Place rational numbers on the number line and calculate with them.",
       "arrangePrompt": "Pick a number, then click on the number line",
       "arrangePromptSelected": "Click on the number line to place the selected number",
+      "arrangePromptAdjust": "Drag the marks to place them more exactly",
       "orderPromptAsc": "Tap the numbers one after another — smallest first",
       "orderPromptDesc": "Tap the numbers one after another — largest first",
       "numerator": "Numerator",
