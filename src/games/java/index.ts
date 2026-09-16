@@ -17,10 +17,12 @@ import StructogramStage, {
   StructogramRulesExample,
 } from "./stages/Structogram";
 import BugsStage, { BugsRulesExample } from "./stages/Bugs";
+import RobotStage, { RobotRulesExample } from "./stages/Robot";
 import {
   BugSolution,
   ChoiceSolution,
   LogicSolution,
+  RobotSolution,
   StructogramSolution,
   TypedSolution,
 } from "./stages/solutions";
@@ -28,12 +30,14 @@ import {
   bugLabel,
   choiceLabel,
   logicLabel,
+  robotLabel,
   structogramLabel,
 } from "./stages/answer-labels";
 import {
   BugsReview,
   ChoiceReview,
   LogicReview,
+  RobotReview,
   StructogramReview,
   TraceReview,
 } from "./stages/reviews";
@@ -79,6 +83,13 @@ export default defineGame(javaSpec, {
     Review: LogicReview,
     Solution: LogicSolution,
     answerLabel: logicLabel,
+  },
+  robot: {
+    Component: RobotStage,
+    RulesExample: RobotRulesExample,
+    Review: RobotReview,
+    Solution: RobotSolution,
+    answerLabel: robotLabel,
   },
   structogram: {
     Component: StructogramStage,

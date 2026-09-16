@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type {
   BugQuestion,
+  RobotQuestion,
   CodeAnswerQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
@@ -10,6 +11,8 @@ import type { StageReviewProps } from "../../../lib/game-registry";
 import { Given, Solution } from "../../../components/review-parts";
 import CodeBlock, { CodeLine } from "../components/CodeBlock";
 import StructogramView from "../components/Structogram";
+import RobotGrid from "../components/RobotGrid";
+import { cellName, readCell } from "./answer-labels";
 
 /**
  * What a player sees once the round is over. A station that asks "run this in
@@ -102,6 +105,43 @@ export function StructogramReview({ question, answer }: StageReviewProps<Structo
       ) : (
         <Solution>
           <StructogramView nodes={question.options[question.answerIndex]} className="mt-1 w-48" />
+        </Solution>
+      )}
+    </>
+  );
+}
+
+/**
+ * The route, drawn.
+ *
+ * A wrong square on its own says nothing about where the reading went astray,
+ * so the review puts the whole drive back on the floor — numbered, so it can be
+ * followed a step at a time — with the player's own square marked beside the
+ * one the robot actually reached.
+ */
+export function RobotReview({ question, answer }: StageReviewProps<RobotQuestion>) {
+  const picked = readCell(answer?.answer);
+  return (
+    <>
+      <CodeBlock lines={question.code} compact />
+      <div className="max-w-[13rem] pt-1">
+        <RobotGrid
+          width={question.width}
+          height={question.height}
+          start={question.start}
+          facing={question.facing}
+          path={question.path}
+          answer={question.answer}
+          answerFacing={question.answerFacing}
+          picked={picked}
+        />
+      </div>
+      <Given answer={answer}>
+        {picked ? <span className="font-mono">{cellName(picked)}</span> : null}
+      </Given>
+      {!answer?.correct && (
+        <Solution>
+          <span className="font-mono">{cellName(question.answer)}</span>
         </Solution>
       )}
     </>

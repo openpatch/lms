@@ -9,12 +9,15 @@
 // Two things make Java different from the Python game and shape most of the
 // generators: `7 / 3` is 2, and `"Summe: " + a + b` glues instead of adding.
 
-import { javaSpec } from "../../shared/games/java";
+import { javaSpec, ROBOT_FACINGS, robotStep, sameCell, turn } from "../../shared/games/java";
 import type {
   BugQuestion,
   CodeAnswerQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
+  RobotCell,
+  RobotFacing,
+  RobotQuestion,
   StructogramQuestion,
 } from "../../shared/games/java";
 import { answerMatches, sequenceMatches, sequenceScore } from "../../shared/code-answer";
@@ -1672,6 +1675,193 @@ function structogramQuestion(template: DiagramTemplate): Omit<StructogramQuestio
   return { code: template.code, options, answerIndex: options.indexOf(correct) };
 }
 
+// ---------------------------------------------------------------------------
+// robot — Kapitel 3 read as a path instead of as a number
+// ---------------------------------------------------------------------------
+
+/** A program, as a tree, so the listing and the path come from one source. */
+type RobotCmd =
+  | { kind: "vor" }
+  | { kind: "links" }
+  | { kind: "rechts" }
+  | { kind: "loop"; times: number; body: RobotCmd[] };
+
+/** The listing the player reads, indented the way the rest of the game is. */
+function robotLines(body: RobotCmd[], depth = 1): string[] {
+  const pad = "    ".repeat(depth);
+  return body.flatMap((cmd) =>
+    cmd.kind === "loop"
+      ? [
+          `${pad}for (int i = 0; i < ${cmd.times}; i++) {`,
+          ...robotLines(cmd.body, depth + 1),
+          `${pad}}`,
+        ]
+      : [`${pad}${cmd.kind}();`],
+  );
+}
+
+/** How many statements a program executes, loops counted out. */
+function robotSteps(body: RobotCmd[]): number {
+  return body.reduce(
+    (total, cmd) => total + (cmd.kind === "loop" ? cmd.times * robotSteps(cmd.body) : 1),
+    0,
+  );
+}
+
+interface RobotRun {
+  path: RobotCell[];
+  facing: RobotFacing;
+  /** False as soon as a step would leave the grid. */
+  onGrid: boolean;
+}
+
+/**
+ * Drive the program. The answer is whatever this says it is — a listing and a
+ * destination worked out separately would only have to disagree once.
+ */
+function runRobot(
+  body: RobotCmd[],
+  start: RobotCell,
+  facing: RobotFacing,
+  width: number,
+  height: number,
+): RobotRun {
+  const run: RobotRun = { path: [start], facing, onGrid: true };
+
+  const step = (commands: RobotCmd[]): void => {
+    for (const cmd of commands) {
+      if (!run.onGrid) return;
+      if (cmd.kind === "loop") {
+        for (let i = 0; i < cmd.times; i++) step(cmd.body);
+        continue;
+      }
+      if (cmd.kind === "links" || cmd.kind === "rechts") {
+        run.facing = turn(run.facing, cmd.kind);
+        continue;
+      }
+      const next = robotStep(run.path[run.path.length - 1], run.facing);
+      if (next.x < 0 || next.y < 0 || next.x >= width || next.y >= height) {
+        // A robot that drives into a wall is a question with no answer
+        run.onGrid = false;
+        return;
+      }
+      run.path.push(next);
+    }
+  };
+
+  step(body);
+  return run;
+}
+
+/** The shapes a program takes, from a straight run to a loop inside a loop. */
+function robotProgram(kind: "straight" | "loops" | "nested"): RobotCmd[] {
+  const move = (): RobotCmd => ({ kind: "vor" });
+  const spin = (): RobotCmd => ({ kind: pick(["links", "rechts"] as const) });
+
+  if (kind === "straight") {
+    // A plain sequence: the statements in the order they are written
+    const body: RobotCmd[] = [];
+    const runs = randomInt(2, 3);
+    for (let i = 0; i < runs; i++) {
+      for (let f = 0; f < randomInt(1, 2); f++) body.push(move());
+      if (i < runs - 1) body.push(spin());
+    }
+    return body;
+  }
+
+  if (kind === "loops") {
+    const inner: RobotCmd[] = [];
+    for (let f = 0; f < randomInt(1, 2); f++) inner.push(move());
+    inner.push(spin());
+    const loop: RobotCmd = { kind: "loop", times: randomInt(2, 4), body: inner };
+    // Sometimes a statement before the loop, so the loop is not the whole story
+    return Math.random() < 0.45 ? [move(), loop] : [loop];
+  }
+
+  // A loop inside a loop: the inner one drives, the outer one turns the corner
+  return [
+    {
+      kind: "loop",
+      times: randomInt(2, 3),
+      body: [
+        { kind: "loop", times: randomInt(2, 3), body: [move()] },
+        spin(),
+      ],
+    },
+  ];
+}
+
+const robotStage: StageHandler<RobotQuestion> = {
+  id: "robot",
+
+  createQuestions({ settings }) {
+    const mode = String(settings.robotTasks);
+    const nested = settings.withNestedRobot !== false;
+    const kinds: ("straight" | "loops" | "nested")[] =
+      mode === "straight"
+        ? ["straight"]
+        : mode === "loops"
+          ? nested
+            ? ["loops", "loops", "nested"]
+            : ["loops"]
+          : nested
+            ? ["straight", "loops", "loops", "nested"]
+            : ["straight", "loops", "loops"];
+
+    return build(Number(settings.questionsPerRound), () => {
+      const width = 6;
+      const height = 6;
+
+      for (let attempt = 0; attempt < 200; attempt++) {
+        const body = robotProgram(pick(kinds));
+        const start = { x: randomInt(0, width - 1), y: randomInt(0, height - 1) };
+        const facing = pick(ROBOT_FACINGS);
+        const run = runRobot(body, start, facing, width, height);
+        // It has to stay on the grid, and it has to go somewhere: a program
+        // whose answer is the square it started on is a question about nothing
+        // the first few times a class meets this.
+        if (!run.onGrid) continue;
+        if (run.path.length < 2 || sameCell(run.path[run.path.length - 1], start)) continue;
+        if (robotSteps(body) > 14) continue;
+
+        const end = run.path[run.path.length - 1];
+        return {
+          code: ["void main() {", ...robotLines(body), "}"],
+          width,
+          height,
+          start,
+          facing,
+          answer: end,
+          answerFacing: run.facing,
+          path: run.path,
+        };
+      }
+
+      // A short walk that fits any grid this size, for the run of luck that fails
+      const start = { x: 1, y: 4 };
+      const body: RobotCmd[] = [{ kind: "vor" }, { kind: "rechts" }, { kind: "vor" }];
+      const run = runRobot(body, start, "north", width, height);
+      return {
+        code: ["void main() {", ...robotLines(body), "}"],
+        width,
+        height,
+        start,
+        facing: "north" as RobotFacing,
+        answer: run.path[run.path.length - 1],
+        answerFacing: run.facing,
+        path: run.path,
+      };
+    });
+  },
+
+  evaluate(question, answer, timing) {
+    const [x, y] = answer.split(",").map(Number);
+    const correct =
+      Number.isInteger(x) && Number.isInteger(y) && sameCell({ x, y }, question.answer);
+    return { correct, points: correct ? speedPoints(timing.questionMs / 1000, 2, 40) : 0 };
+  },
+};
+
 const structogramStage: StageHandler<StructogramQuestion> = {
   id: "structogram",
 
@@ -2698,6 +2888,7 @@ export default createStageGame(javaSpec, [
   logicStage,
   branchStage,
   loopsStage,
+  robotStage,
   structogramStage,
   methodsStage,
   arraysStage,

@@ -151,6 +151,18 @@ export const javaSpec: GameSpec = {
       ],
     },
     {
+      id: "robot",
+      nameKey: "games.java.stages.robot.name",
+      summaryKey: "games.java.stages.robot.summary",
+      rulesKey: "games.java.stages.robot.rules",
+      settings: [
+        questionsPerRound([5, 8, 12], 8),
+        duration(120),
+        choice("robotTasks", ["mixed", "straight", "loops"], "mixed"),
+        toggle("withNestedRobot", true),
+      ],
+    },
+    {
       id: "structogram",
       nameKey: "games.java.stages.structogram.name",
       summaryKey: "games.java.stages.structogram.summary",
@@ -279,6 +291,62 @@ export interface StructogramQuestion extends StageQuestion {
   code: string[];
   options: Structogram[];
   answerIndex: number;
+}
+
+// ---------------------------------------------------------------------------
+// robot — tracing without arithmetic
+// ---------------------------------------------------------------------------
+
+/** Which way the robot is looking. North is up the grid. */
+export type RobotFacing = "north" | "east" | "south" | "west";
+
+export interface RobotCell {
+  /** Column, counted from the left edge. */
+  x: number;
+  /** Row, counted from the top edge. */
+  y: number;
+}
+
+export const ROBOT_FACINGS: RobotFacing[] = ["north", "east", "south", "west"];
+
+/** Where a step in this direction lands. */
+export function robotStep(cell: RobotCell, facing: RobotFacing): RobotCell {
+  switch (facing) {
+    case "north": return { x: cell.x, y: cell.y - 1 };
+    case "east": return { x: cell.x + 1, y: cell.y };
+    case "south": return { x: cell.x, y: cell.y + 1 };
+    case "west": return { x: cell.x - 1, y: cell.y };
+  }
+}
+
+export function turn(facing: RobotFacing, towards: "links" | "rechts"): RobotFacing {
+  const at = ROBOT_FACINGS.indexOf(facing);
+  return ROBOT_FACINGS[(at + (towards === "rechts" ? 1 : 3)) % 4];
+}
+
+export const sameCell = (a: RobotCell, b: RobotCell): boolean => a.x === b.x && a.y === b.y;
+
+/**
+ * Where does the robot end up?
+ *
+ * The same reading the other stations ask for — follow the statements, follow
+ * the loop, keep track of where you are — with nothing to work out on the way.
+ * What a loop does to a position can be seen; what it does to a running product
+ * has to be computed, and a class with a clock running spends that time on
+ * arithmetic instead of on the loop.
+ */
+export interface RobotQuestion extends StageQuestion {
+  code: string[];
+  /** The grid the robot drives on, in cells. */
+  width: number;
+  height: number;
+  start: RobotCell;
+  facing: RobotFacing;
+  /** Where it comes to rest, and which way it is looking there. */
+  answer: RobotCell;
+  answerFacing: RobotFacing;
+  /** Every cell it stood on, start included — drawn in the review. */
+  path: RobotCell[];
 }
 
 /** One line is broken. Which one? */

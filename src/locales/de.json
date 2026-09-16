@@ -782,6 +782,11 @@
           "summary": "for, while, do-while und Verschachtelung",
           "rules": "Lies {{questionsPerRound}} Schleifen: mal zählst du die Durchläufe, mal schreibst du alle ausgegebenen Werte der Reihe nach auf. Achte darauf, ob die Bedingung im Kopf oder im Fuß steht. Du hast {{duration}} Sekunden."
         },
+        "robot": {
+          "name": "Roboter",
+          "summary": "Dem Programm folgen und sagen, wo der Roboter landet",
+          "rules": "Verfolge {{questionsPerRound}} Programme und tippe das Feld an, auf dem der Roboter stehen bleibt. vor() geht ein Feld weiter, links() und rechts() drehen ihn auf der Stelle. Gerechnet wird hier nichts. Du hast {{duration}} Sekunden."
+        },
         "structogram": {
           "name": "Struktogramme",
           "summary": "Programm und Struktogramm einander zuordnen",
@@ -807,6 +812,9 @@
           "summary": "Die eine fehlerhafte Zeile finden",
           "rules": "Finde in {{questionsPerRound}} Programmen die Zeile, in der der Fehler steckt. Je schneller du sie findest, desto mehr Punkte. Du hast {{duration}} Sekunden."
         }
+      },
+      "robot": {
+        "ask": "Auf welchem Feld bleibt der Roboter stehen?"
       }
     },
     "intuition": {
@@ -1062,6 +1070,11 @@
     "loopKindWhile": "Nur kopfgesteuerte Schleifen",
     "loopKindDoWhile": "Nur fußgesteuerte Schleifen",
     "withNestedLoops": "Auch verschachtelte Schleifen",
+    "robotTasks": "Aufgabentypen",
+    "robotTasksMixed": "Gemischt",
+    "robotTasksStraight": "Nur Anweisungen nacheinander",
+    "robotTasksLoops": "Nur mit Schleifen",
+    "withNestedRobot": "Auch verschachtelte Schleifen",
     "methodTasks": "Aufgabentypen",
     "methodTasksMixed": "Gemischt",
     "methodTasksReturns": "Nur Rückgabewerte",

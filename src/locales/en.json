@@ -782,6 +782,11 @@
           "summary": "for, while, do-while and nesting",
           "rules": "Read {{questionsPerRound}} loops: sometimes you count the passes, sometimes you write down every value printed, in order. Watch whether the condition sits in the head or in the foot. You have {{duration}} seconds."
         },
+        "robot": {
+          "name": "Robot",
+          "summary": "Follow the program and say where the robot stops",
+          "rules": "Follow {{questionsPerRound}} programs and tap the square the robot comes to rest on. vor() moves it one square, links() and rechts() turn it where it stands. Nothing here has to be worked out. You have {{duration}} seconds."
+        },
         "structogram": {
           "name": "Structograms",
           "summary": "Match a program to its structogram",
@@ -807,6 +812,9 @@
           "summary": "Find the one broken line",
           "rules": "Find the line that holds the mistake in {{questionsPerRound}} programs. The faster you find it, the more points. You have {{duration}} seconds."
         }
+      },
+      "robot": {
+        "ask": "Which square does the robot stop on?"
       }
     },
     "intuition": {
@@ -1062,6 +1070,11 @@
     "loopKindWhile": "Only head-controlled loops",
     "loopKindDoWhile": "Only foot-controlled loops",
     "withNestedLoops": "Include nested loops",
+    "robotTasks": "Kinds of task",
+    "robotTasksMixed": "Mixed",
+    "robotTasksStraight": "Statements in order only",
+    "robotTasksLoops": "With loops only",
+    "withNestedRobot": "Include nested loops",
     "methodTasks": "Kinds of task",
     "methodTasksMixed": "Mixed",
     "methodTasksReturns": "Only return values",

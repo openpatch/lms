@@ -2,6 +2,7 @@ import type {
   BugQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
+  RobotCell,
   StructogramQuestion,
 } from "../../../../shared/games/java";
 
@@ -30,4 +31,21 @@ export function structogramLabel(_question: StructogramQuestion, answer: string)
 export function bugLabel(_question: BugQuestion, answer: string): string {
   const line = Number(answer);
   return Number.isFinite(line) ? `#${line + 1}` : answer;
+}
+
+/** The "x,y" a robot answer is stored as, or null for anything else. */
+export function readCell(answer: string | undefined): RobotCell | null {
+  if (!answer) return null;
+  const [x, y] = answer.split(",").map(Number);
+  return Number.isInteger(x) && Number.isInteger(y) ? { x, y } : null;
+}
+
+/** A square, as a person would say it: column letter, row number from the top. */
+export function cellName(cell: RobotCell): string {
+  return `${String.fromCharCode(65 + cell.x)}${cell.y + 1}`;
+}
+
+export function robotLabel(_question: unknown, answer: string): string {
+  const cell = readCell(answer);
+  return cell ? cellName(cell) : answer;
 }

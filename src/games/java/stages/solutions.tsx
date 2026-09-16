@@ -1,5 +1,6 @@
 import type {
   BugQuestion,
+  RobotQuestion,
   CodeAnswerQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
@@ -8,6 +9,8 @@ import type {
 import { useTranslation } from "react-i18next";
 import { CodeLine } from "../components/CodeBlock";
 import StructogramView from "../components/Structogram";
+import RobotGrid from "../components/RobotGrid";
+import { cellName } from "./answer-labels";
 
 /**
  * The right answer on its own, and what a stored answer means, for the host's
@@ -40,6 +43,25 @@ export function LogicSolution({ question }: { question: LogicQuestion }) {
 
 export function StructogramSolution({ question }: { question: StructogramQuestion }) {
   return <StructogramView nodes={question.options[question.answerIndex]} className="w-48" />;
+}
+
+export function RobotSolution({ question }: { question: RobotQuestion }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-32">
+        <RobotGrid
+          width={question.width}
+          height={question.height}
+          start={question.start}
+          facing={question.facing}
+          path={question.path}
+          answer={question.answer}
+          answerFacing={question.answerFacing}
+        />
+      </div>
+      <span className="font-mono text-sm">{cellName(question.answer)}</span>
+    </div>
+  );
 }
 
 export function BugSolution({ question }: { question: BugQuestion }) {
