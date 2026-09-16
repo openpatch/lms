@@ -142,7 +142,9 @@
     "deleteSure": "Wirklich? Das lässt sich nicht rückgängig machen.",
     "deleteYes": "Endgültig löschen",
     "deleting": "Wird gelöscht…",
-    "student": "Name"
+    "student": "Name",
+    "run_one": "1. Durchgang",
+    "run_other": "{{count}}. Durchgang"
   },
   "demo": {
     "tryIt": "Ohne Klasse ausprobieren",

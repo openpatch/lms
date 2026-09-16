@@ -142,7 +142,9 @@
     "deleteSure": "Sure? This cannot be undone.",
     "deleteYes": "Delete for good",
     "deleting": "Deleting…",
-    "student": "Name"
+    "student": "Name",
+    "run_one": "run 1",
+    "run_other": "run {{count}}"
   },
   "demo": {
     "tryIt": "Try it without a class",

@@ -297,9 +297,10 @@ export class Room {
       if (round?.stageId) {
         store.saveRound(
           this.state.code,
+          this.sessionId,
           this.teacherId,
           this.state.gameId,
-          round as Parameters<typeof store.saveRound>[3],
+          round as Parameters<typeof store.saveRound>[4],
           this.state.players.filter((p) => !p.isHost),
         );
       }
@@ -314,7 +315,13 @@ export class Room {
       // A rehearsal is not a lesson: what the teacher scored playing against
       // themselves has no business in the record of what classes scored.
       if (!this.state.demo) {
-        store.saveResults(this.state.code, this.teacherId, this.state.gameId, finalResults);
+        store.saveResults(
+          this.state.code,
+          this.sessionId,
+          this.teacherId,
+          this.state.gameId,
+          finalResults,
+        );
       }
       this.broadcast({ type: "finished", results: finalResults, roundResults: results });
     } else {
@@ -339,6 +346,20 @@ export class Room {
       .sort((a, b) => b.score - a.score);
   }
 
+  /**
+   * What the review files this game under.
+   *
+   * The first game of a lobby is filed under the lobby's own code, so every
+   * link made before a lobby could hold more than one still resolves; each
+   * "nochmal" after that adds a run number. It is the code the class joined
+   * with either way — that code names the room, and the room can host more
+   * than one game.
+   */
+  get sessionId(): string {
+    const run = this.state.run ?? 1;
+    return run <= 1 ? this.state.code : `${this.state.code}-${run}`;
+  }
+
   restart(): void {
     clearTimeout(this.countdownTimer);
     clearTimeout(this.roundTimer);
@@ -353,6 +374,10 @@ export class Room {
       p.score = 0;
       p.crowns = 0;
     });
+    // A second game in the same room is a second thing to review, not more of
+    // the first: the scores above have just been wiped, and the round numbering
+    // is about to start at 1 again.
+    this.state.run = (this.state.run ?? 1) + 1;
     this.save();
     this.broadcastLobbyState();
   }

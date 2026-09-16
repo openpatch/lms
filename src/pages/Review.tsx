@@ -5,8 +5,13 @@ import { serverUrl } from "../lib/connection";
 import { getGame } from "../lib/game-registry";
 
 interface SessionSummary {
+  /** One game. A lobby played twice is two of these. */
+  sessionId: string;
+  /** The lobby it was played in; sessions of the same lobby share it. */
   code: string;
   gameId: string;
+  /** Which game of that lobby this was, counting from 1. */
+  run: number;
   finishedAt: number;
   rounds: number;
 }
@@ -86,9 +91,9 @@ export default function Review() {
           {sessions.map((session) => {
             const game = getGame(session.gameId);
             return (
-              <li key={session.code}>
+              <li key={session.sessionId}>
                 <Link
-                  to={`/review/${session.code}`}
+                  to={`/review/${session.sessionId}`}
                   className="flex items-center gap-4 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 transition-colors hover:border-brand-400"
                 >
                   <span className="shrink-0 text-2xl">{game?.icon ?? "?"}</span>
@@ -98,6 +103,12 @@ export default function Review() {
                     </span>
                     <span className="block text-sm text-gray-500">
                       <When at={session.finishedAt} />
+                      {/* Several games can come out of one lobby — the teacher
+                          pressed "nochmal" — so say which of them this is,
+                          otherwise two rows differ only by their timestamp. */}
+                      {session.run > 1 && (
+                        <> · {t("review.run", { count: session.run })}</>
+                      )}
                     </span>
                   </span>
                   <span className="shrink-0 text-sm text-gray-500">

@@ -45,7 +45,7 @@ export default function App() {
             }
           />
           <Route
-            path="/review/:code"
+            path="/review/:sessionId"
             element={
               <RequireTeacher>
                 <ReviewSession />

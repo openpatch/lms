@@ -97,6 +97,14 @@ export interface LobbyState {
   settings: unknown;
   countdownEndsAt: number | null;
   /**
+   * Which game of this lobby is being played, counting from 1.
+   *
+   * A lobby outlives a game: "nochmal" at the end plays another one in the same
+   * room with the same code. The review has to keep those apart, so each run is
+   * recorded under its own session — see `sessionId` in server/rooms.ts.
+   */
+  run?: number;
+  /**
    * A lobby with no class in it: the teacher is trying the game out alone
    * before the lesson. It is a real lobby on a real server running the real
    * rounds — that is the point of it, a rehearsal is worth nothing if it is a

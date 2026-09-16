@@ -20,7 +20,12 @@ interface StoredRound {
 }
 
 interface Session {
+  /** One game. A lobby played twice yields two of these. */
+  sessionId: string;
+  /** The lobby it was played in, which other sessions may share. */
   code: string;
+  /** Which game of that lobby this was, counting from 1. */
+  run: number;
   rounds: StoredRound[];
   scores: { playerName: string; score: number }[];
 }
@@ -37,7 +42,7 @@ interface Session {
  */
 export default function ReviewSession() {
   const { t } = useTranslation();
-  const { code } = useParams();
+  const { sessionId } = useParams();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [failed, setFailed] = useState<"missing" | "error" | null>(null);
@@ -52,7 +57,7 @@ export default function ReviewSession() {
   const remove = async () => {
     setDeleting(true);
     try {
-      const response = await fetch(serverUrl(`/parties/sessions/${code}`), { method: "DELETE" });
+      const response = await fetch(serverUrl(`/parties/sessions/${sessionId}`), { method: "DELETE" });
       if (!response.ok) throw new Error(String(response.status));
       void navigate("/review", { replace: true });
     } catch {
@@ -69,7 +74,7 @@ export default function ReviewSession() {
     let cancelled = false;
     void (async () => {
       try {
-        const response = await fetch(serverUrl(`/parties/sessions/${code}`));
+        const response = await fetch(serverUrl(`/parties/sessions/${sessionId}`));
         if (response.status === 404) {
           if (!cancelled) setFailed("missing");
           return;
@@ -84,7 +89,7 @@ export default function ReviewSession() {
     return () => {
       cancelled = true;
     };
-  }, [code]);
+  }, [sessionId]);
 
   if (failed) {
     return (
@@ -122,6 +127,9 @@ export default function ReviewSession() {
               month: "long",
               year: "numeric",
             })}
+            {/* Two games out of one lobby are two of these pages, and without
+                this they would differ only by the time of day. */}
+            {session.run > 1 && <> · {t("review.run", { count: session.run })}</>}
           </p>
         </div>
         {/* The same slot either way: the trigger, or the way out of it. */}

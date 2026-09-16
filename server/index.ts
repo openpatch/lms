@@ -126,7 +126,9 @@ const httpServer = createServer((req, res) => {
     return;
   }
 
-  const session = url.pathname.match(/^\/parties\/sessions\/([A-Z0-9]{4,12})$/);
+  // A session id is the lobby's code, and for each "nochmal" played in that
+  // same lobby the code with a run number after it.
+  const session = url.pathname.match(/^\/parties\/sessions\/([A-Z0-9]{4,12}(?:-\d{1,3})?)$/);
   if (req.method === "GET" && session) {
     void (async () => {
       const teacher = await teacherFrom(req.headers);
@@ -139,7 +141,14 @@ const httpServer = createServer((req, res) => {
         json(res, 404, { error: "No such session" });
         return;
       }
-      json(res, 200, { code: session[1], ...found });
+      const code = found.rounds[0].code;
+      json(res, 200, {
+        sessionId: session[1],
+        // The room it was played in, which several sessions can share
+        code,
+        run: store.runOf(session[1], code),
+        ...found,
+      });
     })();
     return;
   }
