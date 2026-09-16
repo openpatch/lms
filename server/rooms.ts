@@ -396,17 +396,32 @@ export function roomOfTeacher(teacherId: string): Room | undefined {
   return code ? rooms.get(code) : undefined;
 }
 
-export type CreateResult = { ok: true; room: Room } | { ok: false; reason: "active-lobby"; code: string };
+export type CreateResult =
+  | { ok: true; room: Room }
+  | {
+      ok: false;
+      reason: "active-lobby";
+      code: string;
+      /** What is in the way, so the refusal can describe it rather than just
+       *  name a code: which game, and how many of the class are sitting in it. */
+      gameId: string;
+      players: number;
+    };
 
 /**
  * Open a lobby for a teacher. One at a time: a teacher who already has one gets
  * told which, rather than silently losing the class that is still in it.
+ *
+ * `replace` is that teacher saying yes anyway. It is never a default and never
+ * inferred — it only ever comes from a button pressed on a refusal that has
+ * already said what is about to be closed and who is in it.
  */
 export function createRoom(
   teacherId: string,
   gameId: string,
   hostName: string,
   demo = false,
+  replace = false,
 ): CreateResult {
   const existing = roomOfTeacher(teacherId);
   if (existing) {
@@ -414,8 +429,16 @@ export function createRoom(
     // way to whatever is asked for next. A lobby with a class in it gives way
     // to nothing, a demo included: losing the class to a stray click on
     // "try it out" would be the worst thing this button could do.
-    if (existing.state.demo) existing.close("host-closed");
-    else return { ok: false, reason: "active-lobby", code: existing.state.code };
+    if (existing.state.demo || replace) existing.close("host-closed");
+    else {
+      return {
+        ok: false,
+        reason: "active-lobby",
+        code: existing.state.code,
+        gameId: existing.state.gameId,
+        players: existing.state.players.filter((player) => !player.isHost).length,
+      };
+    }
   }
 
   let code = generateCode();

@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, Link } from "react-router";
+import { useParams, useNavigate, Link } from "react-router";
 import JoinCode from "../components/JoinCode";
 import PlayerList from "../components/PlayerList";
 import ResultsList from "../components/ResultsList";
@@ -13,13 +13,41 @@ import StageSettingsForm from "../components/StageSettingsForm";
 import { useLobbySession } from "../lib/lobby-session";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
+import { createLobby, lobbyPath } from "../lib/lobby-api";
 import type { StageRoundData } from "../../shared/framework";
 
 export default function HostLobby() {
   const { t } = useTranslation();
   const { gameId, code } = useParams();
+  const navigate = useNavigate();
   const game = gameId ? getGame(gameId) : undefined;
+  const [opening, setOpening] = useState(false);
   useActiveGame(game);
+
+  /**
+   * Straight from the lobby that just ended into the next one.
+   *
+   * Closing one used to leave the teacher on a dead screen with a link back to
+   * the arena, so the next lesson cost a walk back through the game list to
+   * press a button they had already decided to press. The lobby being over is
+   * exactly the moment they know whether they want another.
+   */
+  const openAnother = async () => {
+    if (!gameId) return;
+    setOpening(true);
+    const result = await createLobby({ gameId });
+    setOpening(false);
+    if (result.status === "ok") {
+      void navigate(lobbyPath(gameId, result.code));
+    } else if (result.status === "unauthorised") {
+      void navigate("/login", { state: { next: `/arena/${gameId}` } });
+    } else {
+      // Refused or unreachable — rare here, since the lobby this screen is
+      // left over from has just gone. The game's own page is where that is
+      // explained properly, so hand over to it rather than explain it twice.
+      void navigate(`/arena/${gameId}`);
+    }
+  };
 
   const { conn, gameData, gameStarted, countdownEndsAt, roundResults, finalResults } =
     useLobbySession(code ?? "", "host");
@@ -52,9 +80,18 @@ export default function HostLobby() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 mb-4">{t(key)}</p>
-        <Link to="/arena" className="text-brand-600 hover:underline">
-          {t("common.back")}
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={() => void openAnother()}
+            disabled={opening || !gameId}
+            className="rounded-xl bg-game-solid px-4 py-2 font-semibold text-white transition-colors hover:bg-game-solid-hover disabled:bg-gray-200 disabled:text-gray-400"
+          >
+            {opening ? t("game.creating") : t("game.newLobby")}
+          </button>
+          <Link to="/arena" className="text-brand-600 hover:underline">
+            {t("common.back")}
+          </Link>
+        </div>
       </div>
     );
   }

@@ -64,7 +64,7 @@ const httpServer = createServer((req, res) => {
     });
     req.on("end", () => {
       void (async () => {
-        let payload: { gameId?: string; demo?: boolean };
+        let payload: { gameId?: string; demo?: boolean; replace?: boolean };
         try {
           payload = JSON.parse(body || "{}") as typeof payload;
         } catch {
@@ -89,9 +89,18 @@ const httpServer = createServer((req, res) => {
           payload.gameId,
           teacher.name,
           payload.demo === true,
+          // Closing a lobby the class is in is the teacher's call and nobody
+          // else's, so it takes an explicit yes on a refusal that has already
+          // said what would be lost.
+          payload.replace === true,
         );
         if (!result.ok) {
-          json(res, 409, { error: "active-lobby", code: result.code });
+          json(res, 409, {
+            error: "active-lobby",
+            code: result.code,
+            gameId: result.gameId,
+            players: result.players,
+          });
           return;
         }
 

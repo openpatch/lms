@@ -3,7 +3,18 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link } from "react-router";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
-import { serverUrl } from "../lib/connection";
+import { createLobby, lobbyPath } from "../lib/lobby-api";
+
+/** The lobby standing in the way of a new one, as the refusal describes it. */
+interface Blocked {
+  code: string;
+  gameId: string;
+  /** How many of the class are in it, the host not counted. */
+  players: number;
+  /** Whether the attempt that was turned away was a demo, so that saying
+   *  "close it and start a new one" starts the same kind again. */
+  demo: boolean;
+}
 
 export default function GameLanding() {
   const { t } = useTranslation();
@@ -11,7 +22,7 @@ export default function GameLanding() {
   const navigate = useNavigate();
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [existingCode, setExistingCode] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState<Blocked | null>(null);
   const game = gameId ? getGame(gameId) : undefined;
   useActiveGame(game);
 
@@ -30,38 +41,35 @@ export default function GameLanding() {
   // one and a teacher can only have one lobby open at a time.
   //
   // A demo is the same call and the same lobby, minus the class: see Demo.tsx.
-  const handleCreateLobby = async (demo = false) => {
+  //
+  // `replace` is the teacher answering the refusal below: close what is open
+  // and start this instead. It is only ever sent from that refusal, never from
+  // the ordinary button, so a lobby with a class in it cannot be lost to one
+  // stray click — the first click always stops and says what is in the way.
+  const handleCreateLobby = async (demo = false, replace = false) => {
     setPending(true);
     setNotice(null);
-    setExistingCode(null);
-    try {
-      const response = await fetch(serverUrl("/parties/lobbies"), {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ gameId: game.id, demo }),
-      });
+    if (!replace) setBlocked(null);
 
-      if (response.status === 401) {
+    const result = await createLobby({ gameId: game.id, demo, replace });
+    setPending(false);
+
+    switch (result.status) {
+      case "ok":
+        setBlocked(null);
+        void navigate(lobbyPath(game.id, result.code, demo));
+        return;
+      case "blocked":
+        setBlocked({ ...result, demo });
+        return;
+      case "unauthorised":
         void navigate("/login", { state: { next: `/arena/${game.id}` } });
         return;
-      }
-
-      const data = (await response.json()) as { code?: string; error?: string };
-
-      if (response.status === 409 && data.code) {
-        setNotice(t("game.activeLobby", { code: data.code }));
-        setExistingCode(data.code);
+      case "unreachable":
+        setNotice(t("game.serverUnreachable"));
         return;
-      }
-      if (!response.ok || !data.code) {
+      default:
         setNotice(t("common.error"));
-        return;
-      }
-      navigate(`/arena/${game.id}/${demo ? "demo" : "host"}/${data.code}`);
-    } catch {
-      setNotice(t("game.serverUnreachable"));
-    } finally {
-      setPending(false);
     }
   };
 
@@ -113,17 +121,40 @@ export default function GameLanding() {
             {t("demo.tryIt")}
           </button>
           <p className="mt-2 text-center text-sm text-gray-500">{t("demo.tryItHint")}</p>
-          {notice && (
-            <div className="mt-4 text-sm text-center text-amber-700">
-              <p>{notice}</p>
-              {existingCode && (
+          {notice && <p className="mt-4 text-sm text-center text-amber-700">{notice}</p>}
+
+          {/* What is in the way, and the two things that can be done about it.
+              The count is the whole point of this box: "close it and start a
+              new one" is safe to offer only next to the number of people it
+              would throw out. */}
+          {blocked && (
+            <div className="mt-4 rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <p>
+                {t("game.activeLobbyFor", {
+                  game: t(getGame(blocked.gameId)?.titleKey ?? game.titleKey),
+                  code: blocked.code,
+                })}
+              </p>
+              <p className="mt-1">
+                {blocked.players > 0
+                  ? t("game.activeLobbyPlayers", { count: blocked.players })
+                  : t("game.activeLobbyEmpty")}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Link
-                  to={`/arena/${game.id}/host/${existingCode}`}
-                  className="inline-block mt-2 font-semibold underline"
+                  to={`/arena/${blocked.gameId}/host/${blocked.code}`}
+                  className="rounded-lg border-2 border-amber-300 px-3 py-2 font-semibold hover:border-amber-500"
                 >
                   {t("game.toLobby")}
                 </Link>
-              )}
+                <button
+                  onClick={() => void handleCreateLobby(blocked.demo, true)}
+                  disabled={pending}
+                  className="rounded-lg bg-amber-600 px-3 py-2 font-semibold text-white transition-colors hover:bg-amber-700 disabled:bg-gray-300"
+                >
+                  {pending ? t("game.creating") : t("game.replaceLobby")}
+                </button>
+              </div>
             </div>
           )}
         </div>
