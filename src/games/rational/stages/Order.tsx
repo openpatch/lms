@@ -136,8 +136,6 @@ export default function OrderStage({ question, submit }: StageProps<OrderQuestio
     onPointerMove: moveDrag,
     onPointerUp: endDrag,
     onPointerCancel: () => setDrag(null),
-    // Or the tablet scrolls the page instead of moving the number
-    className: "touch-none select-none",
   });
 
   return (
@@ -153,12 +151,12 @@ export default function OrderStage({ question, submit }: StageProps<OrderQuestio
       <div key={question.id} className="flex flex-wrap justify-center gap-3 animate-question-in">
         {items.map((item, index) => {
           const at = order.indexOf(index);
-          const { className: grab, ...handlers } = grip(index);
+          const handlers = grip(index);
           return (
             <button
               key={index}
               {...handlers}
-              className={`relative px-4 py-3 text-2xl rounded-xl border-2 transition-all ${grab} ${
+              className={`relative px-4 py-3 text-2xl rounded-xl border-2 transition-all touch-none select-none ${
                 carried === index ? "opacity-30" : ""
               } ${
                 at === -1
@@ -184,9 +182,17 @@ export default function OrderStage({ question, submit }: StageProps<OrderQuestio
           return (
             <span key={slot} className="flex items-center gap-2">
               {slot > 0 && <span className="text-gray-300">{relation}</span>}
+              {/* The grip belongs to the box and not to the number inside it.
+                  A box never goes away; the number does, the moment it is
+                  picked up — and taking the element that holds the pointer
+                  capture out of the page mid-drag means the release never
+                  reaches anything and the number stays stuck in hand. */}
               <span
                 data-slot={slot}
+                {...(picked == null ? {} : grip(picked))}
                 className={`inline-flex items-center justify-center min-w-12 h-10 rounded-lg transition-colors ${
+                  picked == null ? "" : "touch-none select-none cursor-grab active:cursor-grabbing"
+                } ${
                   picked == null || picked === carried
                     ? `border-2 border-dashed ${target ? "border-game-solid bg-game-50" : "border-gray-200"}`
                     : target
@@ -194,10 +200,11 @@ export default function OrderStage({ question, submit }: StageProps<OrderQuestio
                       : "border-2 border-transparent"
                 }`}
               >
-                {picked == null || picked === carried ? null : (
-                  <span {...grip(picked)}>
-                    <MathTex tex={items[picked].latex} className="text-gray-800" />
-                  </span>
+                {picked == null ? null : (
+                  <MathTex
+                    tex={items[picked].latex}
+                    className={picked === carried ? "invisible" : "text-gray-800"}
+                  />
                 )}
               </span>
             </span>
