@@ -1,12 +1,14 @@
 import type { RobotCell, RobotFacing } from "../../../../shared/games/java";
 import { sameCell } from "../../../../shared/games/java";
 
-/** The arrow a robot looking this way carries. */
-const ARROW: Record<RobotFacing, string> = {
-  north: "↑",
-  east: "→",
-  south: "↓",
-  west: "←",
+/** The arrow a robot looking this way carries, and the edge of its square it
+ *  sits on — the edge it is looking at. In a corner it reads as a mark of its
+ *  own; on the edge it reads as which way the robot is about to go. */
+const ARROW: Record<RobotFacing, { glyph: string; edge: string }> = {
+  north: { glyph: "▲", edge: "top-0 left-1/2 -translate-x-1/2" },
+  east: { glyph: "▶", edge: "right-0 top-1/2 -translate-y-1/2" },
+  south: { glyph: "▼", edge: "bottom-0 left-1/2 -translate-x-1/2" },
+  west: { glyph: "◀", edge: "left-0 top-1/2 -translate-y-1/2" },
 };
 
 export interface RobotGridProps {
@@ -79,21 +81,49 @@ export default function RobotGrid({
                 ? "border-game-200 bg-game-50/60"
                 : "border-gray-200 bg-white";
 
-          const content = isStart ? (
-            <span className="flex flex-col items-center leading-none">
-              <span className="text-lg">🤖</span>
-              <span className="text-xs text-gray-500">{ARROW[facing]}</span>
-            </span>
-          ) : isAnswer && answerFacing ? (
-            <span className="flex flex-col items-center leading-none">
-              <span className="text-lg">🏁</span>
-              <span className="text-xs text-gray-500">{ARROW[answerFacing]}</span>
-            </span>
-          ) : step != null ? (
-            <span className="text-xs font-semibold text-game-ink/50">{step}</span>
-          ) : null;
+          // A square's contents are drawn on top of it, never inside its
+          // layout: the robot used to sit above its own arrow, which is two
+          // lines in a box one line high, and on the smaller boards — the four
+          // routes side by side, the thumbnail in the debrief — that pushed the
+          // squares out of line. Nothing in here can change the size of the
+          // square it is in any more.
+          //
+          // The glyphs are sized in `cqw`, a share of the square's own width,
+          // because this same grid is drawn at 60px a square while it is being
+          // played and at 20 in the debrief, and one font size cannot serve
+          // both. The arrow sits in the corner rather than underneath.
+          const marker = (glyph: string, arrow?: RobotFacing) => (
+            <>
+              {/* Under half the square: an emoji draws taller than its own font
+                  size, so anything nearer the edge clips at the top. */}
+              <span className="text-[46cqw] leading-none">{glyph}</span>
+              {arrow && (
+                <span
+                  className={`absolute ${ARROW[arrow].edge} text-[26cqw] leading-none text-game-ink/60`}
+                >
+                  {ARROW[arrow].glyph}
+                </span>
+              )}
+            </>
+          );
 
-          const className = `grid aspect-square place-items-center rounded-lg border-2 transition-colors ${tone}`;
+          const content = isStart
+            ? marker("🤖", facing)
+            : isAnswer && answerFacing
+              ? marker("🏁", answerFacing)
+              : isAnswer
+                ? marker("🏁")
+                : step != null
+                  ? (
+                      <span className="text-[42cqw] leading-none font-semibold text-game-ink/50">
+                        {step}
+                      </span>
+                    )
+                  : null;
+
+          const className =
+            `@container relative grid aspect-square place-items-center overflow-hidden ` +
+            `rounded-lg border-2 transition-colors ${tone}`;
 
           return onPick ? (
             <button
