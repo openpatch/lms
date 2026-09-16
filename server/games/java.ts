@@ -1686,14 +1686,20 @@ type RobotCmd =
   | { kind: "rechts" }
   | { kind: "loop"; times: number; body: RobotCmd[] };
 
+/** Counters for nested loops. A loop inside a loop cannot borrow the name of
+ *  the one around it — in Java that is not a style question, it is `variable i
+ *  is already defined` and the listing does not compile. */
+const LOOP_COUNTERS = ["i", "j", "k"];
+
 /** The listing the player reads, indented the way the rest of the game is. */
-function robotLines(body: RobotCmd[], depth = 1): string[] {
+function robotLines(body: RobotCmd[], depth = 1, loopDepth = 0): string[] {
   const pad = "    ".repeat(depth);
+  const counter = LOOP_COUNTERS[Math.min(loopDepth, LOOP_COUNTERS.length - 1)];
   return body.flatMap((cmd) =>
     cmd.kind === "loop"
       ? [
-          `${pad}for (int i = 0; i < ${cmd.times}; i++) {`,
-          ...robotLines(cmd.body, depth + 1),
+          `${pad}for (int ${counter} = 0; ${counter} < ${cmd.times}; ${counter}++) {`,
+          ...robotLines(cmd.body, depth + 1, loopDepth + 1),
           `${pad}}`,
         ]
       : [`${pad}${cmd.kind}();`],
