@@ -12,11 +12,12 @@ import type {
   CodeAnswerQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
-  ParsonsAnswer,
   ParsonsQuestion,
   TurtleQuestion,
 } from "../../shared/games/python";
 import { answerMatches, sequenceMatches, sequenceScore } from "../../shared/code-answer";
+import { parsonsQuestion, parsonsScore } from "../../shared/parsons";
+import type { ParsonsTemplate } from "../../shared/parsons";
 import {
   drawingFingerprint,
   fingerprintDistance,
@@ -1285,11 +1286,7 @@ const turtleStage: StageHandler<TurtleQuestion> = {
 // parsons — put the lines of a program back in order
 // ---------------------------------------------------------------------------
 
-interface ParsonsTemplate {
-  captionKey: string;
-  /** The finished program: text and indent depth per line. */
-  lines: { text: string; indent: number }[];
-}
+// The puzzle's own shape lives in shared/parsons.ts; Java builds the same one.
 
 function parsonsTemplates(): ParsonsTemplate[] {
   const limit = randomInt(3, 9);
@@ -1301,6 +1298,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
   return [
     {
       captionKey: "games.python.parsons.guess",
+      purposeKey: "games.python.parsons.purpose.guess",
       lines: [
         { text: `from random import randint`, indent: 0 },
         { text: `geheim = randint(1, 100)`, indent: 0 },
@@ -1313,6 +1311,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.python.parsons.sum",
+      purposeKey: "games.python.parsons.purpose.sum",
       lines: [
         { text: `zahlen = [${values.join(", ")}]`, indent: 0 },
         { text: `summe = 0`, indent: 0 },
@@ -1323,6 +1322,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.python.parsons.square",
+      purposeKey: "games.python.parsons.purpose.square",
       lines: [
         { text: `from turtle import *`, indent: 0 },
         { text: `def quadrat(laenge):`, indent: 0 },
@@ -1334,6 +1334,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.python.parsons.countdown",
+      purposeKey: "games.python.parsons.purpose.countdown",
       lines: [
         { text: `i = 1`, indent: 0 },
         { text: `while i <= ${limit}:`, indent: 0 },
@@ -1344,6 +1345,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.python.parsons.age",
+      purposeKey: "games.python.parsons.purpose.age",
       lines: [
         { text: `alter = int(input("Alter: "))`, indent: 0 },
         { text: `if alter >= 18:`, indent: 0 },
@@ -1354,6 +1356,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.python.parsons.dots",
+      purposeKey: "games.python.parsons.purpose.dots",
       lines: [
         { text: `from turtle import *`, indent: 0 },
         { text: `penup()`, indent: 0 },
@@ -1364,6 +1367,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.python.parsons.max",
+      purposeKey: "games.python.parsons.purpose.max",
       lines: [
         { text: `zahlen = [${listValues(4).join(", ")}]`, indent: 0 },
         { text: `groesster = zahlen[0]`, indent: 0 },
@@ -1375,6 +1379,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.python.parsons.count",
+      purposeKey: "games.python.parsons.purpose.count",
       lines: [
         { text: `zahlen = [${listValues(5).join(", ")}]`, indent: 0 },
         { text: `anzahl = 0`, indent: 0 },
@@ -1387,49 +1392,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
   ];
 }
 
-function parsonsQuestion(template: ParsonsTemplate, withIndent: boolean): Omit<ParsonsQuestion, "id"> {
-  const order = shuffle(template.lines.map((_, index) => index));
-  const lines = order.map((index) => template.lines[index].text);
-  const indents = order.map((index) => template.lines[index].indent);
-  // solution[position] is the offered card that belongs there.
-  const solution = template.lines.map((_, index) => order.indexOf(index));
 
-  return {
-    lines,
-    indents: withIndent ? null : indents,
-    solution,
-    solutionIndents: template.lines.map((line) => line.indent),
-    captionKey: template.captionKey,
-  };
-}
-
-function parsonsResult(question: ParsonsQuestion, answer: string): number {
-  let parsed: ParsonsAnswer;
-  try {
-    parsed = JSON.parse(answer) as ParsonsAnswer;
-  } catch {
-    return 0;
-  }
-  if (!Array.isArray(parsed?.order)) return 0;
-
-  const wanted = question.solution.map((line) => question.lines[line]);
-  const wantedIndents = question.solutionIndents;
-  const placed = parsed.order;
-  const chosenIndents = Array.isArray(parsed.indents) ? parsed.indents : [];
-
-  let hits = 0;
-  for (let position = 0; position < wanted.length; position++) {
-    const card = placed[position];
-    if (card == null || question.lines[card] == null) continue;
-    // Compare the line, not the card: two identical lines are interchangeable.
-    if (question.lines[card] !== wanted[position]) continue;
-    if (question.indents == null) {
-      if (chosenIndents[position] !== wantedIndents[position]) continue;
-    }
-    hits++;
-  }
-  return hits / wanted.length;
-}
 
 const parsonsStage: StageHandler<ParsonsQuestion> = {
   id: "parsons",
@@ -1438,12 +1401,16 @@ const parsonsStage: StageHandler<ParsonsQuestion> = {
     const withIndent = settings.withIndent === true;
     const templates = pickN(parsonsTemplates(), Number(settings.questionsPerRound));
     return build(Number(settings.questionsPerRound), (index) =>
-      parsonsQuestion(templates[index], withIndent),
+      parsonsQuestion(
+        templates[index],
+        withIndent,
+        shuffle(templates[index].lines.map((_, i) => i)),
+      ),
     );
   },
 
   evaluate(question, answer, timing) {
-    const share = parsonsResult(question, answer);
+    const share = parsonsScore(question, answer);
     if (share >= 1) {
       return { correct: true, points: speedPoints(timing.questionMs / 1000, 1, 60) };
     }

@@ -18,6 +18,16 @@ export interface ParsonsQuestion {
   /** The indent each position needs. Only graded when `indents` is null. */
   solutionIndents: number[];
   captionKey: string;
+  /**
+   * What the finished program is supposed to do.
+   *
+   * Without it the puzzle is a jigsaw: lines get fitted together by their shape
+   * — this one opens a block, that one must be inside it — which can be done
+   * without reading them. Saying what the program is for turns it back into
+   * reading, and gives the one check that matters at the end: does this do
+   * that?
+   */
+  purposeKey: string;
 }
 
 /** What the player submits for a Parsons puzzle. */
@@ -36,6 +46,8 @@ export interface ParsonsLine {
 
 export interface ParsonsTemplate {
   captionKey: string;
+  /** What the assembled program is for — see `purposeKey` above. */
+  purposeKey: string;
   lines: ParsonsLine[];
 }
 
@@ -57,6 +69,7 @@ export function parsonsQuestion(
     solution,
     solutionIndents: template.lines.map((line) => line.indent),
     captionKey: template.captionKey,
+    purposeKey: template.purposeKey,
   };
 }
 

@@ -575,7 +575,17 @@
         "age": "Of age?",
         "dots": "A chain of dots",
         "max": "The largest element",
-        "count": "Counting values"
+        "count": "Counting values",
+        "purpose": {
+          "guess": "Let a secret number be guessed and say whether the guess was right.",
+          "sum": "Add up every number in a list and print the total.",
+          "square": "Draw a square using a function of its own.",
+          "countdown": "Count up from 1 to a limit, then print \"fertig\".",
+          "age": "Given an age, say whether it is of full legal age.",
+          "dots": "Draw a row of evenly spaced dots.",
+          "max": "Find the largest element of a list and print it.",
+          "count": "Count how many values of a list are above a limit."
+        }
       },
       "stages": {
         "output": {
@@ -827,7 +837,15 @@
         "countdown": "Countdown with while",
         "method": "A method that returns",
         "array": "Summing an array",
-        "nested": "Stars in rows"
+        "nested": "Stars in rows",
+        "purpose": {
+          "sum": "Add up the numbers from 1 to a limit and print the total.",
+          "branch": "Given a score, say whether it is a pass.",
+          "countdown": "Count down from a number to 1, then print \"fertig\".",
+          "method": "Double a number with a method of its own and print the result.",
+          "array": "Add up every value of an array and print the total.",
+          "nested": "Print several rows with the same number of stars in each."
+        }
       },
       "walk": {
         "printed": "printed:",

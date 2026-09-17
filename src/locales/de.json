@@ -575,7 +575,17 @@
         "age": "Volljährig?",
         "dots": "Punktekette",
         "max": "Das größte Element",
-        "count": "Werte zählen"
+        "count": "Werte zählen",
+        "purpose": {
+          "guess": "Eine geheime Zahl raten lassen und melden, ob der Tipp stimmt.",
+          "sum": "Alle Zahlen einer Liste addieren und die Summe ausgeben.",
+          "square": "Mit einer eigenen Funktion ein Quadrat zeichnen.",
+          "countdown": "Von 1 bis zu einer Grenze hochzählen und am Ende „fertig“ ausgeben.",
+          "age": "Zu einem eingegebenen Alter ausgeben, ob es volljährig ist.",
+          "dots": "Eine Reihe gleich weit entfernter Punkte zeichnen.",
+          "max": "Das größte Element einer Liste finden und ausgeben.",
+          "count": "Zählen, wie viele Werte einer Liste über einer Grenze liegen."
+        }
       },
       "stages": {
         "output": {
@@ -827,7 +837,15 @@
         "countdown": "Countdown mit while",
         "method": "Methode mit Rückgabe",
         "array": "Summe eines Feldes",
-        "nested": "Sterne in Zeilen"
+        "nested": "Sterne in Zeilen",
+        "purpose": {
+          "sum": "Die Zahlen von 1 bis zu einer Grenze addieren und die Summe ausgeben.",
+          "branch": "Zu einer Punktzahl ausgeben, ob sie zum Bestehen reicht.",
+          "countdown": "Von einer Zahl bis 1 herunterzählen und am Ende „fertig“ ausgeben.",
+          "method": "Eine Zahl mit einer eigenen Methode verdoppeln und das Ergebnis ausgeben.",
+          "array": "Alle Werte eines Feldes addieren und die Summe ausgeben.",
+          "nested": "Mehrere Zeilen mit je gleich vielen Sternen ausgeben."
+        }
       },
       "walk": {
         "printed": "ausgegeben:",

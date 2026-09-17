@@ -2019,6 +2019,7 @@ function javaParsonsTemplates(): ParsonsTemplate[] {
   return [
     {
       captionKey: "games.java.parsons.sum",
+      purposeKey: "games.java.parsons.purpose.sum",
       lines: [
         { text: `int summe = 0;`, indent: 1 },
         { text: `for (int i = 1; i <= ${bound}; i++) {`, indent: 1 },
@@ -2029,6 +2030,7 @@ function javaParsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.java.parsons.branch",
+      purposeKey: "games.java.parsons.purpose.branch",
       lines: [
         { text: `int punkte = ${randomInt(0, 100)};`, indent: 1 },
         { text: `if (punkte >= 50) {`, indent: 1 },
@@ -2040,6 +2042,7 @@ function javaParsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.java.parsons.countdown",
+      purposeKey: "games.java.parsons.purpose.countdown",
       lines: [
         { text: `int rest = ${limit};`, indent: 1 },
         { text: `while (rest > 0) {`, indent: 1 },
@@ -2051,6 +2054,7 @@ function javaParsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.java.parsons.method",
+      purposeKey: "games.java.parsons.purpose.method",
       lines: [
         { text: `int verdoppeln(int pZahl) {`, indent: 0 },
         { text: `return pZahl * 2;`, indent: 1 },
@@ -2062,6 +2066,7 @@ function javaParsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.java.parsons.array",
+      purposeKey: "games.java.parsons.purpose.array",
       lines: [
         { text: `int[] werte = ${literal(values)};`, indent: 1 },
         { text: `int summe = 0;`, indent: 1 },
@@ -2073,6 +2078,7 @@ function javaParsonsTemplates(): ParsonsTemplate[] {
     },
     {
       captionKey: "games.java.parsons.nested",
+      purposeKey: "games.java.parsons.purpose.nested",
       lines: [
         { text: `for (int i = 0; i < ${randomInt(2, 4)}; i++) {`, indent: 1 },
         { text: `for (int j = 0; j < ${randomInt(2, 4)}; j++) {`, indent: 2 },
