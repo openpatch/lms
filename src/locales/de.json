@@ -59,6 +59,8 @@
     "submit": "Abschicken",
     "allAnswered": "Alle Aufgaben beantwortet! Warten auf die anderen...",
     "hostView": "Die Spieler antworten. Fortschritt beobachten:",
+    "calculator": "Taschenrechner",
+    "calculatorClose": "Taschenrechner schließen",
     "streak": "Serie",
     "bonus": "Bonus",
     "pts": "Pkt",
@@ -591,7 +593,7 @@
         "output": {
           "name": "Was kommt raus?",
           "summary": "Vorhersagen, was print ausgibt",
-          "rules": "Sage für {{questionsPerRound}} kurze Programme voraus, was sie ausgeben — im Kopf, ohne Taschenrechner. Achte besonders auf /, // und %. Du hast {{duration}} Sekunden."
+          "rules": "Sage für {{questionsPerRound}} kurze Programme voraus, was sie ausgeben. Achte besonders auf /, // und %. Den Taschenrechner unten darfst du benutzen — gefragt ist, was Python rechnet, nicht wie gut du im Kopf rechnest. Du hast {{duration}} Sekunden."
         },
         "variables": {
           "name": "Variablen verfolgen",
@@ -757,7 +759,7 @@
         "output": {
           "name": "Java als Taschenrechner",
           "summary": "Vorhersagen, was IO.println ausgibt",
-          "rules": "Sage für {{questionsPerRound}} kurze Programme voraus, was sie ausgeben — im Kopf, ohne Taschenrechner. Achte besonders auf / und %: zwei ganze Zahlen ergeben eine Ganzzahldivision. Du hast {{duration}} Sekunden."
+          "rules": "Sage für {{questionsPerRound}} kurze Programme voraus, was sie ausgeben. Achte besonders auf / und %: zwei ganze Zahlen ergeben eine Ganzzahldivision. Den Taschenrechner unten darfst du benutzen — er sagt zu 7 / 2 aber 3.5, und Java gibt 3 aus. Du hast {{duration}} Sekunden."
         },
         "types": {
           "name": "Datentypen",

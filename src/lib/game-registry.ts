@@ -90,6 +90,19 @@ export interface StageComponents {
   revealMs?: number;
   /** Stages without questions (a tap round, say) render even without a question. */
   questionless?: boolean;
+  /**
+   * Lends the player a scratch calculator while the stage is being played
+   * (`src/components/Calculator.tsx`), in the bar at the bottom of the screen.
+   *
+   * For the stations whose questions do real arithmetic — a Java listing that
+   * prints `1273 / 17`, a Python one that prints `12 ** 4`. What those ask is
+   * whether the reader can follow the program; long division against a clock
+   * is a second, unrelated exam sat at the same time, and the weaker the
+   * arithmetic the more of the mark it takes. The calculator never sees the
+   * question, so knowing that Java answers `7 / 2` with 3 and not 3.5 is still
+   * the player's to know.
+   */
+  calculator?: boolean;
   /** Replaces the default progress list the host sees. */
   HostView?: AnyStageComponent;
   /** Live score of a player, when the stage does not score by answer points.

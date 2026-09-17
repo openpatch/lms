@@ -18,10 +18,16 @@ import {
 // Five stations ask the same thing of the player — read the listing, write down
 // what comes out — so they share one component and differ only in the programs
 // the server generates for them.
+//
+// All five print numbers the reader has to work out — `1273 // 17`, `3 ** 7`,
+// the sum of a list of prices — so all five lend the class a calculator. What
+// they ask is whether the program can be followed; the arithmetic underneath it
+// is not what is being marked.
 const trace = {
   Component: TraceStage,
   RulesExample: TraceRulesExample,
   Review: TraceReview,
+  calculator: true,
 };
 
 export default defineGame(pythonSpec, {

@@ -83,6 +83,7 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `src/components/PlotCanvas.tsx` | Coordinate system: curves, markers, and a curve the player draws. It sizes itself from the viewport height minus `reserveRem` — the room the rest of the stage needs — so the whole stage stays on screen on a tablet |
 | `src/components/MatchBoard.tsx` | Cards dropped into slots (drag, or tap card then slot) |
 | `src/components/TermInput.tsx` | A MathLive math field: the player writes a term, the stage gets LaTeX |
+| `src/components/Calculator.tsx`, `src/lib/calculator.ts` | The scratch calculator a station lends the class (`calculator` on a stage), and the parser behind it |
 | `src/components/ParameterSliders.tsx` | One slider per parameter, for "tune it until it fits" stages |
 | `shared/<topic>-math.ts`, `shared/polynomial.ts`, `shared/matching.ts`, `shared/term-algebra.ts` | Topic logic both sides share: fractions, roots, probability trees, polynomials, card assignments, terms with several variables |
 | `shared/code-answer.ts` | How a typed answer is read, in any language: numbers as numbers, `wahr` for `true`, a multi-line output as a sequence |
@@ -252,6 +253,7 @@ Optional per stage:
 | `RulesExample` | A small illustration shown with the rules |
 | `questionless` | `true` for stages without questions, so the component renders anyway |
 | `revealMs` | Holds the question just answered on screen for this long, with `revealed` set, so the stage can show the answer where the answer was given. The shell owns the timing and the clock keeps running; the stage only draws itself differently (`squareroot` numberline is the worked example) |
+| `calculator` | `true` lends the player a scratch calculator in the bottom bar, for a station whose questions do arithmetic nobody should have to do in their head against a clock (the Java and Python trace stations). It never sees the question — reading `7 / 2` as 3.5 and knowing Java prints 3 is still the player's half |
 | `HostView` | Replaces the default progress list the host sees |
 | `scorePlayer` | Client-side mirror of the handler's `scorePlayer` |
 | `Review` | One row of the round review on the players' devices |

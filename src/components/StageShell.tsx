@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ActionBarContext } from "./action-bar";
+import Calculator from "./Calculator";
 import { useTranslation } from "react-i18next";
 import type { LobbyState } from "../../shared/types";
 import type { StageRoundData } from "../../shared/framework";
@@ -350,6 +351,9 @@ export default function StageShell({
         )
       ) : showsQuestion ? (
         <ActionBarContext.Provider value={actionBar}>
+          {/* Before the stage, so the keypad sits left of the stage's own
+              button rather than after it in the bar. */}
+          {stage.calculator && <Calculator />}
           <StageComponent {...stageProps} />
         </ActionBarContext.Provider>
       ) : (

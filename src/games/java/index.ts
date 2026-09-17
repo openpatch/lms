@@ -60,15 +60,24 @@ const trace = {
   Solution: TypedSolution,
 };
 
+// The stations whose listings do arithmetic a reader cannot be expected to do
+// in their head against a clock — a product of two two-digit numbers, a
+// division with a remainder — lend the class a calculator. `sorting` is not
+// among them: counting the comparisons of a pass is the whole question there,
+// and there is nothing in it to work out.
+const traceWithCalculator = { ...trace, calculator: true };
+
 export default defineGame(javaSpec, {
-  output: { ...trace, RulesExample: OutputRulesExample },
-  variables: { ...trace, RulesExample: VariablesRulesExample },
-  loops: { ...trace, RulesExample: LoopsRulesExample },
-  methods: { ...trace, RulesExample: MethodsRulesExample },
-  arrays: { ...trace, RulesExample: ArraysRulesExample },
+  output: { ...traceWithCalculator, RulesExample: OutputRulesExample },
+  variables: { ...traceWithCalculator, RulesExample: VariablesRulesExample },
+  loops: { ...traceWithCalculator, RulesExample: LoopsRulesExample },
+  methods: { ...traceWithCalculator, RulesExample: MethodsRulesExample },
+  arrays: { ...traceWithCalculator, RulesExample: ArraysRulesExample },
   sorting: { ...trace, RulesExample: SortingRulesExample },
   types: {
     Component: ChoiceStage,
+    // int gegen double is asked with divisions like 44 / 7 in it.
+    calculator: true,
     RulesExample: TypesRulesExample,
     Review: ChoiceReview,
     Solution: ChoiceSolution,

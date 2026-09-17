@@ -59,6 +59,8 @@
     "submit": "Submit",
     "allAnswered": "All questions answered! Waiting for others...",
     "hostView": "Players are answering. Watch their progress:",
+    "calculator": "Calculator",
+    "calculatorClose": "Close the calculator",
     "streak": "streak",
     "bonus": "bonus",
     "pts": "pts",
@@ -591,7 +593,7 @@
         "output": {
           "name": "What comes out?",
           "summary": "Predict what print writes",
-          "rules": "Predict the output of {{questionsPerRound}} short programs in your head, without a calculator. Watch out for /, // and %. You have {{duration}} seconds."
+          "rules": "Predict the output of {{questionsPerRound}} short programs. Watch out for /, // and %. The calculator at the bottom is yours to use — the question is what Python works out, not how good your mental arithmetic is. You have {{duration}} seconds."
         },
         "variables": {
           "name": "Follow the variable",
@@ -757,7 +759,7 @@
         "output": {
           "name": "Java as a calculator",
           "summary": "Predict what IO.println writes",
-          "rules": "Predict the output of {{questionsPerRound}} short programs in your head, without a calculator. Watch out for / and %: two whole numbers make an integer division. You have {{duration}} seconds."
+          "rules": "Predict the output of {{questionsPerRound}} short programs. Watch out for / and %: two whole numbers make an integer division. The calculator at the bottom is yours to use — but it answers 7 / 2 with 3.5, and Java prints 3. You have {{duration}} seconds."
         },
         "types": {
           "name": "Data types",
