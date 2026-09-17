@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import Icon from "../components/icons";
 import { Link } from "react-router";
 import { serverUrl } from "../lib/connection";
 import { getGame } from "../lib/game-registry";
@@ -96,7 +97,7 @@ export default function Review() {
                   to={`/review/${session.sessionId}`}
                   className="flex items-center gap-4 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 transition-colors hover:border-brand-400"
                 >
-                  <span className="shrink-0 text-2xl">{game?.icon ?? "?"}</span>
+                  <Icon name={game?.icon ?? "?"} className="text-2xl" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold text-gray-800">
                       {game ? t(game.titleKey) : session.gameId}

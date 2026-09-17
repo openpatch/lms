@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link } from "react-router";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
+import Icon from "../components/icons";
 import { createLobby, lobbyPath } from "../lib/lobby-api";
 
 /** The lobby standing in the way of a new one, as the refusal describes it. */
@@ -84,7 +85,7 @@ export default function GameLanding() {
         <div className="bg-linear-to-br from-game-100 to-game-50 p-8">
           <div className="flex items-center gap-4">
             <span className="grid place-items-center w-20 h-20 rounded-2xl bg-white/80 shadow-sm text-5xl">
-              {game.icon}
+              <Icon name={game.icon} />
             </span>
             <div>
               <h1 className="text-2xl font-bold text-game-ink">{t(game.titleKey)}</h1>

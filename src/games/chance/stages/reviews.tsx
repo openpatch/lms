@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import Icon from "../../../components/icons";
 import type { LaplaceQuestion, TreeAnswer, TreeQuestion } from "../../../../shared/games/chance";
 import { cardsBySlot, parseAssignment } from "../../../../shared/matching";
 import { equals, parseFraction } from "../../../../shared/rational-math";
@@ -17,7 +18,7 @@ export function LaplaceReview({ question, answer }: StageReviewProps<LaplaceQues
   return (
     <>
       <p className="text-sm text-gray-800">
-        <span className="mr-1">{question.icon}</span>
+        <Icon name={question.icon} className="mr-1" />
         {t(question.setupKey, question.params)}
       </p>
       <p className="text-sm text-gray-600">{t(question.eventKey, question.params)}</p>
@@ -66,7 +67,7 @@ export function TreeReview({ question, answer }: StageReviewProps<TreeQuestion>)
   return (
     <>
       <p className="text-sm text-gray-800">
-        <span className="mr-1">{question.icon}</span>
+        <Icon name={question.icon} className="mr-1" />
         {t(question.setupKey, question.params)}
       </p>
 

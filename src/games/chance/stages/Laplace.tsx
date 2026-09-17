@@ -5,6 +5,7 @@ import { readChanceNotation } from "../../../../shared/games/chance";
 import type { StageProps } from "../../../lib/game-registry";
 import GameButton from "../../../components/GameButton";
 import { StageActionBar } from "../../../components/StageShell";
+import Icon from "../../../components/icons";
 
 const INPUT_CLASS =
   "px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none";
@@ -53,7 +54,7 @@ export default function LaplaceStage({ question, submit, settings }: StageProps<
   return (
     <div className="flex flex-col items-center gap-6">
       <div key={question.id} className="animate-question-in text-center max-w-lg">
-        <div className="text-4xl mb-2">{question.icon}</div>
+        <Icon name={question.icon} className="mb-2 text-4xl" />
         <p className="text-gray-600 text-lg">{t(question.setupKey, question.params)}</p>
         <p className="text-2xl font-medium text-gray-800 mt-3">
           P({t(question.eventKey, question.params)}) = ?
@@ -117,7 +118,7 @@ export function LaplaceRulesExample() {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center gap-2 text-gray-500">
-      <div className="text-3xl">🎲</div>
+      <Icon name="dice" className="text-3xl" />
       <p className="text-sm text-gray-400 max-w-sm text-center">
         {t("games.chance.stages.laplace.summary")}
       </p>

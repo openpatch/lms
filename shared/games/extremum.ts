@@ -41,7 +41,7 @@ export const extremumSpec: GameSpec = {
   descriptionKey: "games.extremum.description",
   category: "math",
   grades: ["Q1"],
-  icon: "⛰️",
+  icon: "mountain",
   color: "lime",
   status: "live",
   minPlayers: 1,

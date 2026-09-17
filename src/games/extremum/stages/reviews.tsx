@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import Icon from "../../../components/icons";
 import type {
   DeriveQuestion,
   OptimizeAnswer,
@@ -81,7 +82,7 @@ export function OptimizeReview({ question, answer }: StageReviewProps<OptimizeQu
   return (
     <>
       <p className="text-sm text-gray-800">
-        <span className="mr-1">{question.icon}</span>
+        <Icon name={question.icon} className="mr-1" />
         {t(question.contextKey, question.params)}
       </p>
 
@@ -158,7 +159,7 @@ export function OptimizeClassAnswers({
   return (
     <div className="flex flex-col items-center gap-4">
       <p className="max-w-xl text-center text-gray-700">
-        <span className="mr-1">{question.icon}</span>
+        <Icon name={question.icon} className="mr-1" />
         {t(question.contextKey, question.params)}
       </p>
       <div className="flex flex-wrap justify-center gap-6">

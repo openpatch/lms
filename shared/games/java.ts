@@ -74,7 +74,7 @@ export const javaSpec: GameSpec = {
   descriptionKey: "games.java.description",
   category: "cs",
   grades: ["EF"],
-  icon: "☕",
+  icon: "coffee",
   color: "amber",
   status: "live",
   minPlayers: 1,

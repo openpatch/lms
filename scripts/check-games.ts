@@ -22,6 +22,7 @@ import {
   type StageRoundData,
 } from "../shared/framework";
 import type { LobbyState } from "../shared/types";
+import { ICON_NAMES } from "../shared/icons";
 
 const LOCALES = ["en", "de"] as const;
 
@@ -47,6 +48,27 @@ function hasKey(locale: Record<string, unknown>, key: string): boolean {
 /** i18next stores pluralised keys as key_one / key_other. */
 function hasTranslation(locale: Record<string, unknown>, key: string): boolean {
   return hasKey(locale, key) || (hasKey(locale, `${key}_one`) && hasKey(locale, `${key}_other`));
+}
+
+/**
+ * An icon is either one this repository draws (`shared/icons.ts`) or a symbol
+ * to print as it stands — ∫, √, ½, x², which are type and not pictures.
+ *
+ * Neither an emoji, which is the reader's operating system's idea of a picture
+ * rather than ours and differs on every device in the room, nor a plain word,
+ * which is a name whose drawing is missing and shows up in a lesson as that
+ * word in the middle of a game card.
+ */
+const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u;
+
+function checkIcon(where: string, icon: unknown) {
+  if (typeof icon !== "string" || icon === "") return;
+  if ((ICON_NAMES as readonly string[]).includes(icon)) return;
+  if (EMOJI.test(icon)) {
+    fail(`${where}: icon "${icon}" is an emoji — draw it in src/components/icons.tsx`);
+  } else if (/^[A-Za-z]+$/.test(icon)) {
+    fail(`${where}: icon "${icon}" is not drawn in src/components/icons.tsx`);
+  }
 }
 
 function lobbyFor(spec: GameSpec, stageId: string): LobbyState {
@@ -164,6 +186,8 @@ for (const spec of Object.values(gameSpecs)) {
     continue;
   }
 
+  checkIcon(spec.id, spec.icon);
+
   for (const key of [spec.titleKey, spec.descriptionKey]) {
     for (const [name, locale] of Object.entries(locales)) {
       if (!hasTranslation(locale, key)) fail(`${spec.id}: missing ${name} translation "${key}"`);
@@ -195,6 +219,11 @@ for (const spec of Object.values(gameSpecs)) {
 
     const ids = new Set(round.questions.map((q) => q.id));
     if (ids.size !== round.questions.length) fail(`${spec.id}/${stage.id}: question ids are not unique`);
+
+    // A question may carry one too — the context a word problem is set in.
+    for (const question of round.questions) {
+      checkIcon(`${spec.id}/${stage.id}`, (question as { icon?: unknown }).icon);
+    }
 
     if (round.questions.length > 0) {
       const question = round.questions[0];

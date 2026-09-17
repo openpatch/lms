@@ -7,6 +7,7 @@ import { evaluate } from "../../../../shared/polynomial";
 import type { StageProps } from "../../../lib/game-registry";
 import GameButton from "../../../components/GameButton";
 import { StageActionBar } from "../../../components/StageShell";
+import Icon from "../../../components/icons";
 import MathTex from "../../../components/Math";
 import MatchBoard, { MatchSlot, MatchTray } from "../../../components/MatchBoard";
 import ParameterSliders from "../../../components/ParameterSliders";
@@ -53,7 +54,7 @@ export default function OptimizeStage({
   return (
     <div className="flex flex-col items-center w-full gap-4">
       <div key={question.id} className="animate-question-in text-center max-w-xl">
-        <div className="text-3xl mb-1">{question.icon}</div>
+        <Icon name={question.icon} className="mb-1 text-3xl" />
         <p className="text-gray-600">{t(question.contextKey, question.params)}</p>
       </div>
 

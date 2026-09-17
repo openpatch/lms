@@ -77,7 +77,7 @@ export const intuitionSpec: GameSpec = {
   descriptionKey: "games.intuition.description",
   category: "cs",
   grades: [],
-  icon: "🧠",
+  icon: "brain",
   color: "fuchsia",
   status: "live",
   minPlayers: 1,

@@ -46,7 +46,7 @@ function makeLaplaceQuestion(id: number): LaplaceQuestion {
       const wantsRed = Math.random() < 0.5;
       return {
         id,
-        icon: "🔴",
+        icon: "ball",
         setupKey: `${KEY}.setups.urn`,
         eventKey: wantsRed ? `${KEY}.events.red` : `${KEY}.events.blue`,
         params: { red, blue },
@@ -60,7 +60,7 @@ function makeLaplaceQuestion(id: number): LaplaceQuestion {
       const winning = randomInt(1, sectors - 1);
       return {
         id,
-        icon: "🎡",
+        icon: "wheel",
         setupKey: `${KEY}.setups.wheel`,
         eventKey: `${KEY}.events.win`,
         params: { sectors, winning },
@@ -78,7 +78,7 @@ function makeLaplaceQuestion(id: number): LaplaceQuestion {
       const event = pick(events);
       return {
         id,
-        icon: "🃏",
+        icon: "cards",
         setupKey: `${KEY}.setups.cards`,
         eventKey: event.key,
         params: {},
@@ -97,7 +97,7 @@ function makeLaplaceQuestion(id: number): LaplaceQuestion {
       const event = pick(events);
       return {
         id,
-        icon: "🎲",
+        icon: "dice",
         setupKey: `${KEY}.setups.die`,
         eventKey: event.key,
         params: {},
@@ -175,7 +175,7 @@ function makeTreeQuestion(id: number, mode: "with" | "without"): TreeQuestion {
     const red = randomInt(2, 5);
     const blue = randomInt(2, 5);
     model = urnModel(red, blue, mode === "with");
-    icon = "🔴";
+    icon = "ball";
     setupKey = mode === "with" ? `${KEY}.setups.urnTwiceWith` : `${KEY}.setups.urnTwiceWithout`;
     params = { red, blue };
     outcomeKeys = [`${KEY}.outcomes.red`, `${KEY}.outcomes.blue`];
@@ -183,7 +183,7 @@ function makeTreeQuestion(id: number, mode: "with" | "without"): TreeQuestion {
     const sectors = pick([4, 5, 6, 8]);
     const winning = randomInt(1, sectors - 1);
     model = repeatedModel(reduce({ n: winning, d: sectors }));
-    icon = "🎡";
+    icon = "wheel";
     setupKey = `${KEY}.setups.wheelTwice`;
     params = { sectors, winning };
     outcomeKeys = [`${KEY}.outcomes.win`, `${KEY}.outcomes.lose`];

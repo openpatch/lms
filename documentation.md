@@ -70,6 +70,7 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `server/games/<game>.ts` | One stage handler per stage: generate questions, grade an answer |
 | `src/lib/game-registry.ts` | `defineGame()` — joins a spec with its React components |
 | `src/lib/game-theme.ts` | The colour palettes and the `--game-*` variables that paint a game's screens |
+| `src/components/icons.tsx`, `shared/icons.ts` | Every icon the site draws, and the list of their names — see "Icons" |
 | `GameMeta.hidden` | Keeps a game out of the arena while leaving it registered, checked and reachable by URL — the example game, which is a template rather than something a class plays |
 | `src/games/<game>/stages/*.tsx` | One component per stage: render the current question |
 | `src/components/StageShell.tsx` | The bars around a stage: round, score and clock pinned under the app header, the stage's action pinned to the bottom edge (`StageActionBar`) — or the host's, through `hostAction` — plus the ranked host view and feedback |
@@ -325,6 +326,40 @@ It is not a substitute for "Trying it out first" below — there is no rules
 screen, no round result, no clock that means anything and nobody else in the
 lobby. It answers a narrower question: what does this stage look like, and does
 it still work.
+
+## Icons
+
+Nothing on this site is an emoji. An emoji is a character, and what a character
+looks like belongs to the reader's operating system: ☕ is a white mug on one
+device and a brown one on another, ⛰️ is flat on Windows and shaded on a Mac,
+and a font that never got updated draws a box. A game's icon is on the
+projector and on thirty devices at the same time, and all thirty should be
+looking at the same picture.
+
+So `src/components/icons.tsx` draws them — line work on a 24x24 grid, one
+stroke weight, `currentColor`, sized in `em` so a call site says `text-3xl` and
+gets an icon that size. Nothing loads and nothing ships as a file.
+
+```tsx
+<Icon name={game.icon} className="text-3xl" />
+```
+
+`shared/icons.ts` holds the names on their own, away from the drawings. It
+types `ICONS`, so a name with no drawing does not compile, and
+`pnpm check:games` reads it without dragging a React component into a Node
+script — which is what lets that check say a spec names an icon that exists,
+refuse an emoji, and refuse a word that is not drawn.
+
+Two things stay as characters on purpose. Four games are named by a
+mathematical symbol — ∫, √, ½, x² — which is type rather than a picture, and
+`Icon` prints a name it cannot draw, so those keep working. And ✓, ✗, ←, →
+stay typographic marks: they are punctuation, not pictures of anything.
+
+The one deliberate exception is `src/games/intuition/components/PixelPicture.tsx`,
+which squeezes an emoji through a small canvas to get a blocky picture with no
+image file. That station is the one place where the difference between one
+operating system and another is visible in the game itself, and replacing it
+means drawing two dozen objects — it is worth doing and it has not been done.
 
 ## Live stages
 

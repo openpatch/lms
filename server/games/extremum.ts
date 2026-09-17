@@ -100,7 +100,7 @@ interface Context {
 function fenceContext(): Context {
   const length = randomInt(4, 15) * 4;
   return {
-    icon: "🌊",
+    icon: "waves",
     contextKey: `${KEY}.contexts.fence`,
     quantityKey: `${KEY}.quantities.area`,
     params: { length },
@@ -122,7 +122,7 @@ function fenceContext(): Context {
 function boxContext(): Context {
   const side = randomInt(3, 12) * 2;
   return {
-    icon: "📦",
+    icon: "box",
     contextKey: `${KEY}.contexts.box`,
     quantityKey: `${KEY}.quantities.volume`,
     params: { side },
@@ -140,7 +140,7 @@ function boxContext(): Context {
 function parabolaContext(): Context {
   const height = randomInt(2, 9);
   return {
-    icon: "📐",
+    icon: "ruler",
     contextKey: `${KEY}.contexts.parabola`,
     quantityKey: `${KEY}.quantities.area`,
     params: { height },

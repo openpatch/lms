@@ -123,7 +123,7 @@ const BUILD_CONTEXTS: BuildContext[] = [
   {
     key: "games.terme.contexts.taxi",
     variableKey: "games.terme.variables.taxi",
-    icon: "🚕",
+    icon: "taxi",
     make: () => {
       const a = randomInt(3, 6);
       const b = randomInt(2, 4);
@@ -137,7 +137,7 @@ const BUILD_CONTEXTS: BuildContext[] = [
   {
     key: "games.terme.contexts.saving",
     variableKey: "games.terme.variables.saving",
-    icon: "🐷",
+    icon: "piggy",
     make: () => {
       const a = randomInt(15, 40);
       const b = randomInt(3, 8);
@@ -151,7 +151,7 @@ const BUILD_CONTEXTS: BuildContext[] = [
   {
     key: "games.terme.contexts.cinema",
     variableKey: "games.terme.variables.cinema",
-    icon: "🍿",
+    icon: "popcorn",
     make: () => {
       const a = randomInt(8, 12);
       const b = randomInt(3, 5);
@@ -165,7 +165,7 @@ const BUILD_CONTEXTS: BuildContext[] = [
   {
     key: "games.terme.contexts.fence",
     variableKey: "games.terme.variables.fence",
-    icon: "🌱",
+    icon: "plant",
     make: () => {
       const a = randomInt(7, 14);
       return {
@@ -178,7 +178,7 @@ const BUILD_CONTEXTS: BuildContext[] = [
   {
     key: "games.terme.contexts.rectangle",
     variableKey: "games.terme.variables.rectangle",
-    icon: "📐",
+    icon: "ruler",
     make: () => {
       const a = randomInt(2, 6);
       return {
@@ -191,7 +191,7 @@ const BUILD_CONTEXTS: BuildContext[] = [
   {
     key: "games.terme.contexts.age",
     variableKey: "games.terme.variables.age",
-    icon: "🎂",
+    icon: "cake",
     make: () => {
       const a = randomInt(3, 9);
       return {
@@ -204,7 +204,7 @@ const BUILD_CONTEXTS: BuildContext[] = [
   {
     key: "games.terme.contexts.pool",
     variableKey: "games.terme.variables.pool",
-    icon: "🏊",
+    icon: "swim",
     make: () => {
       const a = randomInt(200, 600);
       const b = randomInt(20, 50);
@@ -218,7 +218,7 @@ const BUILD_CONTEXTS: BuildContext[] = [
   {
     key: "games.terme.contexts.workshop",
     variableKey: "games.terme.variables.workshop",
-    icon: "🔧",
+    icon: "wrench",
     make: () => {
       const a = randomInt(20, 45);
       const b = randomInt(5, 15);
@@ -1017,84 +1017,84 @@ interface FormulaSpec {
 const FORMULAS: FormulaSpec[] = [
   {
     key: "games.terme.formulas.rectangleArea",
-    icon: "▭",
+    icon: "rect",
     formula: "A = a \\cdot b",
     solve: { a: "\\frac{A}{b}", b: "\\frac{A}{a}" },
     steps: 1,
   },
   {
     key: "games.terme.formulas.speed",
-    icon: "🚗",
+    icon: "car",
     formula: "s = v \\cdot t",
     solve: { v: "\\frac{s}{t}", t: "\\frac{s}{v}" },
     steps: 1,
   },
   {
     key: "games.terme.formulas.cuboid",
-    icon: "🧊",
+    icon: "cuboid",
     formula: "V = a \\cdot b \\cdot c",
     solve: { c: "\\frac{V}{a \\cdot b}", a: "\\frac{V}{b \\cdot c}" },
     steps: 1,
   },
   {
     key: "games.terme.formulas.power",
-    icon: "⚡",
+    icon: "bolt",
     formula: "P = \\frac{W}{t}",
     solve: { W: "P \\cdot t", t: "\\frac{W}{P}" },
     steps: 1,
   },
   {
     key: "games.terme.formulas.percentage",
-    icon: "％",
+    icon: "percent",
     formula: "W = G \\cdot p",
     solve: { G: "\\frac{W}{p}", p: "\\frac{W}{G}" },
     steps: 1,
   },
   {
     key: "games.terme.formulas.density",
-    icon: "⚖️",
+    icon: "scale",
     formula: "d = \\frac{m}{V}",
     solve: { m: "d \\cdot V", V: "\\frac{m}{d}" },
     steps: 1,
   },
   {
     key: "games.terme.formulas.rectanglePerimeter",
-    icon: "🔲",
+    icon: "square",
     formula: "U = 2 \\cdot \\left(a + b\\right)",
     solve: { a: "\\frac{U}{2} - b", b: "\\frac{U}{2} - a" },
     steps: 2,
   },
   {
     key: "games.terme.formulas.triangleArea",
-    icon: "🔺",
+    icon: "triangle",
     formula: "A = \\frac{g \\cdot h}{2}",
     solve: { g: "\\frac{2A}{h}", h: "\\frac{2A}{g}" },
     steps: 2,
   },
   {
     key: "games.terme.formulas.trapezoid",
-    icon: "⏢",
+    icon: "trapezoid",
     formula: "A = \\frac{a + c}{2} \\cdot h",
     solve: { h: "\\frac{2A}{a + c}" },
     steps: 2,
   },
   {
     key: "games.terme.formulas.mean",
-    icon: "📊",
+    icon: "chartBar",
     formula: "m = \\frac{a + b}{2}",
     solve: { a: "2m - b", b: "2m - a" },
     steps: 2,
   },
   {
     key: "games.terme.formulas.linear",
-    icon: "📈",
+    icon: "chartLine",
     formula: "y = m \\cdot x + b",
     solve: { b: "y - m \\cdot x", x: "\\frac{y - b}{m}", m: "\\frac{y - b}{x}" },
     steps: 2,
   },
   {
     key: "games.terme.formulas.fahrenheit",
-    icon: "🌡️",
+    icon: "thermometer",
     formula: "C = \\frac{5}{9} \\cdot \\left(F - 32\\right)",
     solve: { F: "\\frac{9}{5} \\cdot C + 32" },
     steps: 2,

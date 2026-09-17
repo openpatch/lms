@@ -1,8 +1,13 @@
 import { useTranslation } from "react-i18next";
 import type { ResultRow } from "./results";
+import Icon from "./icons";
 
-const MEDALS = ["🥇", "🥈", "🥉"];
-const CROWN = "👑";
+/** Gold, silver, bronze: one medal, three tints, since the drawing is one. */
+const MEDAL_TINT = ["text-yellow-500", "text-gray-400", "text-orange-400"];
+
+function Medal({ rank, className = "" }: { rank: number; className?: string }) {
+  return <Icon name="medal" className={`${MEDAL_TINT[rank] ?? ""} ${className}`} />;
+}
 
 /**
  * Rounds won, kept apart from the points on purpose.
@@ -22,7 +27,7 @@ function Crowns({ count, fresh }: { count: number; fresh: boolean }) {
         fresh ? "animate-streak-pop ring-2 ring-amber-300" : ""
       }`}
     >
-      <span aria-hidden>{CROWN}</span>
+      <Icon name="crown" />
       {count > 1 && <span className="tabular-nums">{count}</span>}
       <span className="sr-only">{t("game.crownsWon", { count })}</span>
     </span>
@@ -93,7 +98,8 @@ function MostRounds({ results }: { results: ResultRow[] }) {
     // The count is on the chip in their row already; saying it again here only
     // makes the line longer.
     <p className="text-sm text-gray-500">
-      {CROWN} {t("game.mostRounds", { name: holders[0].playerName })}
+      <Icon name="crown" className="mr-1 text-amber-500" />
+      {t("game.mostRounds", { name: holders[0].playerName })}
     </p>
   );
 }
@@ -115,7 +121,8 @@ export default function ResultsList({
       {results.length > 0 && results[0] && results[0].score > 0 && <Confetti />}
       {title && (
         <h2 className="text-2xl font-bold animate-celebrate">
-          {results.length > 0 && results[0] ? `${MEDALS[0]} ` : ""}{title}
+          {results.length > 0 && results[0] && <Medal rank={0} className="mr-2" />}
+          {title}
         </h2>
       )}
       <div className="w-full max-w-md space-y-2">
@@ -132,7 +139,7 @@ export default function ResultsList({
                   it and the number is what everyone is looking at. */}
               <span className="font-medium flex min-w-0 flex-1 items-center gap-2">
                 {i < 3 ? (
-                  <span className="shrink-0 text-2xl">{MEDALS[i]}</span>
+                  <Medal rank={i} className="text-2xl" />
                 ) : (
                   <span className="w-8 shrink-0 text-center text-lg font-bold text-gray-400">
                     {i + 1}

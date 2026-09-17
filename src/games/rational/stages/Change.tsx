@@ -4,6 +4,7 @@ import type { ChangeQuestion } from "../../../../shared/games/rational";
 import type { StageProps } from "../../../lib/game-registry";
 import GameButton from "../../../components/GameButton";
 import { StageActionBar } from "../../../components/StageShell";
+import Icon from "../../../components/icons";
 import NumberLine from "../../../components/NumberLine";
 
 /** A signed value the way it is spoken about: +7 °C, -3 €. */
@@ -38,7 +39,7 @@ export default function ChangeStage({ question, submit }: StageProps<ChangeQuest
   return (
     <div className="flex flex-col items-center w-full gap-6">
       <div key={question.id} className="animate-question-in text-center">
-        <div className="text-4xl mb-1">{question.icon}</div>
+        <Icon name={question.icon} className="mb-1 text-4xl" />
         <div className="text-gray-500">{t(question.contextKey)}</div>
       </div>
 

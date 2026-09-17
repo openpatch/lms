@@ -1,4 +1,5 @@
 import type { RobotCell, RobotFacing } from "../../../../shared/games/java";
+import Icon from "../../../components/icons";
 import { sameCell } from "../../../../shared/games/java";
 
 /** The arrow a robot looking this way carries, and the edge of its square it
@@ -92,11 +93,10 @@ export default function RobotGrid({
           // because this same grid is drawn at 60px a square while it is being
           // played and at 20 in the debrief, and one font size cannot serve
           // both. The arrow sits in the corner rather than underneath.
-          const marker = (glyph: string, arrow?: RobotFacing) => (
+          const marker = (name: string, arrow?: RobotFacing) => (
             <>
-              {/* Under half the square: an emoji draws taller than its own font
-                  size, so anything nearer the edge clips at the top. */}
-              <span className="text-[46cqw] leading-none">{glyph}</span>
+              {/* Under half the square, so the arrow in the corner has room. */}
+              <Icon name={name} className="text-[46cqw]" />
               {arrow && (
                 <span
                   className={`absolute ${ARROW[arrow].edge} text-[26cqw] leading-none text-game-ink/60`}
@@ -108,11 +108,11 @@ export default function RobotGrid({
           );
 
           const content = isStart
-            ? marker("🤖", facing)
+            ? marker("robot", facing)
             : isAnswer && answerFacing
-              ? marker("🏁", answerFacing)
+              ? marker("flag", answerFacing)
               : isAnswer
-                ? marker("🏁")
+                ? marker("flag")
                 : step != null
                   ? (
                       <span className="text-[42cqw] leading-none font-semibold text-game-ink/50">

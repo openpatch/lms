@@ -13,6 +13,7 @@ import StageSettingsForm from "../components/StageSettingsForm";
 import { useLobbySession } from "../lib/lobby-session";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
+import Icon from "../components/icons";
 import { createLobby, lobbyPath } from "../lib/lobby-api";
 import type { StageRoundData } from "../../shared/framework";
 
@@ -217,7 +218,7 @@ export default function HostLobby() {
       <div className="flex items-center justify-between gap-3 mb-6 rounded-2xl border-2 border-game-200 bg-linear-to-br from-game-100 to-game-50 px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <span className="grid place-items-center w-12 h-12 rounded-xl bg-white/80 shadow-sm text-3xl">
-            {game.icon}
+            <Icon name={game.icon} />
           </span>
           <h1 className="text-xl font-bold text-game-ink truncate">{t(game.titleKey)}</h1>
         </div>

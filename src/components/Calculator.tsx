@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ActionBarContext } from "./action-bar";
+import Icon from "./icons";
 import { calculate, formatResult } from "../lib/calculator";
 
 /**
@@ -46,7 +47,7 @@ export default function Calculator() {
           : "border-gray-200 text-gray-600 hover:border-game-solid hover:text-game-ink"
       }`}
     >
-      <span aria-hidden>🧮</span>
+      <Icon name="calculator" />
       <span className="hidden sm:inline">{t("game.calculator")}</span>
     </button>
   );

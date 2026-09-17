@@ -6,6 +6,8 @@ import type { LobbyState } from "../../shared/types";
 import { getAllGames, getGame, getStage } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import StageShell from "../components/StageShell";
+import Icon from "../components/icons";
+import { ICON_NAMES } from "../../shared/icons";
 
 /**
  * One stage, played on its own, with no server and no lobby.
@@ -155,7 +157,7 @@ function PreviewIndex() {
       {games.map((game) => (
         <section key={game.id} className="mb-6">
           <h2 className="mb-2 font-semibold text-gray-700">
-            {game.icon} {game.id}
+            <Icon name={game.icon} /> {game.id}
           </h2>
           <div className="flex flex-wrap gap-2">
             {game.stages.map((stage) => (
@@ -165,13 +167,44 @@ function PreviewIndex() {
                 className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-mono text-sm text-gray-600 hover:border-brand-400 hover:text-brand-600"
               >
                 {stage.id}
-                {stage.calculator && " 🧮"}
+                {stage.calculator && <Icon name="calculator" className="ml-1" />}
               </Link>
             ))}
           </div>
         </section>
       ))}
+      <IconSheet />
     </div>
   );
 }
 
+/**
+ * Every icon at once, at the sizes the site actually uses them at.
+ *
+ * A drawing that is fine at 36px and a smudge at 16 is a drawing that is
+ * wrong, and there is no other screen where they can be seen side by side —
+ * they are scattered over ten games, and some only show up on a screen that
+ * takes a whole round to reach.
+ */
+function IconSheet() {
+  return (
+    <section className="mt-10 border-t border-gray-200 pt-6">
+      <h2 className="mb-3 font-semibold text-gray-700">Icons</h2>
+      <div className="flex flex-wrap gap-2">
+        {ICON_NAMES.map((name) => (
+          <div
+            key={name}
+            className="flex w-28 flex-col items-center gap-1 rounded-lg border border-gray-200 bg-white py-2 text-gray-700"
+          >
+            <div className="flex items-end gap-2">
+              <Icon name={name} className="text-4xl" />
+              <Icon name={name} className="text-2xl" />
+              <Icon name={name} className="text-base" />
+            </div>
+            <span className="font-mono text-[11px] text-gray-500">{name}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}

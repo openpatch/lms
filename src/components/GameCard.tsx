@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { gameThemeVars } from "../lib/game-theme";
 import type { GameDefinition } from "../lib/game-registry";
+import Icon from "./icons";
 
 export default function GameCard({ game }: { game: GameDefinition }) {
   const { t } = useTranslation();
@@ -17,7 +18,7 @@ export default function GameCard({ game }: { game: GameDefinition }) {
       <div className="relative bg-linear-to-br from-game-100 to-game-50 px-6 pt-6 pb-5">
         <div className="flex items-start justify-between gap-3">
           <span className="grid place-items-center w-16 h-16 rounded-2xl bg-white/80 shadow-sm text-4xl group-hover:animate-icon-wobble">
-            {game.icon}
+            <Icon name={game.icon} />
           </span>
           <span
             className={`text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${

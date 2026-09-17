@@ -180,7 +180,8 @@ export interface GameMeta {
   category: GameCategory;
   /** Jahrgangsstufen this game fits, in ascending order. Empty for demo games. */
   grades: Grade[];
-  icon: string; // emoji or short symbol
+  /** An icon name from src/components/icons.tsx, or a symbol to print (∫, √). */
+  icon: string;
   /** This game's colour, unique across the registry. */
   color: GameColor;
   status: GameStatus;

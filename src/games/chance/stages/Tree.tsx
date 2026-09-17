@@ -6,6 +6,7 @@ import { emptyAssignment } from "../../../../shared/matching";
 import type { StageProps } from "../../../lib/game-registry";
 import GameButton from "../../../components/GameButton";
 import { StageActionBar } from "../../../components/StageShell";
+import Icon from "../../../components/icons";
 import MathTex from "../../../components/Math";
 import MatchBoard, { MatchSlot, MatchTray } from "../../../components/MatchBoard";
 
@@ -57,7 +58,7 @@ export default function TreeStage({ question, submit }: StageProps<TreeQuestion>
   return (
     <div className="flex flex-col items-center w-full gap-5">
       <div key={question.id} className="animate-question-in text-center max-w-xl">
-        <div className="text-3xl mb-1">{question.icon}</div>
+        <Icon name={question.icon} className="mb-1 text-3xl" />
         <p className="text-gray-600">{t(question.setupKey, question.params)}</p>
       </div>
 

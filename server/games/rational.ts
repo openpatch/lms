@@ -57,10 +57,10 @@ const ARRANGE_PASS_MARK = 60;
 const ARRANGE_ZERO_AT = 0.2;
 // Contexts of the "change" stage: a state that can go below zero, plus its unit
 const CHANGE_CONTEXTS = [
-  { key: "games.rational.contexts.temperature", icon: "🌡️", unit: "°C", min: -20, max: 20 },
-  { key: "games.rational.contexts.account", icon: "💶", unit: "€", min: -50, max: 50 },
-  { key: "games.rational.contexts.altitude", icon: "🤿", unit: "m", min: -30, max: 30 },
-  { key: "games.rational.contexts.timezone", icon: "🕐", unit: "h", min: -11, max: 12 },
+  { key: "games.rational.contexts.temperature", icon: "thermometer", unit: "°C", min: -20, max: 20 },
+  { key: "games.rational.contexts.account", icon: "money", unit: "€", min: -50, max: 50 },
+  { key: "games.rational.contexts.altitude", icon: "depth", unit: "m", min: -30, max: 30 },
+  { key: "games.rational.contexts.timezone", icon: "clock", unit: "h", min: -11, max: 12 },
 ];
 /** Placements within this many units are perfect … */
 const CHANGE_FREE_UNITS = 0.3;

@@ -4,6 +4,7 @@ import { useParams, Link } from "react-router";
 import { useLobbySession } from "../lib/lobby-session";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
+import Icon from "../components/icons";
 import ResultsList from "../components/ResultsList";
 import { standings, withGains } from "../components/results";
 import RoundReview from "../components/RoundReview";
@@ -176,7 +177,7 @@ export default function Play() {
     <div className="max-w-md mx-auto text-center py-8">
       <div className="rounded-3xl border-2 border-game-200 bg-linear-to-br from-game-100 to-game-50 px-6 py-8">
         <span className="inline-grid place-items-center w-24 h-24 rounded-3xl bg-white/80 shadow-sm text-6xl mb-4">
-          {game.icon}
+          <Icon name={game.icon} />
         </span>
         <h1 className="text-2xl font-bold text-game-ink mb-2">{t(game.titleKey)}</h1>
         <p className="text-game-ink/70">{t("play.waitingHost")}</p>

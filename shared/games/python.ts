@@ -91,7 +91,7 @@ export const pythonSpec: GameSpec = {
   descriptionKey: "games.python.description",
   category: "cs",
   grades: ["10"],
-  icon: "🐍",
+  icon: "snake",
   color: "cyan",
   status: "live",
   minPlayers: 1,

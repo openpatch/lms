@@ -4,6 +4,7 @@ import type { LampQuestion } from "../../../../shared/games/intuition";
 import type { StageProps } from "../../../lib/game-registry";
 import GameButton from "../../../components/GameButton";
 import { StageActionBar } from "../../../components/StageShell";
+import Icon from "../../../components/icons";
 
 /**
  * Switch lamps on until they add up to the number asked for.
@@ -52,7 +53,7 @@ export default function LampenStage({ question, submit }: StageProps<LampQuestio
                 : "border-gray-200 bg-white text-gray-400 hover:border-game-300"
             }`}
           >
-            <span className="text-2xl leading-none">{on[index] ? "💡" : "○"}</span>
+            <Icon name="bulb" className="text-2xl" />
             <span className="tabular-nums">{value}</span>
           </button>
         ))}
@@ -89,7 +90,7 @@ export function LampenRulesExample() {
             lamp.on ? "border-game-solid bg-game-solid text-white" : "border-gray-200 text-gray-400"
           }`}
         >
-          <span className="text-lg leading-none">{lamp.on ? "💡" : "○"}</span>
+          <Icon name="bulb" className="text-lg" />
           <span className="text-sm">{lamp.value}</span>
         </div>
       ))}

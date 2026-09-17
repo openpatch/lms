@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ActionBarContext } from "./action-bar";
 import Calculator from "./Calculator";
+import Icon from "./icons";
 import { useTranslation } from "react-i18next";
 import type { LobbyState } from "../../shared/types";
 import type { StageRoundData } from "../../shared/framework";
@@ -61,7 +62,7 @@ function StreakBadge({ streak }: { streak: number }) {
   const bonusPercent = Math.round((comboMultiplier(streak) - 1) * 100);
   return (
     <div className="animate-streak-pop flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-bold">
-      <span className="text-lg">🔥</span>
+      <Icon name="flame" className="text-lg text-orange-500" />
       {streak} {t("game.streak")}
       {bonusPercent > 0 && (
         <span className="text-xs ml-1">

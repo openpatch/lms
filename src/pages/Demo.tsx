@@ -7,6 +7,7 @@ import RoundReview from "../components/RoundReview";
 import { standings, withGains } from "../components/results";
 import Countdown from "../components/Countdown";
 import StageShell from "../components/StageShell";
+import Icon from "../components/icons";
 import StageRules from "../components/StageRules";
 import StageSettingsForm from "../components/StageSettingsForm";
 import { useLobbySession } from "../lib/lobby-session";
@@ -94,7 +95,7 @@ export default function Demo() {
   const banner = (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-game-300 bg-game-50 px-5 py-3">
       <div className="flex items-center gap-3 min-w-0">
-        <span className="shrink-0 text-2xl">{game.icon}</span>
+        <Icon name={game.icon} className="text-2xl" />
         <div className="min-w-0">
           <p className="truncate font-semibold text-game-ink">
             {t("demo.badge")} · {t(game.titleKey)}

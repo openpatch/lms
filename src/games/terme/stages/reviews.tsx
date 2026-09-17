@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import Icon from "../../../components/icons";
 import type {
   BuildQuestion,
   EvaluateQuestion,
@@ -56,7 +57,7 @@ export function BuildReview({ question, answer }: StageReviewProps<BuildQuestion
   return (
     <>
       <p className="text-sm text-gray-800">
-        <span className="mr-1">{question.icon}</span>
+        <Icon name={question.icon} className="mr-1" />
         {t(question.contextKey, question.numbers)}
       </p>
       <ReviewLine label={t("game.yourAnswer")}>

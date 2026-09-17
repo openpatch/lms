@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import Icon from "../../../components/icons";
 import type {
   ArrangeQuestion,
   CalculateQuestion,
@@ -286,7 +287,7 @@ export function ChangeReview({ question, answer }: StageReviewProps<ChangeQuesti
   return (
     <>
       <p className="text-sm text-gray-800">
-        <span className="mr-1">{question.icon}</span>
+        <Icon name={question.icon} className="mr-1" />
         {t(question.contextKey)}
       </p>
       <p className="font-mono text-sm text-gray-600">

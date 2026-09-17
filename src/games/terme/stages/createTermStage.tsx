@@ -4,6 +4,7 @@ import type { StageQuestion } from "../../../../shared/framework";
 import type { StageProps } from "../../../lib/game-registry";
 import GameButton from "../../../components/GameButton";
 import { StageActionBar } from "../../../components/StageShell";
+import Icon from "../../../components/icons";
 import MathTex from "../../../components/Math";
 import TermInput from "../../../components/TermInput";
 
@@ -56,7 +57,7 @@ export function createTermStage<Q extends TermQuestion>(options: TermStageOption
 
         {question.contextKey && (
           <p className="text-sm text-game-ink text-center">
-            {question.icon && <span className="mr-2">{question.icon}</span>}
+            {question.icon && <Icon name={question.icon} className="mr-2" />}
             {t(question.contextKey)}
           </p>
         )}

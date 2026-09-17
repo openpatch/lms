@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import Icon from "../components/icons";
 import { Link, useNavigate, useParams } from "react-router";
 import AnswerGrid from "../components/AnswerGrid";
 import RoundDebrief from "../components/RoundDebrief";
@@ -117,7 +118,7 @@ export default function ReviewSession() {
       </Link>
 
       <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border-2 border-game-200 bg-linear-to-br from-game-100 to-game-50 px-5 py-4">
-        <span className="shrink-0 text-3xl">{game.icon}</span>
+        <Icon name={game.icon} className="text-3xl" />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl font-bold text-game-ink">{t(game.titleKey)}</h1>
           <p className="text-sm text-game-ink/70">

@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router";
 import type { GameMeta } from "../../shared/types";
 import { ActiveGameContext, gameThemeVars } from "../lib/game-theme";
 import { signOut, useSession } from "../lib/auth";
+import Icon from "./icons";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation();
@@ -43,7 +44,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
             {game && (
               <div className="animate-game-chip-in min-w-0 flex items-center gap-2 rounded-full bg-game-50 border border-game-200 px-3 py-1.5">
-                <span className="text-xl leading-none">{game.icon}</span>
+                <Icon name={game.icon} className="text-xl" />
                 <span className="truncate text-sm font-bold text-game-ink">
                   {t(game.titleKey)}
                 </span>
@@ -113,7 +114,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 let the line wrap rather than push the page sideways. */}
             <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
               <span>
-                {t("common.builtBy")} <span className="text-red-500">&#10084;</span> {t("common.byOpenPatch")}
+                {t("common.builtBy")} <Icon name="heart" className="text-red-500" /> {t("common.byOpenPatch")}
               </span>
               <span className="text-gray-300">&bull;</span>
               <a

@@ -11,7 +11,7 @@ export const exampleSpec: GameSpec = {
   descriptionKey: "games.example.description",
   category: "math",
   grades: [],
-  icon: "🎯",
+  icon: "target",
   color: "teal",
   status: "live",
   // The template, not something a class plays: kept out of the arena but still

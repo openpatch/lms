@@ -68,7 +68,7 @@ export const chanceSpec: GameSpec = {
   category: "math",
   // The SILP puts this vorhaben in year 7 or, alternatively, in year 8
   grades: ["7", "8"],
-  icon: "🎲",
+  icon: "dice",
   color: "rose",
   status: "live",
   minPlayers: 1,
