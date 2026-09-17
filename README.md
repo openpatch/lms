@@ -17,6 +17,10 @@ pnpm dev:server     # game server on :3000
 pnpm dev            # client, proxying /parties to the game server
 ```
 
+`pnpm dev` on its own is enough to look at a single stage: `/preview` lists
+every one of them and plays it in the tab, with no server and no account. It is
+served only by the dev build.
+
 Then create an account for yourself and sign in at `/login`:
 
 ```sh

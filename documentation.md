@@ -77,6 +77,7 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `src/pages/Review.tsx`, `ReviewSession.tsx` | Lessons after the fact — see "After the lesson" |
 | `src/components/AnswerGrid.tsx` | One round read down the names instead of across the questions |
 | `src/pages/Demo.tsx` | The teacher playing a game alone, to try it out — see "Trying it out first" |
+| `src/pages/Preview.tsx` | One stage on its own with no server and no lobby, `/preview` — development only, see "Looking at one stage" |
 | `src/components/StageRules.tsx` | The rules screen before a round |
 | `src/components/StageSettingsForm.tsx` | The host's stage picker and settings, built from the schema |
 | `src/components/NumberLine.tsx` | Ticks, click-to-pick and markers on an axis |
@@ -306,6 +307,24 @@ npm run dev           # client, plus `npm run dev:server` for the game server
 
 `check:games` builds a round of every stage, feeds it a nonsense answer and verifies
 that it is graded rather than crashing, and reports any missing translation.
+
+### Looking at one stage
+
+`npm run dev` on its own, with no game server and no account, serves
+`/preview` — an index of every stage, each a link to itself. A stage opened
+that way plays for real: the page builds the round with that game's own
+handler, `server/games/<game>.ts`, and grades the answers with it, so what is
+on screen is what a class would get. "neue Aufgaben" builds another round, for
+the questions that come out differently every time.
+
+It is development only. `src/App.tsx` mounts the route behind
+`import.meta.env.DEV` and loads the page lazily, so neither it nor the question
+generator it pulls out of `server/` reaches the production bundle.
+
+It is not a substitute for "Trying it out first" below — there is no rules
+screen, no round result, no clock that means anything and nobody else in the
+lobby. It answers a narrower question: what does this stage look like, and does
+it still work.
 
 ## Live stages
 
