@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { OrderQuestion } from "../../../../shared/games/rational";
 import type { StageProps } from "../../../lib/game-registry";
@@ -57,7 +57,20 @@ function slotAt(x: number, y: number): number | null {
 export default function OrderStage({ question, submit }: StageProps<OrderQuestion>) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<Draft | null>(null);
+  /**
+   * The number in hand lives in a ref and is mirrored into state only to be
+   * drawn. A pointer handler reading it out of its render closure reads what
+   * was true at the last render, and a quick drag delivers `pointerdown` and
+   * its first `pointermove` in one frame — before React has re-rendered, so the
+   * move sees nothing in hand and the gesture is silently dropped. On a fast
+   * tablet that is most of them.
+   */
+  const dragRef = useRef<Drag | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
+  const show = (next: Drag | null) => {
+    dragRef.current = next;
+    setDrag(next);
+  };
 
   if (!question) return null;
 
@@ -93,7 +106,7 @@ export default function OrderStage({ question, submit }: StageProps<OrderQuestio
 
   const startDrag = (item: number, e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    setDrag({
+    show({
       item,
       startX: e.clientX,
       startY: e.clientY,
@@ -105,24 +118,23 @@ export default function OrderStage({ question, submit }: StageProps<OrderQuestio
   };
 
   const moveDrag = (e: React.PointerEvent) => {
-    if (!drag) return;
+    const held = dragRef.current;
+    if (!held) return;
     const far =
-      drag.moved || Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) >= DRAG_THRESHOLD;
+      held.moved || Math.hypot(e.clientX - held.startX, e.clientY - held.startY) >= DRAG_THRESHOLD;
     // Under the threshold this is still a tap that has not finished happening
     if (!far) return;
-    // Read the gap out here rather than inside the updater: an updater has to
-    // be pure, and this one would be asking the DOM where the finger is.
-    const over = slotAt(e.clientX, e.clientY);
-    setDrag({ ...drag, moved: true, x: e.clientX, y: e.clientY, over });
+    show({ ...held, moved: true, x: e.clientX, y: e.clientY, over: slotAt(e.clientX, e.clientY) });
   };
 
   const endDrag = () => {
-    if (!drag) return;
+    const held = dragRef.current;
+    if (!held) return;
+    show(null);
     // Under the threshold nothing was carried anywhere: it was a tap, and a tap
     // on a number is what puts it in the line or takes it out again.
-    if (!drag.moved) toggle(drag.item);
-    else drop(drag.item, drag.over);
-    setDrag(null);
+    if (!held.moved) toggle(held.item);
+    else drop(held.item, held.over);
   };
 
   const complete = order.length === items.length;
@@ -135,7 +147,7 @@ export default function OrderStage({ question, submit }: StageProps<OrderQuestio
     onPointerDown: (e: React.PointerEvent) => startDrag(item, e),
     onPointerMove: moveDrag,
     onPointerUp: endDrag,
-    onPointerCancel: () => setDrag(null),
+    onPointerCancel: () => show(null),
   });
 
   return (
