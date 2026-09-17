@@ -78,7 +78,7 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `src/pages/Review.tsx`, `ReviewSession.tsx` | Lessons after the fact — see "After the lesson" |
 | `src/components/AnswerGrid.tsx` | One round read down the names instead of across the questions |
 | `src/pages/Demo.tsx` | The teacher playing a game alone, to try it out — see "Trying it out first" |
-| `src/pages/Preview.tsx` | One stage on its own with no server and no lobby, `/preview` — development only, see "Looking at one stage" |
+| `src/pages/Preview.tsx` | One stage on its own with no server and no lobby, `/preview`, plus its round review — development only, see "Looking at one stage" |
 | `src/components/StageRules.tsx` | The rules screen before a round |
 | `src/components/StageSettingsForm.tsx` | The host's stage picker and settings, built from the schema |
 | `src/components/NumberLine.tsx` | Ticks, click-to-pick and markers on an axis |
@@ -317,6 +317,15 @@ that way plays for real: the page builds the round with that game's own
 handler, `server/games/<game>.ts`, and grades the answers with it, so what is
 on screen is what a class would get. "neue Aufgaben" builds another round, for
 the questions that come out differently every time.
+
+**"Rückblick" shows the other half of a station**: the player's `Review` rows
+and the host's `RoundDebrief` for the round as it stands, the pair a round
+really ends on. It is the half that is otherwise hard to reach — a round has to
+be played out in a lobby before anyone sees it — and the half where a stage is
+most likely to be wrong, since a review that does not say what the player
+answered is only found by looking at one. Questions that have not been answered
+read as unanswered, which is the case worth looking at anyway: that is what the
+clock running out leaves behind.
 
 It is development only. `src/App.tsx` mounts the route behind
 `import.meta.env.DEV` and loads the page lazily, so neither it nor the question
@@ -722,7 +731,7 @@ serves in `grades`; this table says which vorhaben a stage was built for.
 | `UV-MAT-SEK1-07-06` / `08-01` | Zufallsexperimente | `chance` | laplace (einstufig), tree (zweistufig, Pfadregeln) |
 | `UV-MAT-SEK1-08-02` | Terme mit mehreren Variablen | `terme` | build (Terme aufstellen), evaluate (Termwert, wertgleiche Terme), collect (Zusammenfassen), expand (Klammern auflösen), factor (Ausklammern), binomial (binomische Formeln), zero (Satz vom Nullprodukt), fraction (Bruchgleichungen), rearrange (Formeln umstellen), inequality (Ungleichungen) |
 | `UV-MAT-SEK1-09-01` | Quadratwurzeln und reelle Zahlen | `squareroot` | speed, numberline, classify (Zahlbereiche), simplify (Wurzelgesetze), bisect (Intervallhalbierung) |
-| `UV-MAT-Q1GK-01` / `Q1LK-01` | Extremwertprobleme | `extremum` | derive (hilfsmittelfrei ableiten), optimize (Nebenbedingung → Zielfunktion → Maximum) |
+| `UV-MAT-Q1GK-01` / `Q1LK-01` | Extremwertprobleme | `extremum` | derive (hilfsmittelfrei ableiten), optimize (Zielgröße → Extremalbedingung → Nebenbedingung → Zielfunktion → Maximum, einzeln oder am Stück) |
 | EF/Q1 Analysis | Ableitungsbegriff | `analysis` | multiple-choice, draw-graph, draw-derivative |
 | `UV-INF-SEK1-10-01` | Computerprogramme mit System entwickeln | `python` | output (Grundrechenarten), variables (Variablen, Eingaben), loops (for/while/verschachtelt), branch (if/elif/else), logic (and/or/not), functions (Parameter, return), lists (strukturierter Datentyp), turtle (Programm → Bild), parsons (Quelltexte erstellen), bugs (Quelltexte auf Korrektheit prüfen) |
 | `UV-INF-EF-02` bis `EF-06` | Grundlagen der Programmierung mit Java | `java` | output (Rechnen, `/` und `%`), types (Datentypen, Typumwandlung), variables (Zuweisungen, Kurzformen) — EF-II; logic (`&&`/`\|\|`/`!`), branch (Verzweigungen), loops (for/while/do-while/verschachtelt), structogram (Mehrfachrepräsentation) — EF-III; sorting (Suchen und Sortieren) — EF-IV; arrays (eindimensionale Felder) — EF-V; methods (Untermethoden mit und ohne Rückgabewert) — EF-VI; bugs (Fehlermeldungen lesen und korrigieren) |

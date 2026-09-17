@@ -1,16 +1,24 @@
 import { useTranslation } from "react-i18next";
 import Icon from "../../../components/icons";
+import {
+  OPTIMIZE_TERMS,
+  X_CORRECT_AT,
+  askedTerms,
+  termAnswer,
+} from "../../../../shared/games/extremum";
 import type {
   DeriveQuestion,
   OptimizeAnswer,
   OptimizeQuestion,
+  OptimizeTerm,
 } from "../../../../shared/games/extremum";
-import { argMax, derive, toLatex } from "../../../../shared/polynomial";
+import { argMax, derive, evaluate, toLatex } from "../../../../shared/polynomial";
 import { cardsBySlot, parseAssignment } from "../../../../shared/matching";
 import type { ClassAnswer, StageReviewProps } from "../../../lib/game-registry";
 import { Given, SlotLine, Solution } from "../../../components/review-parts";
 import MathTex from "../../../components/Math";
 import NumberLine, { type NumberLineMarker } from "../../../components/NumberLine";
+import PlotCanvas from "../../../components/PlotCanvas";
 
 /**
  * What a player sees once the round is over.
@@ -48,36 +56,53 @@ function optimizeAnswer(raw: string | undefined): OptimizeAnswer | null {
   }
 }
 
-/** The cards that ended up in the two slots, in slot order. */
+/** The cards that ended up in the asked slots, in the order they were asked. */
 function modelled(question: OptimizeQuestion, sent: OptimizeAnswer | null): (string | null)[] {
+  const terms = askedTerms(question);
   const assignment = sent
-    ? parseAssignment(
-        JSON.stringify(sent.assignment ?? []),
-        question.cards.length,
-        question.slotAnswers.length,
-      )
+    ? parseAssignment(JSON.stringify(sent.assignment ?? []), question.cards.length, terms.length)
     : null;
-  if (!assignment) return question.slotAnswers.map(() => null);
-  return cardsBySlot(assignment, question.slotAnswers.length).map((card) =>
+  if (!assignment) return terms.map(() => null);
+  return cardsBySlot(assignment, terms.length).map((card) =>
     card == null ? null : question.cards[card],
+  );
+}
+
+/** Two decimals: an x read off a slider is not worth more than that. */
+function round(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/** A step that was handed over rather than asked about — the chain, greyed. */
+function GivenStep({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2 text-sm text-gray-400">
+      <span className="shrink-0">{label}</span>
+      {children}
+    </div>
   );
 }
 
 /**
  * The modelling and the maximum, both shown as what they were.
  *
- * This station asks two things — which term is the constraint and which is
- * being maximised, then where that maximum lies — and the row used to answer
- * neither: a tick or a cross, then the two right terms with no hint of which
- * of them the player had put where. Now each slot carries the card that was
- * dropped in it, and the chosen x goes back on the interval it was chosen from.
+ * This station asks two things — which steps of the model these terms are, and
+ * where the maximum of what comes out lies — and the row used to answer
+ * neither: a tick or a cross, then the right terms with no hint of which of
+ * them the player had put where. Now each slot carries the card that was
+ * dropped in it, the steps that were handed over stand with it so the chain
+ * reads in full, and the chosen x goes back on the interval it came from.
  */
 export function OptimizeReview({ question, answer }: StageReviewProps<OptimizeQuestion>) {
   const { t } = useTranslation();
   const sent = optimizeAnswer(answer?.answer);
+  const terms = askedTerms(question);
   const placed = modelled(question, sent);
   const chosen = sent && isFinite(Number(sent.x)) ? Number(sent.x) : null;
   const best = argMax(question.target, question.xMin, question.xMax);
+  const options = question.quantityOptions;
+  const pickedQuantity =
+    options && sent && options[Number(sent.quantity)] ? options[Number(sent.quantity)] : null;
 
   return (
     <>
@@ -90,33 +115,81 @@ export function OptimizeReview({ question, answer }: StageReviewProps<OptimizeQu
         <Given answer={answer} />
       ) : (
         <>
-          {(["constraint", "target"] as const).map((slot, index) => (
+          {options == null ? (
+            <GivenStep label={t("games.extremum.slots.quantity")}>
+              {t(question.quantityKey)}
+            </GivenStep>
+          ) : (
             <SlotLine
-              key={slot}
-              label={t(`games.extremum.slots.${slot}`)}
-              given={placed[index] ? <MathTex tex={placed[index] as string} /> : undefined}
-              truth={<MathTex tex={question.slotAnswers[index]} />}
-              correct={placed[index] === question.slotAnswers[index]}
+              label={t("games.extremum.slots.quantity")}
+              given={pickedQuantity ? t(pickedQuantity) : undefined}
+              truth={t(question.quantityKey)}
+              correct={pickedQuantity === question.quantityKey}
             />
-          ))}
+          )}
 
-          <div className="max-w-xs pt-4 pb-1">
-            <NumberLine
-              min={question.xMin}
-              max={question.xMax}
-              heightClass="h-10"
+          {OPTIMIZE_TERMS.map((term: OptimizeTerm) => {
+            const label = t(`games.extremum.slots.${term}`);
+            const truth = termAnswer(question, term);
+            const slot = terms.indexOf(term);
+            if (slot === -1) {
+              return (
+                <GivenStep key={term} label={label}>
+                  <MathTex tex={truth} />
+                </GivenStep>
+              );
+            }
+            return (
+              <SlotLine
+                key={term}
+                label={label}
+                given={placed[slot] ? <MathTex tex={placed[slot] as string} /> : undefined}
+                truth={<MathTex tex={truth} />}
+                correct={placed[slot] === truth}
+              />
+            );
+          })}
+
+          {/* The hill itself, which is what the slider was being moved along.
+              A number line said where the two values were and nothing about
+              why one of them was hard to find; on the curve the player can see
+              that the top is flat, how far the ring around it reaches, and
+              which side of it they came down on. */}
+          <div className="w-full max-w-md pt-3">
+            <PlotCanvas
+              xMin={question.xMin}
+              xMax={question.xMax}
+              yMin={question.yMin}
+              yMax={question.yMax}
+              curves={[{ fn: (x) => evaluate(question.target, x), style: "solution" }]}
               markers={[
+                {
+                  x: best,
+                  y: evaluate(question.target, best),
+                  tone: "correct",
+                  ring: X_CORRECT_AT * (question.xMax - question.xMin),
+                  label: `x = ${round(best)}`,
+                },
                 ...(chosen == null
                   ? []
-                  : [{ value: chosen, tally: true, tone: "mine" } as NumberLineMarker]),
-                { value: best, tone: "correct" },
+                  : [
+                      {
+                        x: chosen,
+                        y: evaluate(question.target, chosen),
+                        tone: "mine" as const,
+                        label: String(round(chosen)),
+                      },
+                    ]),
               ]}
+              // A row of a review, not a stage with the screen to itself.
+              reserveRem={46}
+              minHeightRem={12}
             />
           </div>
           <SlotLine
             label="x"
             given={chosen == null ? undefined : chosen}
-            truth={Math.round(best * 100) / 100}
+            truth={round(best)}
             // The station scores x on closeness, so the row calls it right when
             // the whole answer was — anything else contradicts the tick above it.
             correct={answer.correct === true}
@@ -130,10 +203,11 @@ export function OptimizeReview({ question, answer }: StageReviewProps<OptimizeQu
 /**
  * Where the class put the maximum.
  *
- * The modelling half of this station is two cards and reads fine as a list;
- * the other half is a point on an interval, and twenty of those are a shape,
- * not a column. The terms that belonged in the slots go above the line, since
- * a class that mismodelled was looking for the maximum of the wrong thing.
+ * The modelling half of this station is a handful of cards and reads fine as a
+ * list; the other half is a point on an interval, and twenty of those are a
+ * shape, not a column. The whole model goes above the line — including the
+ * steps this question handed over — since a class that mismodelled was looking
+ * for the maximum of the wrong thing.
  */
 export function OptimizeClassAnswers({
   question,
@@ -144,6 +218,7 @@ export function OptimizeClassAnswers({
 }) {
   const { t } = useTranslation();
   const best = argMax(question.target, question.xMin, question.xMax);
+  const asked = askedTerms(question);
   const marks: NumberLineMarker[] = answers.flatMap((given) => {
     const sent = optimizeAnswer(given.answer);
     const x = sent && isFinite(Number(sent.x)) ? Number(sent.x) : null;
@@ -162,11 +237,20 @@ export function OptimizeClassAnswers({
         <Icon name={question.icon} className="mr-1" />
         {t(question.contextKey, question.params)}
       </p>
-      <div className="flex flex-wrap justify-center gap-6">
-        {(["constraint", "target"] as const).map((slot, index) => (
-          <span key={slot} className="flex items-baseline gap-2 text-sm">
-            <span className="text-gray-400">{t(`games.extremum.slots.${slot}`)}</span>
-            <MathTex tex={question.slotAnswers[index]} className="text-gray-800" />
+      <div className="grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-1 text-sm">
+        <span className="text-right text-gray-400">{t("games.extremum.slots.quantity")}</span>
+        <span className={question.quantityOptions ? "text-gray-800" : "text-gray-400"}>
+          {t(question.quantityKey)}
+        </span>
+        {OPTIMIZE_TERMS.map((term: OptimizeTerm) => (
+          <span key={term} className="contents">
+            <span className="text-right text-gray-400">
+              {t(`games.extremum.slots.${term}`)}
+            </span>
+            <MathTex
+              tex={termAnswer(question, term)}
+              className={asked.includes(term) ? "text-gray-800" : "text-gray-400"}
+            />
           </span>
         ))}
       </div>
@@ -178,10 +262,16 @@ export function OptimizeClassAnswers({
           min={question.xMin}
           max={question.xMax}
           heightClass="h-16"
-          markers={[
-            ...marks,
-            { value: best, tone: "correct", latex: `x = ${Math.round(best * 100) / 100}` },
+          // The same tolerance the player's own review draws as a ring: how
+          // much of the cloud was near enough to count.
+          bands={[
+            {
+              min: best - X_CORRECT_AT * (question.xMax - question.xMin),
+              max: best + X_CORRECT_AT * (question.xMax - question.xMin),
+              tone: "correct",
+            },
           ]}
+          markers={[...marks, { value: best, tone: "correct", latex: `x = ${round(best)}` }]}
         />
       </div>
     </div>

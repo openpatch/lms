@@ -377,21 +377,41 @@
       "derivePrompt": "Wie lautet die Ableitung?",
       "deriveHint": "Schreib sie z. B. als 3x^2-4x+1.",
       "deriveUnreadable": "Das lässt sich noch nicht als ganzrationale Funktion lesen.",
-      "modelPrompt": "Welche Nebenbedingung und welche Zielfunktion gehören zu dieser Situation?",
-      "modelIncomplete": "Wähle zuerst eine Nebenbedingung und eine Zielfunktion.",
+      "quantityPrompt": "Was soll hier möglichst groß werden?",
+      "modelPrompt": "Zieh die passende Karte an die gesuchte Stelle.",
+      "modelIncomplete": "Es fehlt noch eine Angabe.",
       "optimizePrompt": "Verschiebe jetzt x, bis die Größe möglichst groß ist.",
+      "value": "Wert",
       "slots": {
+        "quantity": "Zielgröße",
+        "extremal": "Extremalbedingung",
         "constraint": "Nebenbedingung",
         "target": "Zielfunktion"
       },
       "quantities": {
         "area": "Flächeninhalt",
-        "volume": "Volumen"
+        "volume": "Volumen",
+        "surface": "Oberflächeninhalt",
+        "perimeter": "Umfang",
+        "length": "Länge",
+        "cost": "Kosten",
+        "product": "Produkt",
+        "sum": "Summe",
+        "difference": "Differenz",
+        "quotient": "Quotient",
+        "revenue": "Einnahmen",
+        "price": "Preis",
+        "visitors": "Anzahl der Besucher"
       },
       "contexts": {
         "fence": "Eine rechteckige Weide liegt an einem geraden Fluss. Für die drei Seiten ohne Fluss stehen {{length}} m Zaun zur Verfügung. Wie breit muss sie sein, damit die Fläche am größten wird?",
+        "garden": "Ein rechteckiger Garten soll eingezäunt werden. Für alle vier Seiten stehen {{fence}} m Zaun zur Verfügung. Wie breit muss er sein, damit die Fläche am größten wird?",
         "box": "Aus einem quadratischen Blech mit der Seitenlänge {{side}} cm wird eine offene Schachtel gefaltet: An den Ecken werden Quadrate mit der Seitenlänge x ausgeschnitten. Für welches x wird das Volumen am größten?",
-        "parabola": "Ein Rechteck steht auf der x-Achse, seine oberen Ecken liegen auf der Parabel y = {{height}} - x². Für welches x wird der Flächeninhalt am größten?"
+        "cuboid": "Aus einem Blech mit den Maßen {{length}} cm × {{width}} cm wird eine offene Schachtel gefaltet: An den Ecken werden Quadrate mit der Seitenlänge x ausgeschnitten. Für welches x wird das Volumen am größten?",
+        "parabola": "Ein Rechteck steht auf der x-Achse, seine oberen Ecken liegen auf der Parabel y = {{height}} - x². Für welches x wird der Flächeninhalt am größten?",
+        "triangle": "Ein rechtwinkliges Dreieck hat die Katheten {{width}} cm und {{height}} cm. Ein Rechteck liegt mit einer Ecke im rechten Winkel, die gegenüberliegende Ecke auf der Hypotenuse. Für welche Breite x wird sein Flächeninhalt am größten?",
+        "numbers": "Zwei Zahlen haben zusammen die Summe {{sum}}. Die erste heißt x. Für welches x wird ihr Produkt am größten?",
+        "ticket": "Eine Karte für das Schulkonzert kostet {{price}} €, dann kommen {{visitors}} Besucher. Für jeden Euro, um den die Karte billiger wird, kommen {{perEuro}} Besucher mehr. Um wie viel Euro (x) sollte der Preis gesenkt werden, damit die Einnahmen am größten werden?"
       },
       "stages": {
         "derive": {
@@ -401,8 +421,8 @@
         },
         "optimize": {
           "name": "Extremwertproblem",
-          "summary": "Von der Nebenbedingung über die Zielfunktion zum Maximum",
-          "rules": "Löse {{questionsPerRound}} Extremwertprobleme: Wähle Nebenbedingung und Zielfunktion und finde dann das x, für das die Größe am größten wird. Die Hälfte der Punkte gibt es für das Modell, die andere für das Maximum. Du hast {{duration}} Sekunden."
+          "summary": "Vom Modell zum Maximum — Schritt für Schritt oder am Stück",
+          "rules": "Löse {{questionsPerRound}} Extremwertprobleme. Mal ist nur ein Schritt gesucht — die Zielgröße, die Extremalbedingung, die Nebenbedingung oder die Zielfunktion —, mal der ganze Weg; der Rest steht schon da. Dann suchst du das x, für das die Größe am größten wird. Die Hälfte der Punkte gibt es für das Modell, die andere für das Maximum. Du hast {{duration}} Sekunden."
         }
       }
     },
@@ -1157,7 +1177,11 @@
     "waitSpread": "Wartezeit bis Grün",
     "waitSpreadKurz": "Kurz (1–2,5 s)",
     "waitSpreadNormal": "Normal (1,5–4 s)",
-    "waitSpreadLang": "Lang (2–6 s)"
+    "waitSpreadLang": "Lang (2–6 s)",
+    "modelParts": "Was gesucht ist",
+    "modelPartsMixed": "Gemischt (steigt im Lauf der Runde)",
+    "modelPartsOne": "Immer nur ein Schritt",
+    "modelPartsAll": "Immer der ganze Weg"
   },
   "parsons": {
     "plain": "Bringe die Zeilen in die richtige Reihenfolge.",

@@ -6,6 +6,9 @@ import type { LobbyState } from "../../shared/types";
 import { getAllGames, getGame, getStage } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import StageShell from "../components/StageShell";
+import RoundReview from "../components/RoundReview";
+import RoundDebrief from "../components/RoundDebrief";
+import type { StageRoundData } from "../../shared/framework";
 import Icon from "../components/icons";
 import { ICON_NAMES } from "../../shared/icons";
 
@@ -23,6 +26,13 @@ import { ICON_NAMES } from "../../shared/icons";
  * `server/games/`, not by a stand-in written for the preview. A rehearsal
  * against a mock would be worth nothing: the questions a station generates are
  * half of what there is to look at.
+ *
+ * The other half is what the station says once the round is over, which is why
+ * "Rückblick" is here too: the player's review rows and the host's debrief for
+ * the round as it stands. Those screens otherwise need a round played out in a
+ * lobby before anybody sees them, and they are where a stage most often turns
+ * out to be wrong — a review that shows a tick and not the answer behind it is
+ * only ever found by looking at one.
  */
 export default function Preview() {
   const { gameId, stageId } = useParams();
@@ -73,10 +83,13 @@ function StagePreview({ gameId, stageId }: { gameId: string; stageId: string }) 
   // screen: a stage holds its draft answer against the question's id, and the
   // first question of the new round carries the same id as the old one's.
   const [take, setTake] = useState(0);
+  // The other half of a station: what it says once the round is over.
+  const [reviewing, setReviewing] = useState(false);
 
   const reroll = () => {
     setSession(newSession(gameId, stageId));
     setTake((n) => n + 1);
+    setReviewing(false);
   };
 
   const stage = game ? getStage(game, stageId) : undefined;
@@ -90,18 +103,43 @@ function StagePreview({ gameId, stageId }: { gameId: string; stageId: string }) 
     if (next) setSession({ ...session, gameData: next });
   };
 
+  const round = session.gameData as StageRoundData | null;
+
   return (
     <>
-      <Banner game={game.id} stage={stage.id} onReroll={reroll} />
-      <StageShell
-        key={take}
-        game={game}
-        state={session}
-        gameData={session.gameData}
-        isHost={false}
-        playerId="player"
-        sendMessage={sendMessage}
+      <Banner
+        game={game.id}
+        stage={stage.id}
+        onReroll={reroll}
+        reviewing={reviewing}
+        onReview={() => {
+          setReviewing((on) => !on);
+          // The banner is at the bottom of a page that has just been scrolled
+          // through; without this the screen it switches to opens halfway down.
+          window.scrollTo({ top: 0 });
+        }}
       />
+      {reviewing && round ? (
+        // The pair a round really ends on (see Demo): what the player gets
+        // back, then what the host would talk the round through with. Whatever
+        // has been answered is in it and the rest reads as unanswered, which is
+        // the case worth looking at anyway — a review row that says nothing
+        // when the clock ran out on its question is a row to fix.
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-4 pb-16">
+          <RoundReview game={game} data={round} playerId="player" />
+          <RoundDebrief game={game} data={round} players={session.players} />
+        </div>
+      ) : (
+        <StageShell
+          key={take}
+          game={game}
+          state={session}
+          gameData={session.gameData}
+          isHost={false}
+          playerId="player"
+          sendMessage={sendMessage}
+        />
+      )}
     </>
   );
 }
@@ -110,10 +148,14 @@ function Banner({
   game,
   stage,
   onReroll,
+  reviewing,
+  onReview,
 }: {
   game: string;
   stage: string;
   onReroll: () => void;
+  reviewing: boolean;
+  onReview: () => void;
 }) {
   return (
     // Bottom left: the shell's own bars own the top of the screen, and the
@@ -128,6 +170,9 @@ function Banner({
       </span>
       <button onClick={onReroll} className="underline">
         neue Aufgaben
+      </button>
+      <button onClick={onReview} className="underline">
+        {reviewing ? "zurück zur Station" : "Rückblick"}
       </button>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { OptimizeQuestion } from "../../../../shared/games/extremum";
+import type { OptimizeQuestion, OptimizeTerm } from "../../../../shared/games/extremum";
+import { OPTIMIZE_TERMS, askedTerms } from "../../../../shared/games/extremum";
 import type { Assignment } from "../../../../shared/matching";
 import { emptyAssignment } from "../../../../shared/matching";
 import { evaluate } from "../../../../shared/polynomial";
@@ -15,11 +16,42 @@ import PlotCanvas from "../../../components/PlotCanvas";
 
 interface Draft {
   questionId: number;
+  quantity: number | null;
   assignment: Assignment;
   x: number;
 }
 
-/** Model an extreme value problem, then find its maximum. */
+/** One row of the model: what is being asked for, or what was handed over. */
+function ChainRow({
+  label,
+  // The quantity's buttons wrap to a second line on a phone, and a label
+  // centred against two rows of them reads as belonging to neither.
+  top = false,
+  children,
+}: {
+  label: string;
+  top?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <span className={`text-right text-sm text-gray-500 ${top ? "self-start pt-1.5" : ""}`}>
+        {label}
+      </span>
+      <span className="text-left">{children}</span>
+    </>
+  );
+}
+
+/**
+ * Model an extreme value problem, then find its maximum.
+ *
+ * The whole model is on screen every time — Zielgröße, Extremalbedingung,
+ * Nebenbedingung, Zielfunktion — and the question is which of its steps the
+ * player has to supply. The rest stand there filled in, which is what makes a
+ * one-step question possible at all: the term to pick is a term in *this*
+ * chain, and a player who gets it can read on and see where it was going.
+ */
 export default function OptimizeStage({
   question,
   submit,
@@ -31,6 +63,8 @@ export default function OptimizeStage({
   if (!question) return null;
 
   const showGraph = settings.showTargetGraph !== false;
+  const terms = askedTerms(question);
+  const options = question.quantityOptions;
 
   // Well away from every context's maximum, so the slider has to be moved
   const startX =
@@ -42,14 +76,36 @@ export default function OptimizeStage({
       ? draft
       : {
           questionId: question.id,
+          quantity: null,
           assignment: emptyAssignment(question.cards.length),
           x: startX,
         };
 
-  const modelled = current.assignment.filter((slot) => slot != null).length === 2;
+  const placed = current.assignment.filter((slot) => slot != null).length;
+  const modelled = placed === terms.length && (options == null || current.quantity != null);
   const value = evaluate(question.target, current.x);
 
-  const send = () => submit(JSON.stringify({ assignment: current.assignment, x: current.x }));
+  /** What the readout under the slider is called — the player's pick, while
+   *  naming it is the question, so the row is not the answer to it. */
+  const valueLabel =
+    options == null
+      ? t(question.quantityKey)
+      : current.quantity == null
+        ? t("games.extremum.value")
+        : t(options[current.quantity]);
+
+  const send = () =>
+    submit(
+      JSON.stringify({
+        quantity: current.quantity,
+        assignment: current.assignment,
+        x: current.x,
+      }),
+    );
+
+  const given = (term: OptimizeTerm) => (
+    <MathTex tex={question.terms[OPTIMIZE_TERMS.indexOf(term)]} className="text-gray-400" />
+  );
 
   return (
     <div className="flex flex-col items-center w-full gap-4">
@@ -63,14 +119,42 @@ export default function OptimizeStage({
         assignment={current.assignment}
         onChange={(assignment) => setDraft({ ...current, assignment })}
       >
-        <p className="text-sm text-gray-500">{t("games.extremum.modelPrompt")}</p>
-        <MatchTray className="mb-2" />
-        <div className="flex flex-wrap justify-center gap-6">
-          {(["constraint", "target"] as const).map((slot, index) => (
-            <div key={slot} className="flex flex-col items-center gap-1">
-              <span className="text-sm text-gray-500">{t(`games.extremum.slots.${slot}`)}</span>
-              <MatchSlot slot={index} className="min-w-[12rem]" />
-            </div>
+        <p className="text-sm text-gray-500 text-center">
+          {t(terms.length > 0 ? "games.extremum.modelPrompt" : "games.extremum.quantityPrompt")}
+        </p>
+        {terms.length > 0 && <MatchTray className="mb-2" />}
+
+        <div className="grid grid-cols-[auto_1fr] items-center justify-center gap-x-3 gap-y-2">
+          <ChainRow label={t("games.extremum.slots.quantity")} top={options != null}>
+            {options == null ? (
+              <span className="text-gray-400">{t(question.quantityKey)}</span>
+            ) : (
+              <span className="flex flex-wrap gap-2">
+                {options.map((option, index) => (
+                  <button
+                    key={option}
+                    onClick={() => setDraft({ ...current, quantity: index })}
+                    className={`rounded-lg border-2 px-3 py-1 text-sm transition-all ${
+                      current.quantity === index
+                        ? "border-game-solid bg-game-50 text-game-ink"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-game-300"
+                    }`}
+                  >
+                    {t(option)}
+                  </button>
+                ))}
+              </span>
+            )}
+          </ChainRow>
+
+          {OPTIMIZE_TERMS.map((term) => (
+            <ChainRow key={term} label={t(`games.extremum.slots.${term}`)}>
+              {terms.includes(term) ? (
+                <MatchSlot slot={terms.indexOf(term)} className="min-w-[12rem]" />
+              ) : (
+                given(term)
+              )}
+            </ChainRow>
           ))}
         </div>
       </MatchBoard>
@@ -100,8 +184,7 @@ export default function OptimizeStage({
         />
 
         <p className="text-lg text-gray-700">
-          {t(question.quantityKey)} ={" "}
-          <span className="font-bold text-game-ink">{value.toFixed(2)}</span>
+          {valueLabel} = <span className="font-bold text-game-ink">{value.toFixed(2)}</span>
         </p>
 
         <StageActionBar>
@@ -119,9 +202,14 @@ export function OptimizeRulesExample() {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center gap-2 text-gray-500">
-      <div className="flex items-center gap-3 text-lg">
-        <MathTex tex="2x + y = 40" />
-        <span className="text-gray-400">&rarr;</span>
+      <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1 text-sm">
+        <span className="text-right text-gray-400">{t("games.extremum.slots.extremal")}</span>
+        <MathTex tex="A = x \cdot y" />
+        <span className="text-right text-gray-400">{t("games.extremum.slots.constraint")}</span>
+        <span className="rounded-lg border-2 border-dashed border-gray-300 px-3 py-1 text-gray-400">
+          ?
+        </span>
+        <span className="text-right text-gray-400">{t("games.extremum.slots.target")}</span>
         <MathTex tex="A(x) = x\,(40 - 2x)" />
       </div>
       <p className="text-sm text-gray-400 max-w-sm text-center">

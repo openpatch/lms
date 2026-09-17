@@ -14,11 +14,28 @@ export interface PlotCurve {
   style: CurveStyle;
 }
 
+/** Whose dot this is: the game's own accent, the right answer, or the answer
+ *  of whoever is reading. The same words the number line uses. */
+export type MarkerTone = "accent" | "correct" | "mine";
+
 /** A dot on the plot, e.g. the point a slider currently picks out. */
 export interface PlotMarker {
   x: number;
   y: number;
   label?: string;
+  tone?: MarkerTone;
+  /**
+   * Draws a ring around the dot of this radius, measured in x units — how
+   * close to it still counts, rather than the point itself.
+   *
+   * It is a circle and not a band because a band says nothing about where the
+   * middle of it is, and what the ring is drawn around is the answer. The
+   * radius is the x tolerance, so on a plot whose two axes are not to the same
+   * scale the ring is what that tolerance looks like *along the axis it is
+   * measured on* — the player reads off how far left and right of the summit
+   * they could have been.
+   */
+  ring?: number;
 }
 
 /** A curve that is already sampled — a spline through the player's points, say. */
@@ -90,6 +107,14 @@ const CURVE_SAMPLES = 160;
 const HANDLE_GRAB_PX = 40;
 /** A press that stays within this counts as a tap, not a drag. */
 const TAP_SLOP_PX = 8;
+
+/** A marker takes the game's accent from the theme, so a review drawn next to
+ *  a number line is drawn in the colours that line uses. */
+const MARKER_COLORS: Record<MarkerTone, string> = {
+  accent: "var(--game-solid, #1c8472)",
+  mine: "var(--game-solid, #1c8472)",
+  correct: "#059669",
+};
 
 const CURVE_COLORS: Record<CurveStyle, string> = {
   reference: "#9ca3af",
@@ -428,23 +453,45 @@ export default function PlotCanvas({
           </g>
         ))}
 
-        {markers.map((marker, index) => (
-          <g key={`marker-${index}`}>
-            <circle cx={toPixelX(marker.x)} cy={toPixelY(marker.y)} r="9" fill="#1c8472" />
-            {marker.label && (
-              <text
-                x={toPixelX(marker.x)}
-                y={toPixelY(marker.y) - 18}
-                textAnchor="middle"
-                fontSize="17"
-                fontWeight="600"
-                fill="#1c8472"
-              >
-                {marker.label}
-              </text>
-            )}
-          </g>
-        ))}
+        {markers.map((marker, index) => {
+          const color = MARKER_COLORS[marker.tone ?? "accent"];
+          const cx = toPixelX(marker.x);
+          const cy = toPixelY(marker.y);
+          const ring =
+            marker.ring != null && marker.ring > 0
+              ? Math.abs(toPixelX(marker.x + marker.ring) - cx)
+              : 0;
+          return (
+            <g key={`marker-${index}`}>
+              {ring > 0 && (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={ring}
+                  fill={color}
+                  fillOpacity="0.12"
+                  stroke={color}
+                  strokeWidth="3"
+                  strokeDasharray="8 6"
+                />
+              )}
+              <circle cx={cx} cy={cy} r="9" fill={color} stroke="#ffffff" strokeWidth="3" />
+              {marker.label && (
+                // Clear of the ring, or the label is written across its dashes
+                <text
+                  x={cx}
+                  y={Math.max(PADDING + 16, cy - 18 - ring)}
+                  textAnchor="middle"
+                  fontSize="17"
+                  fontWeight="600"
+                  fill={color}
+                >
+                  {marker.label}
+                </text>
+              )}
+            </g>
+          );
+        })}
 
         {/* Drawn strokes */}
         <g clipPath={`url(#${clipId})`}>

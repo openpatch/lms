@@ -377,21 +377,41 @@
       "derivePrompt": "What is the derivative?",
       "deriveHint": "Type it like 3x^2-4x+1.",
       "deriveUnreadable": "That cannot be read as a polynomial yet.",
-      "modelPrompt": "Which constraint and which target function belong to this situation?",
-      "modelIncomplete": "Pick a constraint and a target function first.",
+      "quantityPrompt": "What is to become as large as possible here?",
+      "modelPrompt": "Drag the right card into the step that is missing.",
+      "modelIncomplete": "Something is still missing.",
       "optimizePrompt": "Now move x until the quantity is as large as possible.",
+      "value": "Value",
       "slots": {
+        "quantity": "Quantity",
+        "extremal": "Quantity in two variables",
         "constraint": "Constraint",
         "target": "Target function"
       },
       "quantities": {
         "area": "Area",
-        "volume": "Volume"
+        "volume": "Volume",
+        "surface": "Surface area",
+        "perimeter": "Perimeter",
+        "length": "Length",
+        "cost": "Cost",
+        "product": "Product",
+        "sum": "Sum",
+        "difference": "Difference",
+        "quotient": "Quotient",
+        "revenue": "Takings",
+        "price": "Price",
+        "visitors": "Number of visitors"
       },
       "contexts": {
         "fence": "A rectangular pasture lies along a straight river. {{length}} m of fence are available for the three sides that are not the river. How wide does it have to be to get the largest area?",
+        "garden": "A rectangular garden is to be fenced in. {{fence}} m of fence are available for all four sides. How wide does it have to be to get the largest area?",
         "box": "An open box is folded from a square sheet with side {{side}} cm by cutting squares of side x out of the corners. Which x gives the largest volume?",
-        "parabola": "A rectangle stands on the x-axis with its upper corners on the parabola y = {{height}} - x². Which x gives the largest area?"
+        "cuboid": "An open box is folded from a sheet {{length}} cm by {{width}} cm by cutting squares of side x out of the corners. Which x gives the largest volume?",
+        "parabola": "A rectangle stands on the x-axis with its upper corners on the parabola y = {{height}} - x². Which x gives the largest area?",
+        "triangle": "A right triangle has legs of {{width}} cm and {{height}} cm. A rectangle sits in the right angle with its opposite corner on the hypotenuse. Which width x gives the largest area?",
+        "numbers": "Two numbers add up to {{sum}}. The first one is x. Which x makes their product largest?",
+        "ticket": "A ticket for the school concert costs {{price}} €, and {{visitors}} people come. For every euro the ticket gets cheaper, {{perEuro}} more people come. By how many euros (x) should the price be cut to take the most money?"
       },
       "stages": {
         "derive": {
@@ -401,8 +421,8 @@
         },
         "optimize": {
           "name": "Extreme Value Problem",
-          "summary": "From the constraint to the target function to the maximum",
-          "rules": "Solve {{questionsPerRound}} extreme value problems: pick the constraint and the target function, then find the value of x that makes the quantity largest. Half the points come from the model, half from the maximum. You have {{duration}} seconds."
+          "summary": "From the model to the maximum — one step at a time or all of it",
+          "rules": "Solve {{questionsPerRound}} extreme value problems. Sometimes only one step is missing — the quantity, the quantity in two variables, the constraint or the target function — and sometimes the whole way; the rest is already there. Then find the x that makes the quantity largest. Half the points come from the model, half from the maximum. You have {{duration}} seconds."
         }
       }
     },
@@ -1157,7 +1177,11 @@
     "waitSpread": "Wait before green",
     "waitSpreadKurz": "Short (1–2.5 s)",
     "waitSpreadNormal": "Normal (1.5–4 s)",
-    "waitSpreadLang": "Long (2–6 s)"
+    "waitSpreadLang": "Long (2–6 s)",
+    "modelParts": "What is asked for",
+    "modelPartsMixed": "Mixed (more as the round goes on)",
+    "modelPartsOne": "One step at a time",
+    "modelPartsAll": "The whole way, every time"
   },
   "parsons": {
     "plain": "Put the lines back in the right order.",
