@@ -1,4 +1,4 @@
-import type { GameSpec, SettingsField, StageQuestion } from "../framework";
+import type { GameSpec, SettingsField, StageQuestion, StageSettings } from "../framework";
 import type { TurtleDrawing } from "../python-turtle";
 
 // ---------------------------------------------------------------------------
@@ -41,6 +41,43 @@ const toggle = (key: string, value: boolean): SettingsField => ({
   labelKey: `settings.${key}`,
   default: value,
 });
+
+/**
+ * The ideas a turtle picture can be built from — the chapters of the Lernpfad,
+ * in the order it teaches them. A station is narrowed to the ones a class has
+ * already met: pick only "loop" in week two, add "list" once lists have been.
+ */
+export type TurtleConcept = "variable" | "loop" | "branch" | "function" | "list";
+
+export const TURTLE_CONCEPTS: TurtleConcept[] = [
+  "variable",
+  "loop",
+  "branch",
+  "function",
+  "list",
+];
+
+const turtleConcepts: SettingsField = {
+  type: "multi",
+  key: "turtleConcepts",
+  labelKey: "settings.turtleConcepts",
+  options: TURTLE_CONCEPTS.map((concept) => ({
+    value: concept,
+    labelKey: `settings.turtleConcept${concept[0].toUpperCase()}${concept.slice(1)}`,
+  })),
+  default: [...TURTLE_CONCEPTS],
+};
+
+/** Which ideas a turtle round may draw on. Never empty. */
+export function readTurtleConcepts(settings: StageSettings): TurtleConcept[] {
+  const raw = settings.turtleConcepts;
+  const picked = Array.isArray(raw) ? raw.filter(isTurtleConcept) : [];
+  return picked.length > 0 ? picked : [...TURTLE_CONCEPTS];
+}
+
+function isTurtleConcept(value: unknown): value is TurtleConcept {
+  return TURTLE_CONCEPTS.includes(value as TurtleConcept);
+}
 
 /**
  * Textual programming with Python — UV-INF-SEK1-10-01, the largest vorhaben of
@@ -140,7 +177,7 @@ export const pythonSpec: GameSpec = {
       nameKey: "games.python.stages.turtle.name",
       summaryKey: "games.python.stages.turtle.summary",
       rulesKey: "games.python.stages.turtle.rules",
-      settings: [questionsPerRound([3, 5, 8], 5), duration(120)],
+      settings: [questionsPerRound([3, 5, 8], 5), duration(120), turtleConcepts],
     },
     {
       id: "parsons",

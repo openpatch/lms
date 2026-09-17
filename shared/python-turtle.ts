@@ -6,9 +6,28 @@
 // `runTurtle()` walks the same tree into the drawing those lines make. That is
 // what lets the server build a question and three wrong pictures from mutated
 // copies of the program without ever parsing Python.
+//
+// The tree covers the ideas the Turtle-Lernpfad teaches one after another —
+// variables, loops, branches, own functions and lists — so a station can be
+// narrowed to the ones a class has already met.
 
-/** A constant, or `factor * <loop variable> + offset` for bodies that grow. */
-export type TurtleValue = number | { factor: number; offset: number; variable: string };
+/**
+ * A number in a program: a constant, `factor * <name> + offset` for anything
+ * read from a variable or a loop counter, or one entry of a list.
+ */
+export type TurtleValue =
+  | number
+  | { factor: number; offset: number; variable: string }
+  | { list: string; index: TurtleValue };
+
+/** A colour: a name like "red", or one looked up in a list of them. */
+export type TurtleColor = string | { list: string; index: TurtleValue };
+
+/** What an `if` asks about a variable. */
+export type TurtleCondition =
+  | { test: "even"; variable: string }
+  | { test: "odd"; variable: string }
+  | { test: "less"; variable: string; value: number };
 
 export type TurtleCommand =
   | { op: "forward"; value: TurtleValue }
@@ -19,9 +38,18 @@ export type TurtleCommand =
   | { op: "pendown" }
   | { op: "goto"; x: number; y: number }
   | { op: "dot"; value: TurtleValue }
-  | { op: "pencolor"; color: string }
+  | { op: "pencolor"; color: TurtleColor }
   | { op: "pensize"; value: TurtleValue }
-  | { op: "repeat"; times: number; variable: string; body: TurtleCommand[] };
+  | { op: "repeat"; times: number; variable: string; body: TurtleCommand[] }
+  /** `name = <value>`. */
+  | { op: "assign"; name: string; value: TurtleValue }
+  /** `name = [40, 70, 100]`. */
+  | { op: "numbers"; name: string; values: number[] }
+  /** `name = ["red", "blue"]`. */
+  | { op: "colors"; name: string; values: string[] }
+  | { op: "branch"; condition: TurtleCondition; body: TurtleCommand[]; orElse?: TurtleCommand[] }
+  | { op: "define"; name: string; body: TurtleCommand[] }
+  | { op: "call"; name: string };
 
 export interface TurtlePoint {
   x: number;
@@ -54,10 +82,62 @@ export interface TurtleBounds {
 
 const DEFAULT_COLOR = "black";
 
-/** Resolves a value against the loop variables currently in scope. */
-function resolve(value: TurtleValue, scope: Record<string, number>): number {
+/**
+ * What a program has in hand while it runs: its variables, its lists and the
+ * functions it has defined. One set for the whole program rather than one per
+ * block, because that is what Python does — a name assigned inside a loop is
+ * still there on the next turn, and the loop counter outlives the loop.
+ */
+interface TurtleEnv {
+  numbers: Record<string, number>;
+  lists: Record<string, number[] | string[]>;
+  functions: Record<string, TurtleCommand[]>;
+  /** Calls still running. A program that calls itself is stopped, not hung. */
+  depth: number;
+}
+
+/** Deep enough for a function that calls a helper; too shallow to recurse. */
+const MAX_CALL_DEPTH = 8;
+
+/** Resolves a value against the variables and lists currently in scope. */
+function resolve(value: TurtleValue, env: TurtleEnv): number {
   if (typeof value === "number") return value;
-  return value.factor * (scope[value.variable] ?? 0) + value.offset;
+  if ("variable" in value) return value.factor * (env.numbers[value.variable] ?? 0) + value.offset;
+  const item = itemAt(value, env);
+  return typeof item === "number" ? item : 0;
+}
+
+/**
+ * The entry `farben[i]` reads. The generator only ever builds indexes that are
+ * in range; a mutated copy is clamped rather than dropped, so a wrong option is
+ * still a picture the player can rule out.
+ */
+function itemAt(
+  value: { list: string; index: TurtleValue },
+  env: TurtleEnv,
+): number | string | undefined {
+  const items = env.lists[value.list];
+  if (!items || items.length === 0) return undefined;
+  const index = Math.round(resolve(value.index, env));
+  return items[Math.min(items.length - 1, Math.max(0, index))];
+}
+
+function resolveColor(color: TurtleColor, env: TurtleEnv): string {
+  if (typeof color === "string") return color;
+  const item = itemAt(color, env);
+  return typeof item === "string" ? item : DEFAULT_COLOR;
+}
+
+function holds(condition: TurtleCondition, env: TurtleEnv): boolean {
+  const value = env.numbers[condition.variable] ?? 0;
+  switch (condition.test) {
+    case "even":
+      return Math.abs(value % 2) === 0;
+    case "odd":
+      return Math.abs(value % 2) === 1;
+    case "less":
+      return value < condition.value;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -90,24 +170,33 @@ function move(state: TurtleState, distance: number, drawing: TurtleDrawing): voi
   else endStroke(state, drawing);
 }
 
+function run(
+  commands: TurtleCommand[],
+  state: TurtleState,
+  env: TurtleEnv,
+  drawing: TurtleDrawing,
+): void {
+  for (const command of commands) step(command, state, env, drawing);
+}
+
 function step(
   command: TurtleCommand,
   state: TurtleState,
-  scope: Record<string, number>,
+  env: TurtleEnv,
   drawing: TurtleDrawing,
 ): void {
   switch (command.op) {
     case "forward":
-      move(state, resolve(command.value, scope), drawing);
+      move(state, resolve(command.value, env), drawing);
       break;
     case "backward":
-      move(state, -resolve(command.value, scope), drawing);
+      move(state, -resolve(command.value, env), drawing);
       break;
     case "right":
-      state.heading -= resolve(command.value, scope);
+      state.heading -= resolve(command.value, env);
       break;
     case "left":
-      state.heading += resolve(command.value, scope);
+      state.heading += resolve(command.value, env);
       break;
     case "penup":
       endStroke(state, drawing);
@@ -132,24 +221,46 @@ function step(
       drawing.dots.push({
         x: state.x,
         y: state.y,
-        size: Math.max(1, resolve(command.value, scope)),
+        size: Math.max(1, resolve(command.value, env)),
         color: state.color,
       });
       break;
     case "pencolor":
       endStroke(state, drawing);
-      state.color = command.color;
+      state.color = resolveColor(command.color, env);
       break;
     case "pensize":
       endStroke(state, drawing);
-      state.width = Math.max(1, resolve(command.value, scope));
+      state.width = Math.max(1, resolve(command.value, env));
       break;
     case "repeat":
       for (let i = 0; i < command.times; i++) {
-        const inner = { ...scope, [command.variable]: i };
-        for (const child of command.body) step(child, state, inner, drawing);
+        env.numbers[command.variable] = i;
+        run(command.body, state, env, drawing);
       }
       break;
+    case "assign":
+      env.numbers[command.name] = resolve(command.value, env);
+      break;
+    case "numbers":
+    case "colors":
+      env.lists[command.name] = command.values;
+      break;
+    case "branch":
+      if (holds(command.condition, env)) run(command.body, state, env, drawing);
+      else if (command.orElse) run(command.orElse, state, env, drawing);
+      break;
+    case "define":
+      env.functions[command.name] = command.body;
+      break;
+    case "call": {
+      const body = env.functions[command.name];
+      if (!body || env.depth >= MAX_CALL_DEPTH) break;
+      env.depth++;
+      run(body, state, env, drawing);
+      env.depth--;
+      break;
+    }
   }
 }
 
@@ -165,7 +276,7 @@ export function runTurtle(program: TurtleCommand[]): TurtleDrawing {
     width: 2,
     stroke: [{ x: 0, y: 0 }],
   };
-  for (const command of program) step(command, state, {}, drawing);
+  run(program, state, { numbers: {}, lists: {}, functions: {}, depth: 0 }, drawing);
   endStroke(state, drawing);
   return drawing;
 }
@@ -247,12 +358,28 @@ export function fingerprintDistance(a: Uint8Array, b: Uint8Array): number {
 
 function valueToPython(value: TurtleValue): string {
   if (typeof value === "number") return formatNumber(value);
+  if ("list" in value) return `${value.list}[${valueToPython(value.index)}]`;
   const { factor, offset, variable } = value;
   const product = factor === 1 ? variable : `${variable} * ${formatNumber(factor)}`;
   if (offset === 0) return product;
   return offset > 0
     ? `${product} + ${formatNumber(offset)}`
     : `${product} - ${formatNumber(-offset)}`;
+}
+
+function colorToPython(color: TurtleColor): string {
+  return typeof color === "string" ? `"${color}"` : `${color.list}[${valueToPython(color.index)}]`;
+}
+
+function conditionToPython(condition: TurtleCondition): string {
+  switch (condition.test) {
+    case "even":
+      return `${condition.variable} % 2 == 0`;
+    case "odd":
+      return `${condition.variable} % 2 == 1`;
+    case "less":
+      return `${condition.variable} < ${formatNumber(condition.value)}`;
+  }
 }
 
 function formatNumber(value: number): string {
@@ -278,11 +405,37 @@ function commandToPython(command: TurtleCommand, indent: number, lines: string[]
       lines.push(`${pad}goto(${formatNumber(command.x)}, ${formatNumber(command.y)})`);
       break;
     case "pencolor":
-      lines.push(`${pad}pencolor("${command.color}")`);
+      lines.push(`${pad}pencolor(${colorToPython(command.color)})`);
       break;
     case "repeat":
       lines.push(`${pad}for ${command.variable} in range(${command.times}):`);
       for (const child of command.body) commandToPython(child, indent + 1, lines);
+      break;
+    case "assign":
+      lines.push(`${pad}${command.name} = ${valueToPython(command.value)}`);
+      break;
+    case "numbers":
+      lines.push(`${pad}${command.name} = [${command.values.map(formatNumber).join(", ")}]`);
+      break;
+    case "colors":
+      lines.push(`${pad}${command.name} = [${command.values.map((c) => `"${c}"`).join(", ")}]`);
+      break;
+    case "branch":
+      lines.push(`${pad}if ${conditionToPython(command.condition)}:`);
+      for (const child of command.body) commandToPython(child, indent + 1, lines);
+      if (command.orElse && command.orElse.length > 0) {
+        lines.push(`${pad}else:`);
+        for (const child of command.orElse) commandToPython(child, indent + 1, lines);
+      }
+      break;
+    case "define":
+      lines.push(`${pad}def ${command.name}():`);
+      for (const child of command.body) commandToPython(child, indent + 1, lines);
+      // A blank line after the definition, the way the Lernpfad prints it.
+      lines.push("");
+      break;
+    case "call":
+      lines.push(`${pad}${command.name}()`);
       break;
   }
 }

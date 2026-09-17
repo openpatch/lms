@@ -6,13 +6,14 @@
 // the Python subset the hyperbook's Turtle-Lernpfad teaches — no f-strings, no
 // dictionaries, no slicing.
 
-import { pythonSpec } from "../../shared/games/python";
+import { pythonSpec, readTurtleConcepts } from "../../shared/games/python";
 import type {
   BugQuestion,
   CodeAnswerQuestion,
   CodeChoiceQuestion,
   LogicQuestion,
   ParsonsQuestion,
+  TurtleConcept,
   TurtleQuestion,
 } from "../../shared/games/python";
 import { answerMatches, sequenceMatches, sequenceScore } from "../../shared/code-answer";
@@ -25,6 +26,7 @@ import {
   toPython,
   type TurtleCommand,
   type TurtleDrawing,
+  type TurtleValue,
 } from "../../shared/python-turtle";
 import { speedPoints } from "../../shared/framework";
 import type { AnswerTiming, StageHandler } from "../framework";
@@ -1171,16 +1173,279 @@ function rosetteProgram(): TurtleCommand[] {
   ];
 }
 
-const TURTLE_PROGRAMS = [
-  polygonProgram,
-  starProgram,
-  stairProgram,
-  zigzagProgram,
-  spiralProgram,
-  dotRingProgram,
-  growingDotsProgram,
-  rosetteProgram,
+// Everything above needs nothing but a loop. What follows adds one idea each —
+// a variable, a branch, a function of one's own, a list — so a station can be
+// held to the chapters a class has actually had.
+
+/** The name itself, read as a value: `laenge`, not `laenge * 1 + 0`. */
+function nameValue(name: string): TurtleValue {
+  return { factor: 1, offset: 0, variable: name };
+}
+
+/** One length, written down once and used three times. */
+function variableCornerProgram(): TurtleCommand[] {
+  const name = pick(["laenge", "seite", "weite"]);
+  const turn = pick([60, 90, 120]);
+  const commands: TurtleCommand[] = [{ op: "assign", name, value: pick([70, 90, 110]) }];
+  for (let i = 0; i < randomInt(3, 4); i++) {
+    if (i > 0) commands.push({ op: "right", value: turn });
+    commands.push({ op: "forward", value: nameValue(name) });
+  }
+  return commands;
+}
+
+/** The variable changes halfway, and every line after it is drawn shorter. */
+function variableShrinkProgram(): TurtleCommand[] {
+  const name = pick(["laenge", "seite"]);
+  const turn = pick([90, 120]);
+  const step = pick([30, 40, 50]);
+  return [
+    { op: "assign", name, value: pick([100, 120, 140]) },
+    { op: "forward", value: nameValue(name) },
+    { op: "right", value: turn },
+    { op: "assign", name, value: { factor: 1, offset: -step, variable: name } },
+    { op: "forward", value: nameValue(name) },
+    { op: "right", value: turn },
+    { op: "forward", value: nameValue(name) },
+  ];
+}
+
+/** A square spiral: the variable grows on every turn of the loop. */
+function growingSquareProgram(): TurtleCommand[] {
+  const name = pick(["laenge", "seite"]);
+  const step = pick([10, 15, 20]);
+  return [
+    { op: "assign", name, value: pick([20, 30, 40]) },
+    {
+      op: "repeat",
+      times: randomInt(6, 10),
+      variable: "i",
+      body: [
+        { op: "forward", value: nameValue(name) },
+        { op: "right", value: pick([90, 120]) },
+        { op: "assign", name, value: { factor: 1, offset: step, variable: name } },
+      ],
+    },
+  ];
+}
+
+/** Every second corner goes the other way. */
+function alternatingTurnProgram(): TurtleCommand[] {
+  return [
+    {
+      op: "repeat",
+      times: randomInt(6, 10),
+      variable: "i",
+      body: [
+        { op: "forward", value: pick([50, 60, 70]) },
+        {
+          op: "branch",
+          condition: { test: "even", variable: "i" },
+          body: [{ op: "right", value: pick([60, 90, 120]) }],
+          orElse: [{ op: "left", value: pick([45, 60, 90]) }],
+        },
+      ],
+    },
+  ];
+}
+
+/** Long step, short step: here the branch decides how far, not which way. */
+function everySecondStepProgram(): TurtleCommand[] {
+  return [
+    {
+      op: "repeat",
+      times: randomInt(6, 10),
+      variable: "i",
+      body: [
+        {
+          op: "branch",
+          condition: { test: "even", variable: "i" },
+          body: [{ op: "forward", value: pick([80, 100]) }],
+          orElse: [{ op: "forward", value: pick([30, 40]) }],
+        },
+        { op: "right", value: pick([60, 72, 90]) },
+      ],
+    },
+  ];
+}
+
+/** The loop turns one way while `i` is small, and the other way afterwards. */
+function halfwayTurnProgram(): TurtleCommand[] {
+  const steps = randomInt(6, 10);
+  const turn = pick([60, 90, 120]);
+  return [
+    {
+      op: "repeat",
+      times: steps,
+      variable: "i",
+      body: [
+        { op: "forward", value: pick([50, 60, 70]) },
+        {
+          op: "branch",
+          condition: { test: "less", variable: "i", value: Math.floor(steps / 2) },
+          body: [{ op: "right", value: turn }],
+          orElse: [{ op: "left", value: turn }],
+        },
+      ],
+    },
+  ];
+}
+
+/** A shape worth a name of its own, stamped all the way round. */
+function stampedShapeProgram(): TurtleCommand[] {
+  const name = pick(["quadrat", "dreieck"]);
+  const sides = name === "quadrat" ? 4 : 3;
+  const around = pick([4, 5, 6, 8]);
+  return [
+    {
+      op: "define",
+      name,
+      body: [
+        {
+          op: "repeat",
+          times: sides,
+          variable: "i",
+          body: [
+            { op: "forward", value: pick([40, 50, 60]) },
+            { op: "right", value: POLYGON_STEPS[sides] },
+          ],
+        },
+      ],
+    },
+    {
+      op: "repeat",
+      times: around,
+      variable: "j",
+      body: [{ op: "call", name }, { op: "right", value: POLYGON_STEPS[around] }],
+    },
+  ];
+}
+
+/** The same figure twice over — the reason it was given a name. */
+function twiceCalledProgram(): TurtleCommand[] {
+  const name = "treppe";
+  const size = pick([40, 50, 60]);
+  return [
+    {
+      op: "define",
+      name,
+      body: [
+        { op: "forward", value: size },
+        { op: "left", value: 90 },
+        { op: "forward", value: size },
+        { op: "right", value: 90 },
+        { op: "forward", value: size },
+      ],
+    },
+    { op: "call", name },
+    { op: "right", value: pick([90, 120]) },
+    { op: "call", name },
+  ];
+}
+
+const TURTLE_COLORS = ["red", "blue", "green", "orange", "purple"];
+
+/** A length taken out of the list on every turn of the loop. */
+function lengthListProgram(): TurtleCommand[] {
+  const name = pick(["laengen", "strecken"]);
+  const count = randomInt(3, 5);
+  const start = pick([40, 50]);
+  const step = pick([25, 30, 35]);
+  const values = Array.from({ length: count }, (_, index) => start + index * step);
+  return [
+    { op: "numbers", name, values: shuffle(values) },
+    {
+      op: "repeat",
+      times: count,
+      variable: "i",
+      body: [
+        { op: "forward", value: { list: name, index: nameValue("i") } },
+        { op: "right", value: pick([72, 90, 120]) },
+      ],
+    },
+  ];
+}
+
+/** A colour out of the list for every side, so the order of the list shows. */
+function colorListProgram(): TurtleCommand[] {
+  const name = "farben";
+  const count = randomInt(3, 5);
+  return [
+    { op: "colors", name, values: shuffle(TURTLE_COLORS).slice(0, count) },
+    {
+      op: "repeat",
+      times: count,
+      variable: "i",
+      body: [
+        { op: "pencolor", color: { list: name, index: nameValue("i") } },
+        { op: "forward", value: pick([70, 90, 110]) },
+        { op: "right", value: Math.round(360 / count) },
+      ],
+    },
+  ];
+}
+
+/** Three lengths, each fetched by its own place in the list. */
+function indexedListProgram(): TurtleCommand[] {
+  const name = pick(["laengen", "strecken"]);
+  const turn = pick([72, 90, 120]);
+  return [
+    { op: "numbers", name, values: shuffle([50, 80, 110, 140]).slice(0, 3) },
+    { op: "forward", value: { list: name, index: 0 } },
+    { op: "right", value: turn },
+    { op: "forward", value: { list: name, index: 1 } },
+    { op: "right", value: turn },
+    { op: "forward", value: { list: name, index: 2 } },
+  ];
+}
+
+/** A program the station can ask about, and what a player needs to read it. */
+interface TurtleProgram {
+  concepts: TurtleConcept[];
+  build: () => TurtleCommand[];
+}
+
+const TURTLE_PROGRAMS: TurtleProgram[] = [
+  { concepts: ["loop"], build: polygonProgram },
+  { concepts: ["loop"], build: starProgram },
+  { concepts: ["loop"], build: stairProgram },
+  { concepts: ["loop"], build: zigzagProgram },
+  { concepts: ["loop"], build: spiralProgram },
+  { concepts: ["loop"], build: dotRingProgram },
+  { concepts: ["loop"], build: growingDotsProgram },
+  { concepts: ["loop"], build: rosetteProgram },
+  { concepts: ["variable"], build: variableCornerProgram },
+  { concepts: ["variable"], build: variableShrinkProgram },
+  { concepts: ["variable", "loop"], build: growingSquareProgram },
+  { concepts: ["branch", "loop"], build: alternatingTurnProgram },
+  { concepts: ["branch", "loop"], build: everySecondStepProgram },
+  { concepts: ["branch", "loop"], build: halfwayTurnProgram },
+  { concepts: ["function"], build: twiceCalledProgram },
+  { concepts: ["function", "loop"], build: stampedShapeProgram },
+  { concepts: ["list"], build: indexedListProgram },
+  { concepts: ["list", "loop"], build: lengthListProgram },
+  { concepts: ["list", "loop"], build: colorListProgram },
 ];
+
+/**
+ * The programs a round may draw on.
+ *
+ * A listing is fair only if everything in it has been taught, so a program
+ * counts when *all* of its concepts are switched on. Should nothing fit —
+ * "branch" on its own, say, when every branch here sits inside a loop — the
+ * programs that use at least one of the chosen ideas stand in, because a round
+ * with no questions is worse than one that asks a little too much.
+ */
+function turtleProgramsFor(concepts: TurtleConcept[]): TurtleProgram[] {
+  const taught = TURTLE_PROGRAMS.filter((program) =>
+    program.concepts.every((concept) => concepts.includes(concept)),
+  );
+  if (taught.length > 0) return taught;
+  const touching = TURTLE_PROGRAMS.filter((program) =>
+    program.concepts.some((concept) => concepts.includes(concept)),
+  );
+  return touching.length > 0 ? touching : TURTLE_PROGRAMS;
+}
 
 function cloneProgram(program: TurtleCommand[]): TurtleCommand[] {
   return JSON.parse(JSON.stringify(program)) as TurtleCommand[];
@@ -1192,25 +1457,65 @@ function allCommands(program: TurtleCommand[]): TurtleCommand[] {
   const walk = (commands: TurtleCommand[]) => {
     for (const command of commands) {
       out.push(command);
-      if (command.op === "repeat") walk(command.body);
+      if (command.op === "repeat" || command.op === "define") walk(command.body);
+      if (command.op === "branch") {
+        walk(command.body);
+        if (command.orElse) walk(command.orElse);
+      }
     }
   };
   walk(program);
   return out;
 }
 
+/** Does this value come out of a list — `laengen[i]` rather than a number? */
+function readsList(value: TurtleValue): boolean {
+  return typeof value === "object" && "list" in value;
+}
+
+/** Does this block read a list anywhere inside it? */
+function blockReadsList(commands: TurtleCommand[]): boolean {
+  return allCommands(commands).some((command) => {
+    if (command.op === "pencolor") return typeof command.color !== "string";
+    return "value" in command && readsList(command.value);
+  });
+}
+
+/** Which commands can be changed into a plausible mistake. */
+function canMutate(command: TurtleCommand): boolean {
+  switch (command.op) {
+    case "repeat":
+      // A loop over a list has to keep its length: reading past the end is an
+      // error, not a different picture. Its lists are mutated instead.
+      return !blockReadsList(command.body);
+    case "right":
+    case "left":
+      return true;
+    case "forward":
+    case "dot":
+    case "assign":
+      return !readsList(command.value);
+    case "numbers":
+      return command.values.length > 0;
+    default:
+      return false;
+  }
+}
+
+/** A slip in an assignment: a different starting value, or a different step. */
+function mutateAssigned(value: TurtleValue): TurtleValue {
+  if (typeof value === "number") return Math.max(10, value + pick([-40, -30, 30, 40]));
+  if (!("variable" in value)) return value;
+  // `laenge = laenge + 15` — the step changes, and stays a step, so the picture
+  // grows or shrinks differently instead of collapsing onto its own start.
+  return { ...value, offset: Math.max(5, value.offset + pick([-10, 10, 20])) };
+}
+
 /** One plausible slip: a different count, a different angle, a turn the other way. */
 function mutateProgram(program: TurtleCommand[]): TurtleCommand[] {
   const copy = cloneProgram(program);
   const commands = allCommands(copy);
-  const candidates = commands.filter(
-    (command) =>
-      command.op === "repeat" ||
-      command.op === "right" ||
-      command.op === "left" ||
-      command.op === "forward" ||
-      command.op === "dot",
-  );
+  const candidates = commands.filter(canMutate);
   const target = pick(candidates.length > 0 ? candidates : commands);
 
   if (target.op === "repeat") {
@@ -1226,15 +1531,30 @@ function mutateProgram(program: TurtleCommand[]): TurtleCommand[] {
       target.value = Math.max(15, target.value + pick([-60, -45, -30, 30, 45, 60]));
     }
   } else if (target.op === "forward") {
-    target.value =
-      typeof target.value === "number"
-        ? Math.max(20, target.value + pick([-40, -30, 30, 40]))
-        : { ...target.value, factor: target.value.factor + pick([-6, -4, 4, 8]) };
+    if (typeof target.value === "number") {
+      target.value = Math.max(20, target.value + pick([-40, -30, 30, 40]));
+    } else if ("variable" in target.value) {
+      // A bare `forward(laenge)` reads better a little longer than multiplied.
+      target.value =
+        target.value.factor === 1 && target.value.offset === 0
+          ? { ...target.value, offset: pick([-40, -30, 30, 40]) }
+          : { ...target.value, factor: target.value.factor + pick([-6, -4, 4, 8]) };
+    }
   } else if (target.op === "dot") {
-    target.value =
-      typeof target.value === "number"
-        ? Math.max(6, target.value + pick([-8, -6, 8, 12]))
-        : { ...target.value, factor: Math.max(0, target.value.factor + pick([-5, -3, 4, 6])) };
+    if (typeof target.value === "number") {
+      target.value = Math.max(6, target.value + pick([-8, -6, 8, 12]));
+    } else if ("variable" in target.value) {
+      target.value = {
+        ...target.value,
+        factor: Math.max(0, target.value.factor + pick([-5, -3, 4, 6])),
+      };
+    }
+  } else if (target.op === "assign") {
+    target.value = mutateAssigned(target.value);
+  } else if (target.op === "numbers") {
+    // One entry of the list is off — the shape keeps its rhythm but not its size.
+    const at = randomInt(0, target.values.length - 1);
+    target.values[at] = Math.max(20, target.values[at] + pick([-50, -40, 40, 50]));
   }
   return copy;
 }
@@ -1246,8 +1566,8 @@ function mutateProgram(program: TurtleCommand[]): TurtleCommand[] {
  */
 const MIN_DIFFERENT_CELLS = 40;
 
-function turtleQuestion(): Omit<TurtleQuestion, "id"> {
-  const program = pick(TURTLE_PROGRAMS)();
+function turtleQuestion(concepts: TurtleConcept[]): Omit<TurtleQuestion, "id"> {
+  const program = pick(turtleProgramsFor(concepts)).build();
   const correct = runTurtle(program);
   const fingerprints = [drawingFingerprint(correct)];
   const wrong: TurtleDrawing[] = [];
@@ -1273,7 +1593,8 @@ const turtleStage: StageHandler<TurtleQuestion> = {
   id: "turtle",
 
   createQuestions({ settings }) {
-    return build(Number(settings.questionsPerRound), () => turtleQuestion());
+    const concepts = readTurtleConcepts(settings);
+    return build(Number(settings.questionsPerRound), () => turtleQuestion(concepts));
   },
 
   evaluate(question, answer, timing) {
