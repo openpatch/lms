@@ -169,15 +169,48 @@
   },
   "games": {
     "spreadsheet": {
-      "title": "Cell Works",
-      "description": "Copy formulas, simulate growth and turn European climate data into suitable charts.",
+      "title": "Spreadsheets",
+      "description": "Copy formulas, calculate with SUM, MAX and IF, simulate growth, check formulas and turn European data into suitable charts.",
       "prompts": {
         "percentFormula": "In C{{row}}, increase the price from B{{row}} by {{value}}%. The rate is in {{address}}. Which formula can be copied down correctly?",
         "feeFormula": "Add a fixed fee of €{{value}} to every value in column B. It is stored in {{address}}. Which formula can be copied down correctly?",
         "linearGrowth": "The quantity grows by the same amount each year ({{step}} here). Which formula belongs in B3 and can be copied down?",
         "exponentialGrowth": "The quantity grows by the same percentage each year ({{step}}% here). Which formula belongs in B3 and can be copied down?",
         "temperatureChart": "Which chart best shows how the temperature in {{city}} changes over the year?",
-        "rainfallChart": "Which chart best compares annual rainfall in these European cities?"
+        "rainfallChart": "Which chart best compares annual rainfall in these European cities?",
+        "functionValue": "Which value appears in {{cell}}?",
+        "conditionValue": "What does {{address}} show?",
+        "conditionShipping": "From the order value in F1 on, shipping is free; otherwise €{{fee}} is added. What does {{address}} show?",
+        "checkPercent": "Every price in column C should rise by the percentage in F1. The formula was copied down from C2. Is it right in C{{row}}?",
+        "functionGoal": "{{cell}} should show $t(games.spreadsheet.goals.{{series}}.{{goal}}). Which formula goes there?",
+        "checkGoal": "{{cell}} should show $t(games.spreadsheet.goals.{{series}}.{{goal}}). Is the formula in {{cell}} right?",
+        "functionReverse": "{{cell}} shows {{value}}. Which formula calculated this value?",
+        "cellCount": "How many cells does =SUMME({{range}}) add up?",
+        "conditionColumn": "Column C shows “{{then}}” or “{{otherwise}}”, depending on the value in F1. Which formula was in C2 before it was copied down?",
+        "conditionCount": "The formula from C2 was copied down to C6. How many times does column C show “{{then}}”?",
+        "conditionDiscount": "From the order value in F1 on, there is a €{{amount}} discount. What does {{address}} show?",
+        "conditionComparison": "Which condition is TRUE (WAHR) exactly when the value in B2 is $t(games.spreadsheet.comparisons.{{comparison}}) the value in F1?",
+        "currencyFormula": "Column C should convert the prices from column B into {{currency}}. The rate (€1 = {{rate}} {{currency}}) is in {{address}}. Which formula can be copied down correctly?",
+        "afterCopy": "The formula in {{from}} is copied to {{to}}. Which formula is in {{to}} then?",
+        "mixedFormula": "B2 should show the price from column A times the quantity from row 1. Which formula can be copied right and down and fills the whole table correctly?",
+        "shareFormula": "Column C should show each row's share of the total in B7. Which formula belongs in C2 and can be copied down?",
+        "growthFormula": "$t(games.spreadsheet.growthContexts.{{context}}) Which formula belongs in B3 and can be copied down?",
+        "growthModel": "How do the values in column B change?",
+        "growthNext": "The formula in B3 was copied down. Which value appears in {{cell}}?",
+        "growthParameter": "The formula in B3 was copied down. Which value is in E1?",
+        "plantChart": "Which chart best shows how the sunflower grows week by week?",
+        "batteryChart": "Which chart best shows how the phone battery drains over the day?",
+        "julyRainChart": "Which chart best compares the July rainfall of these cities?",
+        "populationChart": "Which chart best compares the populations of these capitals and big cities?",
+        "kioskChart": "Which chart best compares the sales at the school kiosk?",
+        "commuteChart": "A survey shows how the class gets to school. Which chart best shows the parts of the whole?",
+        "pocketMoneyChart": "What is pocket money spent on? Which chart best shows what part of the whole each item makes up?",
+        "iceChart": "Do ice-cream sales at the kiosk depend on the temperature? Which chart shows this best?",
+        "sunshineChart": "Are sunnier cities also warmer in July? Which chart shows the relationship best?",
+        "checkFee": "Every price in column C should get the fee from F1 added. The formula was copied down from C2. Is it right in C{{row}}?",
+        "checkCurrency": "Column C should show the prices in {{currency}}; the rate is in F1. The formula was copied down from C2. Is it right in C{{row}}?",
+        "checkShare": "Column C should show each row's share of the total in B7. The formula was copied down from C2. Is it right in C{{row}}?",
+        "checkRule": "Column C should show “{{then}}” when the value in B is $t(games.spreadsheet.comparisons.{{comparison}}) the value in F1. The formula was copied down from C2. Is it right in C{{row}}?"
       },
       "chartKinds": {
         "line": "Line chart",
@@ -187,24 +220,115 @@
       },
       "examples": {
         "copy": "B2 moves; F1 stays fixed.",
-        "chart": "A line makes change over time visible."
+        "chart": "A line makes change over time visible.",
+        "range": "B2:B6 means every cell from B2 to B6.",
+        "condition": "WENN(condition; then; else), WENN means IF",
+        "check": "A semicolon instead of a colon: only B2 and B6 count."
       },
       "stages": {
         "references": {
-          "name": "Copy Command",
+          "name": "Cell References When Copying",
           "summary": "Use relative and absolute cell references correctly",
-          "rules": "For {{questionsPerRound}} sheets, choose the formula that can be copied down without errors. Row data must move while fixed parameters need $ signs. You have {{duration}} seconds."
+          "rules": "In {{questionsPerRound}} tasks, choose the formula that can be copied without errors, or predict what a cell contains after copying. Relative references move along; $ fixes a column or row. You have {{duration}} seconds."
         },
         "growth": {
-          "name": "Crystal Ball",
+          "name": "Simulating Growth",
           "summary": "Simulate linear and exponential growth",
-          "rules": "Read the values and choose the matching formula for {{questionsPerRound}} forecasts. Distinguish a fixed increase from a fixed percentage. You have {{duration}} seconds."
+          "rules": "In {{questionsPerRound}} tasks, choose the matching formula, recognise the growth model, continue the simulation or read the parameter in E1. A fixed increase or a fixed percentage? You have {{duration}} seconds."
         },
         "charts": {
-          "name": "Chart Studio",
-          "summary": "Visualise European climate data appropriately",
-          "rules": "For {{questionsPerRound}} data sets, choose the chart that answers the question most clearly: change over time or comparison. You have {{duration}} seconds."
+          "name": "The Right Chart",
+          "summary": "Visualise European and everyday data appropriately",
+          "rules": "For {{questionsPerRound}} data sets, choose the chart that answers the question most clearly: change over time, comparison, parts of a whole or relationship. You have {{duration}} seconds."
+        },
+        "functions": {
+          "name": "SUMME, MAX, MIN and MITTELWERT",
+          "summary": "SUMME, MAX, MIN and MITTELWERT over a range",
+          "rules": "For {{questionsPerRound}} sheets, read what a function calculates, find the right formula or count the cells in a range. Watch the range: B2:B6 covers every cell from B2 to B6, B2;B6 only two. You have {{duration}} seconds."
+        },
+        "conditions": {
+          "name": "The WENN (IF) Function",
+          "summary": "Use WENN (IF) to show different results depending on a condition",
+          "rules": "In {{questionsPerRound}} tasks, evaluate WENN (IF) formulas, count their results or find the right formula and condition. Watch > and >= when a value sits exactly on the limit. You have {{duration}} seconds."
+        },
+        "check": {
+          "name": "Checking Formulas",
+          "summary": "Find mistakes in formulas: range, function or reference",
+          "rules": "Check {{questionsPerRound}} formulas to see whether they solve the task. If not: is the range wrong, is it the wrong function, or is a $ sign missing? You have {{duration}} seconds."
         }
+      },
+      "verdicts": {
+        "correct": "Formula is right",
+        "range": "Wrong range",
+        "function": "Wrong function",
+        "reference": "Missing $: reference shifted"
+      },
+      "goals": {
+        "julyTemp": {
+          "max": "the highest July temperature",
+          "min": "the lowest July temperature",
+          "average": "the average July temperature"
+        },
+        "janTemp": {
+          "max": "the highest January temperature",
+          "min": "the lowest January temperature",
+          "average": "the average January temperature"
+        },
+        "julyRain": {
+          "sum": "the July rainfall of all cities together",
+          "max": "the largest July rainfall",
+          "min": "the smallest July rainfall",
+          "average": "the average July rainfall"
+        },
+        "sunshine": {
+          "max": "the most hours of sunshine in July",
+          "min": "the fewest hours of sunshine in July",
+          "average": "the average hours of sunshine in July"
+        },
+        "population": {
+          "sum": "the population of all cities together",
+          "max": "the population of the largest city",
+          "min": "the population of the smallest city",
+          "average": "the average population"
+        },
+        "kiosk": {
+          "sum": "the number of all items sold",
+          "max": "the sales of the most popular item",
+          "min": "the sales of the least popular item",
+          "average": "the average sales per item"
+        },
+        "laps": {
+          "sum": "the number of all laps run",
+          "max": "the most laps run by one class",
+          "min": "the fewest laps run by one class",
+          "average": "the average laps per class"
+        }
+      },
+      "comparisons": {
+        "atLeast": "at least as large as",
+        "moreThan": "larger than",
+        "atMost": "at most as large as",
+        "lessThan": "smaller than",
+        "equal": "equal to",
+        "notEqual": "not equal to"
+      },
+      "growthContexts": {
+        "savings": "The same amount (E1) goes into the piggy bank every week.",
+        "sunflower": "A sunflower grows by the same height (E1) every week.",
+        "candle": "A candle gets shorter by the same length (E1) every hour.",
+        "prepaid": "The same amount (E1) is charged to the phone credit every month.",
+        "interest": "A savings account earns the interest rate in E1 every year.",
+        "bacteria": "A bacterial culture grows by the percentage in E1 every hour.",
+        "followers": "A channel gains the percentage in E1 of followers every month.",
+        "ebike": "An e-bike loses the percentage in E1 of its value every year.",
+        "medicine": "The body breaks down the percentage in E1 of the drug every hour."
+      },
+      "models": {
+        "linearUp": "Linear growth",
+        "linearDown": "Linear decrease",
+        "expUp": "Exponential growth",
+        "expDown": "Exponential decrease",
+        "quadratic": "Quadratic growth"
       }
     },
     "example": {

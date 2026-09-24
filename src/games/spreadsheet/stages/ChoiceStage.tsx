@@ -7,6 +7,7 @@ import type {
 } from "../../../../shared/games/spreadsheet";
 import type { StageProps } from "../../../lib/game-registry";
 import SpreadsheetTable from "../SpreadsheetTable";
+import { optionKeyPrefix, optionText } from "./answer-labels";
 
 function chartPath(values: number[]): string {
   const min = Math.min(...values);
@@ -48,8 +49,19 @@ function ChartPreview({ kind, values }: { kind: ChartKind; values: number[] }) {
   );
 }
 
-function optionLabel(option: string, chart: boolean, t: (key: string) => string): string {
-  return chart ? t(`games.spreadsheet.chartKinds.${option}`) : option;
+/** The cell address and its content, as the formula bar above a sheet shows them. */
+function FormulaBar({ address, text }: { address: string; text: string }) {
+  return (
+    <div className="flex max-w-full items-stretch overflow-x-auto rounded-lg border border-gray-300 bg-white font-mono shadow-sm">
+      <span className="border-r border-gray-300 bg-gray-100 px-3 py-2 font-semibold text-gray-600">
+        {address}
+      </span>
+      <span className="border-r border-gray-300 px-2 py-2 italic text-gray-400" aria-hidden="true">
+        fx
+      </span>
+      <code className="whitespace-nowrap px-3 py-2 text-gray-800">{text}</code>
+    </div>
+  );
 }
 
 export default function ChoiceStage<Q extends SpreadsheetChoiceQuestion>({
@@ -62,7 +74,10 @@ export default function ChoiceStage<Q extends SpreadsheetChoiceQuestion>({
 
   if (!question) return null;
   const chart = question.kind === "chart";
-  const values = question.rows.map((row) => Number(row.cells.at(-1))).filter(Number.isFinite);
+  const worded = optionKeyPrefix(question) !== undefined;
+  const values = question.rows
+    .map((row) => Number(String(row.cells.at(-1)).replace(",", ".")))
+    .filter(Number.isFinite);
   const pickedIndex = picked?.questionId === question.id ? picked.index : -1;
 
   const choose = (index: number) => {
@@ -77,7 +92,9 @@ export default function ChoiceStage<Q extends SpreadsheetChoiceQuestion>({
         {t(question.promptKey, question.promptParams)}
       </p>
 
-      <SpreadsheetTable headers={question.headers} rows={question.rows} />
+      {question.formula && <FormulaBar {...question.formula} />}
+
+      {question.rows.length > 0 && <SpreadsheetTable headers={question.headers} rows={question.rows} />}
 
       {question.parameterAddress && (
         <div className="rounded-lg border-2 border-game-200 bg-game-50 px-4 py-2 font-mono text-game-ink">
@@ -104,13 +121,23 @@ export default function ChoiceStage<Q extends SpreadsheetChoiceQuestion>({
               }`}
             >
               {chart && <ChartPreview kind={option as ChartKind} values={values} />}
-              <span className={chart ? "text-sm" : "font-mono text-base"}>
-                {optionLabel(option, chart, t)}
+              <span className={chart ? "text-sm" : worded ? "text-base" : "font-mono text-base"}>
+                {optionText(question, option, t)}
               </span>
             </button>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function FormulaRulesExample({ formula, captionKey }: { formula: string; captionKey: string }) {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded-lg bg-gray-100 px-4 py-3 text-center font-mono text-gray-700">
+      {formula}
+      <div className="mt-1 font-sans text-xs text-gray-500">{t(captionKey)}</div>
     </div>
   );
 }
@@ -125,12 +152,24 @@ export function SpreadsheetRulesExample({ chart = false }: { chart?: boolean }) 
       </div>
     );
   }
+  return <FormulaRulesExample formula="=B2*(1+$F$1)" captionKey="games.spreadsheet.examples.copy" />;
+}
+
+export function FunctionRulesExample() {
+  return <FormulaRulesExample formula="=SUMME(B2:B6)" captionKey="games.spreadsheet.examples.range" />;
+}
+
+export function ConditionRulesExample() {
   return (
-    <div className="rounded-lg bg-gray-100 px-4 py-3 text-center font-mono text-gray-700">
-      =B2*(1+$F$1)
-      <div className="mt-1 font-sans text-xs text-gray-500">{t("games.spreadsheet.examples.copy")}</div>
-    </div>
+    <FormulaRulesExample
+      formula={'=WENN(B2>=$F$1;"warm";"kühl")'}
+      captionKey="games.spreadsheet.examples.condition"
+    />
   );
+}
+
+export function CheckRulesExample() {
+  return <FormulaRulesExample formula="=MAX(B2;B6)" captionKey="games.spreadsheet.examples.check" />;
 }
 
 export function ChartRulesExample() {

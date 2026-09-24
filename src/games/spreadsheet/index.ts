@@ -3,6 +3,9 @@ import { defineGame } from "../../lib/game-registry";
 import ChoiceStage, {
   ChartRulesExample,
   ChartStage,
+  CheckRulesExample,
+  ConditionRulesExample,
+  FunctionRulesExample,
   SpreadsheetRulesExample,
 } from "./stages/ChoiceStage";
 import { choiceAnswerLabel } from "./stages/answer-labels";
@@ -26,6 +29,27 @@ export default defineGame(spreadsheetSpec, {
   charts: {
     Component: ChartStage,
     RulesExample: ChartRulesExample,
+    revealMs: 900,
+    Review: SpreadsheetReview,
+    answerLabel: choiceAnswerLabel,
+  },
+  functions: {
+    Component: ChoiceStage,
+    RulesExample: FunctionRulesExample,
+    revealMs: 900,
+    Review: SpreadsheetReview,
+    answerLabel: choiceAnswerLabel,
+  },
+  conditions: {
+    Component: ChoiceStage,
+    RulesExample: ConditionRulesExample,
+    revealMs: 900,
+    Review: SpreadsheetReview,
+    answerLabel: choiceAnswerLabel,
+  },
+  check: {
+    Component: ChoiceStage,
+    RulesExample: CheckRulesExample,
     revealMs: 900,
     Review: SpreadsheetReview,
     answerLabel: choiceAnswerLabel,
