@@ -116,7 +116,7 @@ jobs:
             "$TARGET:$DEPLOY_PATH/dist/"
           rsync -az --delete -e "ssh $SSH_OPTS" \
             --exclude node_modules --exclude dist --exclude data --exclude .git \
-            server shared scripts deploy package.json pnpm-lock.yaml tsconfig*.json \
+            server shared scripts deploy package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json \
             "$TARGET:$DEPLOY_PATH/"
 
       - name: Install dependencies and restart
