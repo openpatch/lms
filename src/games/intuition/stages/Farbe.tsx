@@ -58,6 +58,7 @@ export default function FarbeStage({ question, submit }: StageProps<ColorQuestio
               min={0}
               max={255}
               step={question.step}
+              aria-label={t(channel.labelKey)}
               value={mix[channel.key]}
               onChange={(event) =>
                 setDraft({

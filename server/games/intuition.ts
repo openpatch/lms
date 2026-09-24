@@ -114,6 +114,8 @@ function colorTask(step: number): Omit<ColorQuestion, "id"> {
 
 const farbeStage: StageHandler<ColorQuestion> = {
   id: "farbe",
+  // The colour to mix is the goal shown on screen, not an answer to hide.
+  forPlayer: (question) => question,
 
   createQuestions({ settings }) {
     const step = settings.colorPrecision === "fein" ? 1 : 16;
@@ -185,6 +187,8 @@ function lampTask(values: number[]): Omit<LampQuestion, "id"> {
 
 const lampenStage: StageHandler<LampQuestion> = {
   id: "lampen",
+  // The target is the number shown to reach.
+  forPlayer: (question) => question,
 
   createQuestions({ settings }) {
     const mode = String(settings.lampValues);
@@ -263,6 +267,7 @@ function pixelTask(
 
 const pixelStage: StageHandler<PixelQuestion> = {
   id: "pixel",
+  forPlayer: (question) => ({ ...question, answerIndex: -1 }),
 
   createQuestions({ settings }) {
     const stepSeconds = REVEAL_SECONDS[String(settings.revealSpeed)] ?? REVEAL_SECONDS.normal;
@@ -323,6 +328,7 @@ function dialTask(withHint: boolean): Omit<DialQuestion, "id"> {
 
 const drehenStage: StageHandler<DialQuestion> = {
   id: "drehen",
+  forPlayer: (question) => ({ ...question, shift: 0 }),
 
   createQuestions({ settings }) {
     const withHint = settings.withFrequencyHint === true;
@@ -364,6 +370,8 @@ function untangleTask(nodeCount: number): Omit<UntangleQuestion, "id"> {
 
 const kabelStage: StageHandler<UntangleQuestion> = {
   id: "kabel",
+  // The tangle is the task; any untangling that works is right.
+  forPlayer: (question) => question,
 
   createQuestions({ settings }) {
     const nodeCount = Number(settings.nodeCount);
@@ -447,6 +455,7 @@ function routeTask(nodeCount: number): Omit<RouteQuestion, "id"> {
 
 const wegStage: StageHandler<RouteQuestion> = {
   id: "weg",
+  forPlayer: (question) => ({ ...question, best: 0 }),
 
   createQuestions({ settings }) {
     const nodeCount = Number(settings.mapSize);
@@ -523,6 +532,8 @@ function sortedShare(values: number[]): number {
 
 const nachbarnStage: StageHandler<SwapQuestion> = {
   id: "nachbarn",
+  // `minSwaps` is shown as par on purpose.
+  forPlayer: (question) => question,
 
   createQuestions({ settings }) {
     const cardCount = Number(settings.cardCount);
@@ -594,6 +605,9 @@ function buildTimeline(durationSeconds: number, life: number, radius: number): T
 
 const zieleStage: StageHandler = {
   id: "ziele",
+  // No questions: a live stage keeps its state in `extra`, which is the
+  // board everybody plays on.
+  forPlayer: (question) => question,
   live: true,
   // Nothing here moves on its own: the board is running on the player's device
   // and the tick exists only to carry the scoreboard. Beating any faster would
@@ -699,6 +713,9 @@ function nextWait(settings: Record<string, unknown>): number {
  */
 const ampelStage: StageHandler = {
   id: "ampel",
+  // No questions: a live stage keeps its state in `extra`, which is the
+  // board everybody plays on.
+  forPlayer: (question) => question,
   live: true,
   // This one does move on its own, and the moment it moves is the whole
   // station, so it beats quickly — it can afford to, carrying no timeline.

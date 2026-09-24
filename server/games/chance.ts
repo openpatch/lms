@@ -110,6 +110,7 @@ function makeLaplaceQuestion(id: number): LaplaceQuestion {
 
 const laplaceStage: StageHandler<LaplaceQuestion> = {
   id: "laplace",
+  forPlayer: (question) => ({ ...question, favourable: 0, outcomes: 0 }),
 
   createQuestions({ settings }) {
     return Array.from({ length: Number(settings.questionsPerRound) }, (_, id) =>
@@ -210,6 +211,11 @@ function makeTreeQuestion(id: number, mode: "with" | "without"): TreeQuestion {
 
 const treeStage: StageHandler<TreeQuestion> = {
   id: "tree",
+  forPlayer: (question) => ({
+    ...question,
+    slotAnswers: [],
+    eventAnswer: { n: 0, d: 1, latex: "" },
+  }),
 
   createQuestions({ settings }) {
     const replacement = readReplacement(settings);

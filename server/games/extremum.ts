@@ -64,6 +64,9 @@ function randomPolynomial(degree: number): Polynomial {
 
 const deriveStage: StageHandler<DeriveQuestion> = {
   id: "derive",
+  // The polynomial is the function shown; its derivative is the answer, and
+  // working that out is the task.
+  forPlayer: (question) => question,
 
   createQuestions({ settings }) {
     const degree = Number(settings.degree);
@@ -424,6 +427,16 @@ function makeOptimizeQuestion(
 
 const optimizeStage: StageHandler<OptimizeQuestion> = {
   id: "optimize",
+  forPlayer: (question) => ({
+    ...question,
+    // The parts the player is asked for are the answer; the parts handed over
+    // stay, since the board shows them. The target curve stays too: whether
+    // it is drawn is the teacher's setting, and the readout needs it.
+    terms: question.terms.map((term, index) =>
+      question.asked.includes(OPTIMIZE_TERMS[index]) ? "" : term,
+    ) as [string, string, string],
+    quantityKey: question.quantityOptions ? "" : question.quantityKey,
+  }),
 
   createQuestions({ settings }) {
     const total = Number(settings.questionsPerRound);

@@ -146,10 +146,12 @@ export default function Play() {
             total: roundData?.totalRounds ?? 0,
           })}
         </div>
-        <ResultsList
-          results={standings(lobbyState.players, roundResults, (roundData?.currentRound ?? 1) > 1)}
-          title={t("game.roundResults")}
-        />
+        {!game.unranked && (
+          <ResultsList
+            results={standings(lobbyState.players, roundResults, (roundData?.currentRound ?? 1) > 1)}
+            title={t("game.roundResults")}
+          />
+        )}
         {roundData && <RoundReview game={game} data={roundData} playerId={myPlayerId} />}
         <p className="text-gray-500">{t("game.waitingNextRound")}</p>
       </div>
@@ -160,11 +162,13 @@ export default function Play() {
   if (lobbyState.phase === "finished") {
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6 px-4">
-        <ResultsList
-          results={withGains(finalResults, roundResults, (roundData?.currentRound ?? 1) > 1)}
-          title={t("game.finalResults")}
-          honourRounds
-        />
+        {!game.unranked && (
+          <ResultsList
+            results={withGains(finalResults, roundResults, (roundData?.currentRound ?? 1) > 1)}
+            title={t("game.finalResults")}
+            honourRounds
+          />
+        )}
         {roundData && <RoundReview game={game} data={roundData} playerId={myPlayerId} />}
         <p className="text-gray-500">{t("play.waitingHost")}</p>
       </div>

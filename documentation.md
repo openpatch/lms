@@ -166,6 +166,8 @@ import { createStageGame, type StageHandler } from "../framework";
 
 const spotStage: StageHandler<SpotQuestion> = {
   id: "spot",
+  // What a player's device gets before they answer: the answer blanked out.
+  forPlayer: (question) => ({ ...question, isPrime: false }),
 
   createQuestions({ settings }) {
     return Array.from({ length: Number(settings.questionsPerRound) }, (_, id) => {
@@ -190,6 +192,19 @@ round per stage, blocks answers from the host and answers to already-answered
 questions, records timing and streak, applies the combo bonus, ends the round when
 everyone has answered or the clock runs out, and reports results.
 
+**`forPlayer` is required.** A round is built with its answer key in it —
+the server grades against it — and every answer goes into it as it arrives.
+The host's screen gets the round as it stands; every other device gets
+`forViewer` from `createStageGame`: only that player's own answers, and each
+question they have not answered yet passed through `forPlayer`. Return the
+same shape with whatever decides the answer blanked out (`answerIndex: -1`, an
+empty `solution`, a list of blanks as long as the `expected` it stands for, if
+the stage shows how many lines to write). A stage whose question gives nothing
+away returns it unchanged, with a comment saying why. Once a player has
+answered a question, and once the round is over, they get it whole — that is
+when a stage shows what the answer was. `pnpm check:server` plays a Java round
+with two players and fails if a key or a classmate's answer reaches a player.
+
 A handler can also provide:
 
 | Member | Use |
@@ -198,6 +213,8 @@ A handler can also provide:
 | `onAction(data, payload, playerId, ctx)` | Handle actions other than `answer`; mutate `data.extra`, return `true` when something changed |
 | `scorePlayer(data, playerId)` | Custom score when points-per-answer does not fit |
 | `getDurationSeconds(ctx)` | Round length when it is not the `duration` setting |
+| `extraForPlayer(extra, playerId)` | What a player may see of `extra`, when it holds something per player that nobody else should see. Leave it out when `extra` is the board everybody plays on |
+| `isFinished(data, players)` | When the round is over before the clock, for a stage whose players finish something other than questions |
 
 `ctx` carries the stage's resolved `settings`, the `round` number, `totalRounds`
 and the non-host `players`.
@@ -258,6 +275,7 @@ Optional per stage:
 | `calculator` | `true` lends the player a scratch calculator in the bottom bar, for a station whose questions do arithmetic nobody should have to do in their head against a clock (the Java and Python trace stations). It never sees the question — reading `7 / 2` as 3.5 and knowing Java prints 3 is still the player's half |
 | `HostView` | Replaces the default progress list the host sees |
 | `scorePlayer` | Client-side mirror of the handler's `scorePlayer` |
+| `ClassSummary` | Replaces the standings and the question-by-question debrief on the host's screen after the round, and the answer grid in the review after the lesson |
 | `Review` | One row of the round review on the players' devices |
 | `ClassAnswers` | The class's answers to one question, for the host's debrief — see "Talking the round through" |
 
@@ -309,6 +327,13 @@ npm run dev           # client, plus `npm run dev:server` for the game server
 `check:games` builds a round of every stage, feeds it a nonsense answer and verifies
 that it is graded rather than crashing, and reports any missing translation.
 
+
+`pnpm test` draws every stage as a player sees it — a round built by the
+game's own handler, in the same `StageShell` a lesson uses — and runs axe over
+it: a button with no name, a slider nobody can tell apart from the next, a
+picture with nothing to say what it is. jsdom has no layout, so contrast and
+target size still need a real browser. A new stage is in it the moment it is
+registered.
 ### Looking at one stage
 
 `npm run dev` on its own, with no game server and no account, serves
@@ -316,10 +341,12 @@ that it is graded rather than crashing, and reports any missing translation.
 that way plays for real: the page builds the round with that game's own
 handler, `server/games/<game>.ts`, and grades the answers with it, so what is
 on screen is what a class would get. "neue Aufgaben" builds another round, for
-the questions that come out differently every time.
+the questions that come out differently every time. `?settings=` takes the
+stage's settings as JSON, for a stage that cannot play on its defaults — the
+bitflow game needs the address of a flow.
 
 **"Rückblick" shows the other half of a station**: the player's `Review` rows
-and the host's `RoundDebrief` for the round as it stands, the pair a round
+and the host's `RoundDebrief` (or the stage's `ClassSummary`) for the round as it stands, the pair a round
 really ends on. It is the half that is otherwise hard to reach — a round has to
 be played out in a lobby before anyone sees it — and the half where a stage is
 most likely to be wrong, since a review that does not say what the player
@@ -623,7 +650,7 @@ at 500, which is exactly why `solid` exists.
 ## Settings schema
 
 Settings are declarative so that one schema drives both the host UI and the
-server-side validation. Five field types exist:
+server-side validation. Six field types exist:
 
 ```ts
 { type: "select", key, labelKey, options: number[], default }
@@ -631,6 +658,7 @@ server-side validation. Five field types exist:
 { type: "toggle", key, labelKey, default }
 { type: "choice", key, labelKey, options: { value: string, labelKey }[], default }
 { type: "multi",  key, labelKey, options: { value: string, labelKey }[], default: string[] }
+{ type: "url",    key, labelKey, hintKey?, default: string }
 ```
 
 `select` picks a number and shows it as is; `choice` picks a named value and shows
@@ -639,6 +667,9 @@ the translation of its `labelKey` (see the notation setting of the rational game
 combination and the value is a `string[]` in spec order (see the operations setting
 of the rational game's calculate stage). The form keeps the last box checked, and
 the server puts the whole default back if an empty selection arrives anyway.
+`url` is a web address the teacher brings — the flow of the bitflow game. Only an
+http(s) address is kept; the form holds a half-typed one as a draft rather than
+sending it, since the server would hand it back empty.
 
 The server never trusts what the client sends: `resolveGameSettings()` drops unknown
 stages and keys, clamps ranges to `[min, max]` and snaps them to `step`, rejects
@@ -953,6 +984,33 @@ head to the foot, a relation off by a step, or two boxes of a sequence swapped.
 `structogramSignature()` flattens a diagram to a string so a mutation that
 changed nothing — swapping two identical boxes — is thrown away instead of being
 offered as a wrong answer that is right.
+
+## A bitflow flow
+
+The `bitflow` game plays a flow built in Bitflow Studio: the teacher gives the
+address of a `.bitflow` file in the stage settings, and each player works
+through it at their own pace on their own device. It is the one game here that
+is not a contest, and it is marked `unranked` in its spec: no standings, no
+crowns, no score in the header. The teacher's screen is a board by name —
+progress and score per player — and nobody else sees anything about anybody.
+
+The flow never reaches the server. Each device fetches it from its address,
+runs `<bitflow-flow>` from `@bitflow/web-component` and marks it there. What it
+sends is a `progress` action: where the player is and, once something has been
+marked, bitflow's shareable report — results, tries and timings, with every
+answer taken out by `createShareableReport` before it leaves. The server checks
+it against `shared/bitflow-progress.ts`, where a step's report is a strict
+object: a report that still carries an `answer`, from a device someone has
+changed, is refused by its shape. `extraForPlayer` gives each player their own
+progress and nobody else's.
+
+The attempt is kept in the player's browser as it goes, so a reload puts them
+back where they were. The round ends when everybody has finished, on the clock,
+or when the teacher ends it.
+
+`/preview/bitflow/flow?settings={"flowUrl":"…"}` plays it without a server; the
+address has to answer with `Access-Control-Allow-Origin`, as any flow embedded
+across origins does.
 
 ## Conventions
 

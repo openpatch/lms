@@ -188,10 +188,16 @@ export default function ReviewSession() {
                 {stage ? ` · ${t(stage.nameKey)}` : ""}
               </h2>
               <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-4">
-                <AnswerGrid game={game} data={round.data} players={round.players} />
-                <div className="flex justify-center border-t border-gray-100 pt-4">
-                  <RoundDebrief game={game} data={round.data} players={round.players} />
-                </div>
+                {stage?.ClassSummary ? (
+                  <stage.ClassSummary data={round.data} players={round.players} />
+                ) : (
+                  <>
+                    <AnswerGrid game={game} data={round.data} players={round.players} />
+                    <div className="flex justify-center border-t border-gray-100 pt-4">
+                      <RoundDebrief game={game} data={round.data} players={round.players} />
+                    </div>
+                  </>
+                )}
               </div>
             </section>
           );

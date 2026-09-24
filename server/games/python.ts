@@ -193,6 +193,11 @@ function divisionTask(): Task {
 
 const outputStage: StageHandler<CodeAnswerQuestion> = {
   id: "output",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.outputTasks);
@@ -319,6 +324,11 @@ function stringTask(): Task {
 
 const variablesStage: StageHandler<CodeAnswerQuestion> = {
   id: "variables",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+  }),
 
   createQuestions({ settings }) {
     const withStrings = settings.withStrings === true;
@@ -447,6 +457,11 @@ function whileTask(): Task {
 
 const loopsStage: StageHandler<CodeAnswerQuestion> = {
   id: "loops",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.loopTasks);
@@ -585,6 +600,7 @@ function logicBranchTask(): Omit<CodeChoiceQuestion, "id"> {
 
 const branchStage: StageHandler<CodeChoiceQuestion> = {
   id: "branch",
+  forPlayer: (question) => ({ ...question, answerIndex: -1 }),
 
   createQuestions({ settings }) {
     const branchCount = Number(settings.branchCount);
@@ -748,6 +764,10 @@ const bracketTask: LogicTask = (id) => {
 
 const logicStage: StageHandler<LogicQuestion> = {
   id: "logic",
+  forPlayer: (question) =>
+    question.kind === "value"
+      ? { ...question, answer: false }
+      : { ...question, answerIndex: -1 },
 
   createQuestions({ settings }) {
     const mode = String(settings.logicTasks);
@@ -883,6 +903,11 @@ function printVersusReturnTask(): Task {
 
 const functionsStage: StageHandler<CodeAnswerQuestion> = {
   id: "functions",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.functionTasks);
@@ -1003,6 +1028,11 @@ function listLoopTask(): Task {
 
 const listsStage: StageHandler<CodeAnswerQuestion> = {
   id: "lists",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.listTasks);
@@ -1591,6 +1621,7 @@ function turtleQuestion(concepts: TurtleConcept[]): Omit<TurtleQuestion, "id"> {
 
 const turtleStage: StageHandler<TurtleQuestion> = {
   id: "turtle",
+  forPlayer: (question) => ({ ...question, answerIndex: -1 }),
 
   createQuestions({ settings }) {
     const concepts = readTurtleConcepts(settings);
@@ -1717,6 +1748,7 @@ function parsonsTemplates(): ParsonsTemplate[] {
 
 const parsonsStage: StageHandler<ParsonsQuestion> = {
   id: "parsons",
+  forPlayer: (question) => ({ ...question, solution: [], solutionIndents: [] }),
 
   createQuestions({ settings }) {
     const withIndent = settings.withIndent === true;
@@ -1912,6 +1944,7 @@ const BUG_TEMPLATES: BugTemplate[] = [
 
 const bugsStage: StageHandler<BugQuestion> = {
   id: "bugs",
+  forPlayer: (question) => ({ ...question, errorLine: -1, reasonKey: "" }),
 
   createQuestions({ settings }) {
     const mode = String(settings.bugTasks);

@@ -192,6 +192,13 @@ export interface GameMeta {
    * own URL for anyone working on it.
    */
   hidden?: boolean;
+  /**
+   * No standings, no crowns, no scores on anyone's screen but the host's. For
+   * a game that is not a contest — a bitflow flow, where each player works
+   * through an assessment at their own pace and how they did is theirs and
+   * their teacher's to know.
+   */
+  unranked?: boolean;
   minPlayers: number;
   maxPlayers: number;
 }

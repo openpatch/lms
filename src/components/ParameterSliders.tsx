@@ -50,6 +50,10 @@ export default function ParameterSliders({
               onChange(next);
             }}
             className="flex-1 accent-game-solid"
+            // The formula beside it is its name; read as plain text, with the
+            // value spoken the way it is shown.
+            aria-label={parameter.latex.replace(/\\/g, "")}
+            aria-valuetext={`${show(values[index], parameter.step)}${parameter.unit ? ` ${parameter.unit}` : ""}`}
           />
           <span className="w-24 text-left text-lg font-medium text-game-ink tabular-nums">
             {show(values[index], parameter.step)}

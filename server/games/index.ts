@@ -8,7 +8,9 @@ import extremumHandler from "./extremum";
 import termeHandler from "./terme";
 import pythonHandler from "./python";
 import javaHandler from "./java";
+import bitflowHandler from "./bitflow";
 import intuitionHandler from "./intuition";
+import spreadsheetHandler from "./spreadsheet";
 
 /**
  * Server-side game handler registry.
@@ -25,4 +27,6 @@ export const gameHandlers: Record<string, GameHandler> = {
   python: pythonHandler,
   java: javaHandler,
   intuition: intuitionHandler,
+  bitflow: bitflowHandler,
+  spreadsheet: spreadsheetHandler,
 };

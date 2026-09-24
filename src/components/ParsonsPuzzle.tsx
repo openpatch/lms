@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useAutoScroll } from "../lib/useAutoScroll";
 import { useTranslation } from "react-i18next";
 import type { ParsonsQuestion } from "../../shared/parsons";
 import type { StageProps } from "../lib/game-registry";
@@ -24,6 +25,29 @@ interface Drag {
   /** Where it would land: a place in the program, or back in the pool. */
   over: number | "pool" | null;
   moved: boolean;
+}
+
+/**
+ * Where a finger takes hold of a line. The rest of a line is left to the
+ * browser, so a swipe that starts on the program scrolls the page — the lines
+ * fill the width, and taking every touch on them for a drag would leave a
+ * phone nowhere to scroll from. A mouse still drags from anywhere.
+ */
+function Grip() {
+  return (
+    <span
+      data-parsons-grip
+      aria-hidden="true"
+      className="flex w-6 shrink-0 cursor-grab touch-none items-center justify-center self-stretch text-gray-400 select-none"
+    >
+      ⠿
+    </span>
+  );
+}
+
+/** A touch or a pen: a pointer whose drag the browser would take for a scroll. */
+function isFinger(e: React.PointerEvent): boolean {
+  return e.pointerType === "touch" || e.pointerType === "pen";
 }
 
 /** What the pointer is over: a position in the program, the program's empty
@@ -112,6 +136,13 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
    *  line that was just carried somewhere on purpose. */
   const swallowClick = useRef(false);
 
+  // A long program is taller than a phone. Held near the edge, a drag scrolls
+  // the page, and what the line is over is read again as the rows go past.
+  const autoScroll = useAutoScroll(() => {
+    const held = dragRef.current;
+    if (held?.moved) show({ ...held, over: targetAt(held.x, held.y) });
+  });
+
   if (!question) return null;
 
   const freeIndent = question.indents == null;
@@ -190,6 +221,7 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
   const startDrag = (line: number, from: number | "pool", e: React.PointerEvent) => {
     // The arrows and the ✕ are buttons in their own right
     if (e.target instanceof Element && e.target.closest("button[aria-label]")) return;
+    if (isFinger(e) && !(e.target instanceof Element && e.target.closest("[data-parsons-grip]"))) return;
     // A drag whose click never arrived must not eat the next one instead. The
     // click a drag produces lands before any new press, so clearing here can
     // only ever throw away a flag nobody is waiting on — and a line dragged out
@@ -206,9 +238,11 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
       held.moved || Math.hypot(e.clientX - held.startX, e.clientY - held.startY) >= DRAG_THRESHOLD;
     if (!far) return;
     show({ ...held, moved: true, x: e.clientX, y: e.clientY, over: targetAt(e.clientX, e.clientY) });
+    autoScroll.follow(e.currentTarget, e.clientX, e.clientY);
   };
 
   const endDrag = () => {
+    autoScroll.stop();
     const held = dragRef.current;
     if (!held) return;
     show(null);
@@ -223,7 +257,10 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
     onPointerDown: (e: React.PointerEvent) => startDrag(line, from, e),
     onPointerMove: moveDrag,
     onPointerUp: endDrag,
-    onPointerCancel: () => show(null),
+    onPointerCancel: () => {
+      autoScroll.stop();
+      show(null);
+    },
   });
 
   const carried = drag?.moved ? drag.line : null;
@@ -257,15 +294,16 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
           <ol className="flex flex-col gap-1">
             {order.map((line, position) => (
               <li
-                key={position}
+                key={line}
                 data-parsons-slot={position}
                 {...grip(line, position)}
-                className={`flex touch-none items-center gap-1 rounded-lg border bg-white px-2 py-1 select-none ${
+                className={`flex touch-manipulation items-center gap-1 rounded-lg border bg-white px-2 py-1 select-none ${
                   drag?.moved && drag.over === position
                     ? "border-game-solid ring-2 ring-game-200"
                     : "border-game-200"
                 } ${carried === line ? "opacity-40" : ""} cursor-grab active:cursor-grabbing`}
               >
+                <Grip />
                 {freeIndent && (
                   <>
                     <IconButton
@@ -325,12 +363,15 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
               }
               place(line);
             }}
-            className={`touch-none overflow-x-auto rounded-lg border-2 border-gray-200 bg-white px-3 py-2 text-left font-mono text-sm whitespace-pre text-slate-800 transition-colors select-none hover:border-game-solid hover:bg-game-50 sm:text-base ${
+            className={`flex touch-manipulation items-center gap-1 overflow-x-auto rounded-lg border-2 border-gray-200 bg-white px-1 py-2 text-left font-mono text-sm whitespace-pre text-slate-800 transition-colors select-none hover:border-game-solid hover:bg-game-50 sm:text-base ${
               carried === line ? "opacity-40" : ""
             } cursor-grab active:cursor-grabbing`}
           >
-            {!freeIndent && "    ".repeat(question.indents?.[line] ?? 0)}
-            <CodeLine text={question.lines[line]} />
+            <Grip />
+            <span>
+              {!freeIndent && "    ".repeat(question.indents?.[line] ?? 0)}
+              <CodeLine text={question.lines[line]} />
+            </span>
           </button>
         ))}
       </div>

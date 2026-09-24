@@ -56,8 +56,35 @@ export interface StageHandler<Q extends StageQuestion = StageQuestion> {
   createQuestions(ctx: StageContext): Q[];
   /** Grade one answer. Only called for questions this stage created. */
   evaluate(question: Q, answer: string, timing: AnswerTiming, ctx: StageContext): AnswerVerdict;
+  /**
+   * The question as a player sees it before answering it: the same shape, with
+   * whatever decides the answer blanked out — `answerIndex: -1`, an empty
+   * `solution`, a list of blanks as long as the `expected` it stands for, where
+   * the stage shows how many lines to write.
+   *
+   * Required, and not only for stages with something to hide: a stage whose
+   * question gives nothing away says so by returning it unchanged, which is a
+   * decision someone made rather than one nobody noticed they had to make. Once
+   * the player has answered a question, and once the round is over, they get
+   * it whole — that is when the stages show what the answer was.
+   */
+  forPlayer(question: Q): Q;
   /** Extra per-round state for stages that are not question based. */
   createExtra?(ctx: StageContext): Record<string, unknown>;
+  /**
+   * What a player may see of `extra`. Leave it out when `extra` is the board
+   * the whole class plays on — the lights, the targets. A stage that keeps
+   * something per player in it, which nobody else should see, returns only
+   * that player's part.
+   */
+  extraForPlayer?(extra: Record<string, unknown>, playerId: string): Record<string, unknown>;
+  /**
+   * Whether the round is over before the clock says so. Without it a round
+   * with questions ends once everyone has answered them all, and one without
+   * questions ends on the clock. A stage whose players finish something else —
+   * a flow they work through at their own pace — says here when they have.
+   */
+  isFinished?(data: StageRoundData<Q>, players: Player[]): boolean;
   /** Round length in seconds. Defaults to the stage's `duration` setting. */
   getDurationSeconds?(ctx: StageContext): number;
   /** Handle an action other than "answer". Mutate `data.extra` and return true
@@ -332,10 +359,12 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
       const timeExpired = (Date.now() - data.startTime) / 1000 >= data.duration;
       // A live stage, and a stage without questions, only ever end on the
       // clock: there is nothing there to finish answering.
-      const allAnswered =
-        !handlerFor(data)?.live &&
-        data.questions.length > 0 &&
-        players.every((p) => answeredCount(data, p.id) >= data.questions.length);
+      const handler = handlerFor(data);
+      const allAnswered = handler?.isFinished
+        ? handler.isFinished(data, players)
+        : !handler?.live &&
+          data.questions.length > 0 &&
+          players.every((p) => answeredCount(data, p.id) >= data.questions.length);
 
       return allAnswered || timeExpired ? roundResults(state) : undefined;
     },
@@ -356,6 +385,28 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
 
     liveTickMs(state: LobbyState) {
       return handlerFor(state.gameData as StageRoundData | null)?.tickMs ?? 0;
+    },
+
+    forViewer(state: LobbyState, viewerId: string) {
+      const data = state.gameData as StageRoundData | null;
+      if (!data || !Array.isArray(data.questions)) return data;
+      const handler = handlerFor(data);
+      const own = data.answers[viewerId];
+      const over =
+        data.finished || state.phase === "round-finished" || state.phase === "finished";
+      return {
+        ...data,
+        // A player's device needs their own answers — their score, their streak,
+        // what they got wrong — and nobody else's.
+        answers: own ? { [viewerId]: own } : {},
+        extra: handler?.extraForPlayer ? handler.extraForPlayer(data.extra, viewerId) : data.extra,
+        questions:
+          over || !handler
+            ? data.questions
+            : data.questions.map((question) =>
+                own?.[question.id] ? question : handler.forPlayer(question),
+              ),
+      };
     },
 
     onTick(state: LobbyState, now: number) {

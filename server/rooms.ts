@@ -98,8 +98,41 @@ export class Room {
     }
   }
 
+  /**
+   * The game data as one connection may see it: the round as it stands for the
+   * host, and for anyone else the game's player view — no answer key on a
+   * question they have not answered, and no answers but their own.
+   */
+  gameDataFor(connectionId: string): unknown {
+    if (connectionId === this.state.hostId) return this.state.gameData;
+    const handler = gameHandlers[this.state.gameId];
+    return handler?.forViewer ? handler.forViewer(this.state, connectionId) : this.state.gameData;
+  }
+
+  /**
+   * Sends every connection a message built from its own view of the game data.
+   * One serialisation per socket rather than one for the room: each player's
+   * view carries their own answers, so no two are alike to share. The host's
+   * is the round itself.
+   */
+  broadcastViews(build: (gameData: unknown) => ServerMessage): void {
+    for (const [id, socket] of this.sockets) {
+      if (socket.readyState !== socket.OPEN) continue;
+      socket.send(JSON.stringify(build(this.gameDataFor(id))));
+    }
+  }
+
+  /** The lobby as one connection may see it. */
+  stateFor(connectionId: string): LobbyState {
+    return { ...this.state, gameData: this.gameDataFor(connectionId) };
+  }
+
   broadcastLobbyState(): void {
-    this.broadcast({ type: "lobby-state", state: this.state, serverNow: Date.now() });
+    this.broadcastViews((gameData) => ({
+      type: "lobby-state",
+      state: { ...this.state, gameData },
+      serverNow: Date.now(),
+    }));
   }
 
   attach(connectionId: string, socket: WebSocket): void {
@@ -156,12 +189,12 @@ export class Room {
     this.state.countdownEndsAt = countdownEndsAt;
     this.save();
 
-    this.broadcast({
+    this.broadcastViews((gameData) => ({
       type: "countdown",
-      gameData: this.state.gameData,
+      gameData,
       countdownEndsAt,
       serverNow: Date.now(),
-    });
+    }));
     this.broadcastLobbyState();
 
     clearTimeout(this.countdownTimer);
@@ -181,7 +214,7 @@ export class Room {
     if (begun) this.state.gameData = begun;
     this.save();
 
-    this.broadcast({ type: "game-start", gameData: this.state.gameData, serverNow: Date.now() });
+    this.broadcastViews((gameData) => ({ type: "game-start", gameData, serverNow: Date.now() }));
     this.broadcastLobbyState();
 
     clearTimeout(this.roundTimer);
@@ -236,7 +269,7 @@ export class Room {
 
     if (this.liveDirty) {
       this.liveDirty = false;
-      this.broadcast({ type: "game-state", gameData: this.state.gameData });
+      this.broadcastViews((gameData) => ({ type: "game-state", gameData }));
       // Mirrored far less often than it is sent: what a restart has to put
       // back is the round, not the last quarter of a second of it.
       const now = Date.now();

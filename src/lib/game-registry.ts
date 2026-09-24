@@ -7,7 +7,7 @@ import type {
   StageSpec,
 } from "../../shared/framework";
 import { gameSpecs } from "../../shared/games";
-import type { GameMeta, PlayerAnswer } from "../../shared/types";
+import type { GameMeta, Player, PlayerAnswer } from "../../shared/types";
 
 /**
  * Props every stage component receives. The shell (see StageShell) takes care of
@@ -35,6 +35,12 @@ export interface StageProps<Q extends StageQuestion = StageQuestion> {
   settings: StageSettings;
   isHost: boolean;
   playerId: string;
+  /**
+   * Everyone in the lobby. A host view that lays the class out by name needs
+   * it; a player's device only ever has its own data in `data`, so this is the
+   * names and nothing about how anyone is doing.
+   */
+  players?: Player[];
 }
 
 /**
@@ -105,6 +111,16 @@ export interface StageComponents {
   calculator?: boolean;
   /** Replaces the default progress list the host sees. */
   HostView?: AnyStageComponent;
+  /**
+   * Replaces the standings and the question-by-question debrief on the host's
+   * screen once the round is over, and the answer grid in the review after the
+   * lesson. For a stage with no questions to walk through — a flow a player
+   * works through on their own — whose round comes to something else.
+   */
+  ClassSummary?: ComponentType<{
+    data: StageRoundData<any>;
+    players: Player[];
+  }>;
   /** Live score of a player, when the stage does not score by answer points.
    *  Mirror of the server-side StageHandler.scorePlayer. */
   scorePlayer?: (data: StageRoundData<any>, playerId: string) => number;
@@ -201,6 +217,8 @@ import termeGame from "../games/terme";
 import pythonGame from "../games/python";
 import javaGame from "../games/java";
 import intuitionGame from "../games/intuition";
+import bitflowGame from "../games/bitflow";
+import spreadsheetGame from "../games/spreadsheet";
 
 export const games: Record<string, GameDefinition> = {
   example: exampleGame,
@@ -213,6 +231,8 @@ export const games: Record<string, GameDefinition> = {
   python: pythonGame,
   java: javaGame,
   intuition: intuitionGame,
+  bitflow: bitflowGame,
+  spreadsheet: spreadsheetGame,
 };
 
 // Every spec needs a client definition, and vice versa.

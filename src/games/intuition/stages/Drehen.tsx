@@ -57,6 +57,8 @@ export default function DrehenStage({ question, submit }: StageProps<DialQuestio
             max={25}
             step={1}
             value={dial}
+            aria-label={t("games.intuition.dialLabel")}
+            aria-valuetext={`${ALPHABET[dial]} → A`}
             onChange={(event) =>
               setDraft({ questionId: question.id, dial: Number(event.target.value) })
             }

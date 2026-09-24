@@ -40,6 +40,17 @@ export default function Preview() {
   return <StagePreview key={`${gameId}/${stageId}`} gameId={gameId} stageId={stageId} />;
 }
 
+/** Stage settings from `?settings=` as JSON, or none. */
+function previewSettings(): Record<string, unknown> {
+  try {
+    const raw = new URLSearchParams(window.location.search).get("settings");
+    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
 /** The lobby a round is built against: one host, one player, default settings. */
 function lobbyFor(gameId: string, stageId: string): LobbyState | null {
   const game = getGame(gameId);
@@ -55,8 +66,14 @@ function lobbyFor(gameId: string, stageId: string): LobbyState | null {
     ],
     phase: "playing",
     gameData: null,
-    // One stage, so the round the handler builds is the one asked for.
-    settings: { ...settings, stages: [stageId] },
+    // One stage, so the round the handler builds is the one asked for — at the
+    // settings `?settings=` gives it, for a stage that cannot run on defaults
+    // (a flow needs an address). Resolved by the handler like any other.
+    settings: {
+      ...settings,
+      stages: [stageId],
+      stageSettings: { ...settings.stageSettings, [stageId]: { ...settings.stageSettings[stageId], ...previewSettings() } },
+    },
     countdownEndsAt: null,
   };
 }
@@ -127,7 +144,11 @@ function StagePreview({ gameId, stageId }: { gameId: string; stageId: string }) 
         // when the clock ran out on its question is a row to fix.
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-4 pb-16">
           <RoundReview game={game} data={round} playerId="player" />
-          <RoundDebrief game={game} data={round} players={session.players} />
+          {stage.ClassSummary ? (
+            <stage.ClassSummary data={round} players={session.players} />
+          ) : (
+            <RoundDebrief game={game} data={round} players={session.players} />
+          )}
         </div>
       ) : (
         <StageShell

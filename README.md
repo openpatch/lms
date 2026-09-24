@@ -27,11 +27,18 @@ Then create an account for yourself and sign in at `/login`:
 pnpm teacher add you@example.com "Your Name"
 ```
 
+The bitflow game runs `@bitflow/web-component` from the sibling `bitflow`
+checkout (`link:../bitflow/packages/web-component` in `package.json`) until the
+release that exports `createShareableReport` is on npm; build that package
+first (`pnpm --filter @bitflow/web-component build` in `../bitflow`), and switch
+the dependency to its npm version once it is published.
+
 ## Checks
 
 ```sh
 pnpm check:games    # builds a round of every stage of every game
 pnpm check:server   # signs in, opens a lobby, plays a round, restarts the server
+pnpm test           # every stage of every game, as a player sees it, through axe
 pnpm lint
 pnpm build
 ```

@@ -43,6 +43,7 @@ function pick<T>(arr: T[]): T {
 
 const speedStage: StageHandler<SpeedQuestion> = {
   id: "speed",
+  forPlayer: (question) => ({ ...question, numericAnswer: 0 }),
 
   createQuestions({ settings }) {
     return pickN(PERFECT_SQUARES, Number(settings.questionsPerRound)).map((value, id) => ({
@@ -60,6 +61,7 @@ const speedStage: StageHandler<SpeedQuestion> = {
 
 const numberLineStage: StageHandler<NumberLineQuestion> = {
   id: "numberline",
+  forPlayer: (question) => ({ ...question, numericAnswer: 0 }),
 
   createQuestions({ settings }) {
     return pickN(NON_PERFECT, Number(settings.questionsPerRound)).map((value, id) => ({
@@ -82,6 +84,7 @@ const numberLineStage: StageHandler<NumberLineQuestion> = {
 
 const classifyStage: StageHandler<ClassifyQuestion> = {
   id: "classify",
+  forPlayer: (question) => ({ ...question, classifyAnswer: "natural" }),
 
   createQuestions({ settings }) {
     const count = Number(settings.questionsPerRound);
@@ -150,6 +153,7 @@ function makeSimplifyTask(mixed: boolean): { promptLatex: string; radicand: numb
 
 const simplifyStage: StageHandler<SimplifyQuestion> = {
   id: "simplify",
+  forPlayer: (question) => ({ ...question, answer: { factor: 0, radicand: 0 } }),
 
   createQuestions({ settings }) {
     const mixed = settings.rootTasks !== "partial";
@@ -188,6 +192,8 @@ function optimalSteps(width: number, target: number): number {
 
 const bisectStage: StageHandler<BisectQuestion> = {
   id: "bisect",
+  // `target` is the width to narrow down to, shown as the goal.
+  forPlayer: (question) => question,
 
   createQuestions({ settings }) {
     const target = readTargetPrecision(settings);

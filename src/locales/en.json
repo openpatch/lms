@@ -102,7 +102,9 @@
       "unanswered": "not answered",
       "times_one": "1×",
       "times_other": "{{count}}×"
-    }
+    },
+    "answerCorrect": "Right.",
+    "answerWrong": "Wrong."
   },
   "lobby": {
     "title": "Lobby",
@@ -166,6 +168,45 @@
     "backToLobby": "Back to Lobby"
   },
   "games": {
+    "spreadsheet": {
+      "title": "Cell Works",
+      "description": "Copy formulas, simulate growth and turn European climate data into suitable charts.",
+      "prompts": {
+        "percentFormula": "In C{{row}}, increase the price from B{{row}} by {{value}}%. The rate is in {{address}}. Which formula can be copied down correctly?",
+        "feeFormula": "Add a fixed fee of €{{value}} to every value in column B. It is stored in {{address}}. Which formula can be copied down correctly?",
+        "linearGrowth": "The quantity grows by the same amount each year ({{step}} here). Which formula belongs in B3 and can be copied down?",
+        "exponentialGrowth": "The quantity grows by the same percentage each year ({{step}}% here). Which formula belongs in B3 and can be copied down?",
+        "temperatureChart": "Which chart best shows how the temperature in {{city}} changes over the year?",
+        "rainfallChart": "Which chart best compares annual rainfall in these European cities?"
+      },
+      "chartKinds": {
+        "line": "Line chart",
+        "bar": "Column chart",
+        "pie": "Pie chart",
+        "scatter": "Scatter plot"
+      },
+      "examples": {
+        "copy": "B2 moves; F1 stays fixed.",
+        "chart": "A line makes change over time visible."
+      },
+      "stages": {
+        "references": {
+          "name": "Copy Command",
+          "summary": "Use relative and absolute cell references correctly",
+          "rules": "For {{questionsPerRound}} sheets, choose the formula that can be copied down without errors. Row data must move while fixed parameters need $ signs. You have {{duration}} seconds."
+        },
+        "growth": {
+          "name": "Crystal Ball",
+          "summary": "Simulate linear and exponential growth",
+          "rules": "Read the values and choose the matching formula for {{questionsPerRound}} forecasts. Distinguish a fixed increase from a fixed percentage. You have {{duration}} seconds."
+        },
+        "charts": {
+          "name": "Chart Studio",
+          "summary": "Visualise European climate data appropriately",
+          "rules": "For {{questionsPerRound}} data sets, choose the chart that answers the question most clearly: change over time or comparison. You have {{duration}} seconds."
+        }
+      }
+    },
     "example": {
       "title": "Example Game",
       "description": "A one-stage example game to test the framework.",
@@ -660,7 +701,8 @@
           "summary": "Find the one broken line",
           "rules": "Find the line that holds the mistake in {{questionsPerRound}} programs. The faster you find it, the more points. You have {{duration}} seconds."
         }
-      }
+      },
+      "turtleOption": "Drawing {{number}}"
     },
     "java": {
       "title": "Java Trail",
@@ -872,7 +914,9 @@
       "walk": {
         "printed": "printed:",
         "step": "Step"
-      }
+      },
+      "robotCell": "Row {{row}}, column {{column}}",
+      "robotStartCell": "Row {{row}}, column {{column}}, where the robot starts"
     },
     "intuition": {
       "title": "Gut Feeling",
@@ -1000,7 +1044,34 @@
         "streak": "best run",
         "average": "on average"
       },
-      "lightMissed": "That light was already on"
+      "lightMissed": "That light was already on",
+      "dialLabel": "Shift"
+    },
+    "bitflow": {
+      "title": "Bitflow",
+      "description": "Work through an assessment built in Bitflow Studio, each at your own pace. Your teacher sees how everyone is getting on; nobody else does.",
+      "stages": {
+        "flow": {
+          "name": "Assessment",
+          "summary": "A flow from Bitflow Studio, worked through by everyone at their own pace.",
+          "rules": "Work through the assessment on your own device, at your own pace. It is marked as you go, right here on your device. Your teacher sees how far you are and how it went — never what you wrote — and nobody else in the class sees anything about you."
+        }
+      },
+      "noFlow": "The teacher has not given an assessment to work through.",
+      "loadFailed": "The assessment could not be started on this device. Reload the page to try again.",
+      "fetchFailed": "The assessment could not be loaded from its address. Ask your teacher to check it.",
+      "invalidFlow": "The address does not lead to a Bitflow assessment.",
+      "boardCaption": "How far everyone is",
+      "name": "Name",
+      "progress": "Progress",
+      "score": "Score",
+      "notStarted": "not started",
+      "completed": "finished",
+      "step": "step {{visited}} of {{total}}",
+      "away": "(away)",
+      "progressOf": "Progress of {{name}}",
+      "ownScore": "You scored {{earned}} of {{possible}} points.",
+      "notFinished": "The time is up before you finished."
     }
   },
   "settings": {
@@ -1181,7 +1252,10 @@
     "modelParts": "What is asked for",
     "modelPartsMixed": "Mixed (more as the round goes on)",
     "modelPartsOne": "One step at a time",
-    "modelPartsAll": "The whole way, every time"
+    "modelPartsAll": "The whole way, every time",
+    "flowUrl": "Assessment address",
+    "flowUrlHint": "The web address of a .bitflow file, e.g. one published with your Hyperbook. Every device fetches it from there.",
+    "minutes": "Time"
   },
   "parsons": {
     "plain": "Put the lines back in the right order.",

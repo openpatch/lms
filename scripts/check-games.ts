@@ -198,7 +198,9 @@ for (const spec of Object.values(gameSpecs)) {
     const settingKeys = stage.settings.flatMap((f) =>
       f.type === "choice" || f.type === "multi"
         ? [f.labelKey, ...f.options.map((o) => o.labelKey)]
-        : [f.labelKey],
+        : f.type === "url" && f.hintKey
+          ? [f.labelKey, f.hintKey]
+          : [f.labelKey],
     );
     const keys = [stage.nameKey, stage.summaryKey, stage.rulesKey, ...settingKeys];
     for (const key of keys) {

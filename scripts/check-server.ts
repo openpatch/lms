@@ -172,6 +172,8 @@ async function main() {
   // of their own rather than fighting the one the round above leaves a lobby on.
   await addTeacher("demo@example.org", "Demo Teacher", "smoke-test-password");
   await addTeacher("review@example.org", "Review Teacher", "smoke-test-password");
+  await addTeacher("secrets@example.org", "Secrets Teacher", "smoke-test-password");
+  await addTeacher("flow@example.org", "Flow Teacher", "smoke-test-password");
   let server = await start();
 
   try {
@@ -456,6 +458,159 @@ async function main() {
       !goneBody.sessions.some((entry) => entry.code === lesson2Code),
       `${goneBody.sessions.length} session(s) left`,
     );
+
+    console.log("what a player's device is told");
+    // The round is built with its answer key in it, and every answer the class
+    // gives goes into it. Neither may reach a student's device: a round played
+    // with the keys one devtools tab away is not a round, and a class that can
+    // read each other's answers is not a class being asked anything.
+    const secretsCookie = await signIn("secrets@example.org", "smoke-test-password");
+    const secretsCode = (await createLobby(secretsCookie, "java")).body.code ?? "";
+    const teacher = new TestClient(secretsCode, randomUUID(), secretsCookie, "host");
+    await teacher.ready();
+    teacher.send({ type: "host", gameId: "java" });
+    const ada = new TestClient(secretsCode, randomUUID());
+    const bob = new TestClient(secretsCode, randomUUID());
+    await ada.ready();
+    await bob.ready();
+    ada.send({ type: "join", name: "Ada" });
+    bob.send({ type: "join", name: "Bob" });
+    await teacher.waitUntil("lobby-state", (m) => m.state.players.filter((p) => !p.isHost).length === 2);
+    teacher.send({ type: "start" });
+    teacher.send({ type: "begin-countdown" });
+
+    type Round = {
+      questions: { id: number; expected: string[] }[];
+      answers: Record<string, unknown>;
+    };
+    const roundOf = async (client: TestClient) =>
+      ((await client.waitFor("game-start")) as { gameData: Round } | undefined)?.gameData;
+    const teachersRound = await roundOf(teacher);
+    const adasRound = await roundOf(ada);
+    const first = teachersRound?.questions[0];
+    check(
+      "the host sees the answer key",
+      !!first && first.expected.some((line) => line !== ""),
+    );
+    check(
+      "a player does not, before answering",
+      !!adasRound && adasRound.questions.every((question) => question.expected.every((line) => line === "")),
+    );
+    check(
+      "but is still told how many lines to write",
+      adasRound?.questions[0]?.expected.length === first?.expected.length,
+    );
+
+    ada.send({ type: "game-action", payload: { action: "answer", questionId: first?.id, answer: "0" } });
+    const adaAfter = await ada.waitUntil("game-state", (m) => {
+      const round = m.gameData as Round;
+      return !!round.answers && Object.keys(round.answers).length === 1 &&
+        round.questions[0].expected.some((line) => line !== "");
+    });
+    check("a question answered comes back whole, so the stage can show the answer", adaAfter);
+    const bobSaw = bob.received
+      .filter((m) => m.type === "game-state" || m.type === "lobby-state")
+      .map((m) => (m.type === "game-state" ? m.gameData : m.state.gameData) as Round | null);
+    check(
+      "and nobody else's answers reach a player",
+      bobSaw.length > 0 && bobSaw.every((round) => !round || Object.keys(round.answers ?? {}).length === 0),
+    );
+    check(
+      "while the host sees the whole class",
+      await teacher.waitUntil("game-state", (m) => Object.keys((m.gameData as Round).answers).length === 1),
+    );
+    teacher.send({ type: "close-lobby" });
+    await teacher.waitFor("lobby-closed");
+
+    console.log("a bitflow flow with a class");
+    // The flow runs on each device; the server is sent where a player is and a
+    // report with the answers taken out. A report that still carries one is
+    // refused by its shape, and nobody but the host sees anybody's progress.
+    const flowCookie = await signIn("flow@example.org", "smoke-test-password");
+    const flowCode = (await createLobby(flowCookie, "bitflow")).body.code ?? "";
+    const flowHost = new TestClient(flowCode, randomUUID(), flowCookie, "host");
+    await flowHost.ready();
+    flowHost.send({ type: "host", gameId: "bitflow" });
+    flowHost.send({
+      type: "update-settings",
+      settings: {
+        stages: ["flow"],
+        stageSettings: { flow: { flowUrl: "https://example.org/quiz.bitflow", minutes: 30 } },
+      },
+    });
+    const danId = randomUUID();
+    const cleo = new TestClient(flowCode, randomUUID());
+    const dan = new TestClient(flowCode, danId);
+    await cleo.ready();
+    await dan.ready();
+    cleo.send({ type: "join", name: "Cleo" });
+    dan.send({ type: "join", name: "Dan" });
+    await flowHost.waitUntil("lobby-state", (m) => m.state.players.filter((p) => !p.isHost).length === 2);
+    flowHost.send({ type: "start" });
+    flowHost.send({ type: "begin-countdown" });
+    const cleoRound = (await cleo.waitFor("game-start")) as
+      | { gameData: { settings: { flowUrl?: string } } }
+      | undefined;
+    check(
+      "every device is told where the flow is",
+      cleoRound?.gameData.settings.flowUrl === "https://example.org/quiz.bitflow",
+    );
+
+    const nodeReport = { nodeId: "q1", bitType: "task-choice", result: { state: "correct", score: { earned: 1, possible: 1 } }, tries: 1 };
+    const report = (node: Record<string, unknown>) => ({
+      status: "completed",
+      visited: 2,
+      total: 2,
+      report: {
+        schemaVersion: 1,
+        flowId: "quiz",
+        flowSchemaVersion: 1,
+        attemptId: "a1",
+        status: "completed",
+        nodeReports: [node],
+        score: { earned: 1, possible: 1 },
+        startedAt: "2026-01-01T10:00:00.000Z",
+        completedAt: "2026-01-01T10:05:00.000Z",
+      },
+    });
+    type FlowRound = { extra: { progress: Record<string, unknown> } };
+    const progressSeenBy = (client: TestClient) =>
+      client.received
+        .filter((m) => m.type === "game-state")
+        .map((m) => Object.keys((m.gameData as FlowRound).extra.progress));
+
+    cleo.send({
+      type: "game-action",
+      payload: { action: "progress", progress: report({ ...nodeReport, answer: "B" }) },
+    });
+    await new Promise((r) => setTimeout(r, 300));
+    check(
+      "a report still carrying an answer is refused",
+      progressSeenBy(flowHost).every((ids) => ids.length === 0),
+    );
+
+    dan.send({ type: "game-action", payload: { action: "progress", progress: { status: "inProgress", visited: 1, total: 2 } } });
+    cleo.send({ type: "game-action", payload: { action: "progress", progress: report(nodeReport) } });
+    check(
+      "the host sees each player's progress",
+      await flowHost.waitUntil("game-state", (m) => Object.keys((m.gameData as FlowRound).extra.progress).length === 2),
+    );
+    await new Promise((r) => setTimeout(r, 300));
+    const danSaw = progressSeenBy(dan);
+    check(
+      "a player sees only their own",
+      danSaw.length > 0 && danSaw.every((ids) => ids.every((id) => id === danId)),
+      JSON.stringify(danSaw.at(-1)),
+    );
+    dan.send({ type: "game-action", payload: { action: "progress", progress: report(nodeReport) } });
+    check("the round ends once everybody has finished", !!(await cleo.waitFor("finished")));
+    const flowResults = (await cleo.waitFor("finished")) as { results: { score: number; crowns?: number }[] } | undefined;
+    check(
+      "and nobody is ranked or crowned for a flow",
+      !!flowResults && flowResults.results.every((result) => result.score === 0 && !result.crowns),
+    );
+    flowHost.send({ type: "close-lobby" });
+    await flowHost.waitFor("lobby-closed");
 
     console.log("a demo lobby");
     // A teacher rehearsing alone: one seat, opened with the lobby, that their

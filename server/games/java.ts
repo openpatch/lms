@@ -275,6 +275,12 @@ function divisionTask(): Task {
 
 const outputStage: StageHandler<CodeAnswerQuestion> = {
   id: "output",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+    steps: undefined,
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.arithmeticTasks);
@@ -485,6 +491,7 @@ function namingTask(): ChoiceDraft {
 
 const typesStage: StageHandler<CodeChoiceQuestion> = {
   id: "types",
+  forPlayer: (question) => ({ ...question, answerIndex: -1, reasonKey: undefined }),
 
   createQuestions({ settings }) {
     const mode = String(settings.typeTasks);
@@ -632,6 +639,12 @@ function inputTask(): Task {
 
 const variablesStage: StageHandler<CodeAnswerQuestion> = {
   id: "variables",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+    steps: undefined,
+  }),
 
   createQuestions({ settings }) {
     const withShorthand = settings.withShorthand === true;
@@ -836,6 +849,10 @@ const bracketTask: LogicTask = (id) => {
 
 const logicStage: StageHandler<LogicQuestion> = {
   id: "logic",
+  forPlayer: (question) =>
+    question.kind === "value"
+      ? { ...question, answer: false }
+      : { ...question, answerIndex: -1 },
 
   createQuestions({ settings }) {
     const mode = String(settings.boolTasks);
@@ -1061,6 +1078,7 @@ function equalsBranchTask(): ChoiceDraft {
 
 const branchStage: StageHandler<CodeChoiceQuestion> = {
   id: "branch",
+  forPlayer: (question) => ({ ...question, answerIndex: -1, reasonKey: undefined }),
 
   createQuestions({ settings }) {
     const branchCount = Number(settings.branchCount);
@@ -1413,6 +1431,12 @@ function nestedTask(): Task {
 
 const loopsStage: StageHandler<CodeAnswerQuestion> = {
   id: "loops",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+    steps: undefined,
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.loopKind);
@@ -1819,6 +1843,12 @@ function robotProgram(kind: "straight" | "loops" | "nested"): RobotCmd[] {
 
 const robotStage: StageHandler<RobotQuestion> = {
   id: "robot",
+  forPlayer: (question) => ({
+    ...question,
+    answer: question.start,
+    answerFacing: question.facing,
+    path: [],
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.robotTasks);
@@ -1924,6 +1954,7 @@ function misread(body: RobotCmd[]): RobotCmd[] | null {
 
 const trailStage: StageHandler<RobotTrailQuestion> = {
   id: "trail",
+  forPlayer: (question) => ({ ...question, answerIndex: -1 }),
 
   createQuestions({ settings }) {
     const nested = settings.withNestedRobot !== false;
@@ -2093,6 +2124,7 @@ function javaParsonsTemplates(): ParsonsTemplate[] {
 
 const parsonsStage: StageHandler<ParsonsQuestion> = {
   id: "parsons",
+  forPlayer: (question) => ({ ...question, solution: [], solutionIndents: [] }),
 
   createQuestions({ settings }) {
     const count = Number(settings.questionsPerRound);
@@ -2115,6 +2147,7 @@ const parsonsStage: StageHandler<ParsonsQuestion> = {
 
 const structogramStage: StageHandler<StructogramQuestion> = {
   id: "structogram",
+  forPlayer: (question) => ({ ...question, answerIndex: -1 }),
 
   createQuestions({ settings }) {
     const count = Number(settings.questionsPerRound);
@@ -2369,6 +2402,12 @@ function voidTask(): Task {
 
 const methodsStage: StageHandler<CodeAnswerQuestion> = {
   id: "methods",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+    steps: undefined,
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.methodTasks);
@@ -2531,6 +2570,12 @@ function traverseTask(): Task {
 
 const arraysStage: StageHandler<CodeAnswerQuestion> = {
   id: "arrays",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+    steps: undefined,
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.arrayTasks);
@@ -2664,6 +2709,12 @@ function sortTask(): Task {
 
 const sortingStage: StageHandler<CodeAnswerQuestion> = {
   id: "sorting",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are lines to write: the stage says how many.
+    expected: question.expected.map(() => ""),
+    steps: undefined,
+  }),
 
   createQuestions({ settings }) {
     const mode = String(settings.sortTasks);
@@ -3116,6 +3167,7 @@ const BUG_TEMPLATES: BugTemplate[] = [
 
 const bugsStage: StageHandler<BugQuestion> = {
   id: "bugs",
+  forPlayer: (question) => ({ ...question, errorLine: -1, reasonKey: "" }),
 
   createQuestions({ settings }) {
     const mode = String(settings.bugTasks);

@@ -250,6 +250,7 @@ function buildOptions(correct: string, wrong: string[]): { options: string[]; co
 
 const buildStage: StageHandler<BuildQuestion> = {
   id: "build",
+  forPlayer: (question) => ({ ...question, correct: -1 }),
 
   createQuestions({ settings }) {
     // Every context at most once per round, so a round is not four taxis
@@ -376,6 +377,12 @@ function makeEquivalencePair(equivalent: boolean): EquivalencePair | null {
 
 const evaluateStage: StageHandler<EvaluateQuestion> = {
   id: "evaluate",
+  forPlayer: (question) => ({
+    ...question,
+    value: { n: 0, d: 1 },
+    equivalent: false,
+    solutionLatex: "",
+  }),
 
   createQuestions({ settings }) {
     const mode = settings.evaluateAsk;
@@ -522,6 +529,7 @@ function makeProductTask(): { termLatex: string; solution: Term } {
 
 const collectStage: StageHandler<CollectQuestion> = {
   id: "collect",
+  forPlayer: (question) => ({ ...question, solutionLatex: "" }),
 
   createQuestions({ settings }) {
     const mode = settings.collectTask;
@@ -634,6 +642,7 @@ function makeDoubleBracketTask(): { termLatex: string; solution: Term } {
 
 const expandStage: StageHandler<ExpandQuestion> = {
   id: "expand",
+  forPlayer: (question) => ({ ...question, solutionLatex: "" }),
 
   createQuestions({ settings }) {
     const mode = settings.bracketMode;
@@ -675,6 +684,7 @@ function makeCoprimeSum(variables: string[], parts: number): Term {
 
 const factorStage: StageHandler<FactorQuestion> = {
   id: "factor",
+  forPlayer: (question) => ({ ...question, solutionLatex: "", commonLatex: "" }),
 
   createQuestions({ settings }) {
     const withVariables = Boolean(settings.withVariables);
@@ -760,6 +770,7 @@ function makeBinomial(withCoefficients: boolean): { product: string; expanded: T
 
 const binomialStage: StageHandler<BinomialQuestion> = {
   id: "binomial",
+  forPlayer: (question) => ({ ...question, solutionLatex: "" }),
 
   createQuestions({ settings }) {
     const mode = settings.binomialDirection;
@@ -804,6 +815,12 @@ function linearFactor(variable: string, root: number, coefficient: number): Term
 
 const zeroStage: StageHandler<ZeroQuestion> = {
   id: "zero",
+  forPlayer: (question) => ({
+    ...question,
+    // As many blanks as there are zeros: the stage offers that many fields.
+    solutions: question.solutions.map(() => ({ n: 0, d: 1 })),
+    solutionLatex: "",
+  }),
 
   createQuestions({ settings }) {
     const factorFirst = Boolean(settings.factorFirst);
@@ -958,6 +975,7 @@ function makeCrossTask(variable: string): FractionTask | null {
 
 const fractionStage: StageHandler<FractionQuestion> = {
   id: "fraction",
+  forPlayer: (question) => ({ ...question, answer: { n: 0, d: 1 }, solutionLatex: "" }),
 
   createQuestions({ settings }) {
     const mode = settings.fractionAsk;
@@ -1103,6 +1121,7 @@ const FORMULAS: FormulaSpec[] = [
 
 const rearrangeStage: StageHandler<RearrangeQuestion> = {
   id: "rearrange",
+  forPlayer: (question) => ({ ...question, solutionLatex: "" }),
 
   createQuestions({ settings }) {
     const multiStep = Boolean(settings.multiStep);
@@ -1221,6 +1240,7 @@ function makeInequalityTask(
 
 const inequalityStage: StageHandler<InequalityQuestion> = {
   id: "inequality",
+  forPlayer: (question) => ({ ...question, bound: { n: 0, d: 1 }, relation: "<", solutionLatex: "" }),
 
   createQuestions({ settings }) {
     const withSignFlip = Boolean(settings.withSignFlip);

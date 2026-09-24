@@ -15,9 +15,11 @@
     "start": "node --import tsx server/index.ts",
     "check:server": "tsx scripts/check-server.ts",
     "teacher": "tsx scripts/teacher.ts",
-    "bench": "node --import tsx scripts/bench.ts"
+    "bench": "node --import tsx scripts/bench.ts",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@bitflow/web-component": "^0.2.0",
     "@types/katex": "^0.16.8",
     "better-auth": "^1.7.4",
     "i18next": "^26.4.2",
@@ -30,18 +32,23 @@
     "react-i18next": "^17.0.13",
     "react-router": "^8.3.1",
     "tsx": "^4.23.13",
-    "ws": "^8.21.3"
+    "ws": "^8.21.3",
+    "zod": "^4.6.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^6.1.0",
+    "axe-core": "^4.13.0",
+    "jsdom": "^30.1.1",
     "oxlint": "^1.79.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vitest": "^5.0.1"
   }
 }

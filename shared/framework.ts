@@ -51,6 +51,19 @@ export type SettingsField =
       default: string;
     }
   | {
+      /**
+       * A web address, for a stage that plays something the teacher brings
+       * rather than something the game generates. Only an http(s) URL is kept;
+       * anything else resolves to the default, which is empty.
+       */
+      type: "url";
+      key: string;
+      labelKey: string;
+      /** The line under the field saying what belongs in it. */
+      hintKey?: string;
+      default: string;
+    }
+  | {
       type: "multi";
       key: string;
       labelKey: string;
@@ -106,6 +119,18 @@ export function defaultStageSettings(stage: StageSpec): StageSettings {
   return values;
 }
 
+/** Whether a string is an http(s) address short enough to be one. */
+export function isWebAddress(value: string): boolean {
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > 2_000) return false;
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 /** Coerces one value to something the field allows, falling back to its default. */
 function resolveField(field: SettingsField, raw: unknown): SettingsValue {
   switch (field.type) {
@@ -122,6 +147,8 @@ function resolveField(field: SettingsField, raw: unknown): SettingsValue {
         .filter((value) => requested.includes(value));
       return picked.length > 0 ? picked : [...field.default];
     }
+    case "url":
+      return typeof raw === "string" && isWebAddress(raw) ? raw.trim() : field.default;
     case "select": {
       const value = Number(raw);
       return field.options.includes(value) ? value : field.default;

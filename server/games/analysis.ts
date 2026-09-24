@@ -133,6 +133,7 @@ function scoreDrawing(points: DrawnPoint[], question: DrawQuestion, target: (x: 
 
 const multipleChoiceStage: StageHandler<MultipleChoiceQuestion> = {
   id: "multiple-choice",
+  forPlayer: (question) => ({ ...question, correctOptionIndex: -1 }),
 
   createQuestions({ settings }) {
     const ids = pickN(
@@ -185,6 +186,8 @@ function makeDrawStage(
 ): StageHandler<DrawQuestion> {
   return {
     id,
+    // The function to draw from is the task itself; nothing in it is the answer.
+    forPlayer: (question) => question,
 
     createQuestions({ settings }) {
       return drawQuestions(Number(settings.questionsPerRound), target);

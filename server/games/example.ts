@@ -5,6 +5,9 @@ import { createStageGame } from "../framework";
 /** Tap stage: no questions at all, just a click counter per player. */
 const tapStage: StageHandler = {
   id: "tap",
+  // No questions: a live stage keeps its state in `extra`, which is the
+  // board everybody plays on.
+  forPlayer: (question) => question,
   createQuestions: () => [],
   createExtra: () => ({ clicks: {} as Record<string, number> }),
   // Never called: the stage has no questions.

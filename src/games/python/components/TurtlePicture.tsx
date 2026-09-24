@@ -11,9 +11,12 @@ import { drawingBounds, type TurtleDrawing } from "../../../../shared/python-tur
 export default function TurtlePicture({
   drawing,
   className = "",
+  label,
 }: {
   drawing: TurtleDrawing;
   className?: string;
+  /** What the picture is called, when nothing around it says so. */
+  label?: string;
 }) {
   const bounds = drawingBounds(drawing);
   const padding = 12;
@@ -27,7 +30,9 @@ export default function TurtlePicture({
       viewBox={`${minX} ${minY} ${width} ${height}`}
       preserveAspectRatio="xMidYMid meet"
       className={`h-full w-full ${className}`}
-      role="img"
+      // A picture with a name when it is given one; otherwise decoration, for
+      // the button or the text around it to name.
+      {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
     >
       {drawing.strokes.map((stroke, index) => (
         <polyline

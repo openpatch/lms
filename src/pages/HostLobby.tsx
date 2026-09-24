@@ -11,11 +11,12 @@ import StageShell from "../components/StageShell";
 import StageRules from "../components/StageRules";
 import StageSettingsForm from "../components/StageSettingsForm";
 import { useLobbySession } from "../lib/lobby-session";
-import { getGame } from "../lib/game-registry";
+import { getGame, getStage } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import Icon from "../components/icons";
 import { createLobby, lobbyPath } from "../lib/lobby-api";
 import type { StageRoundData } from "../../shared/framework";
+import type { LobbyState } from "../../shared/types";
 
 export default function HostLobby() {
   const { t } = useTranslation();
@@ -171,19 +172,19 @@ export default function HostLobby() {
         <div className="text-sm font-semibold uppercase text-game-ink">
           {t("game.round", { current: data?.currentRound ?? 0, total: data?.totalRounds ?? 0 })}
         </div>
-        <ResultsList
-          results={standings(lobbyState.players, roundResults, (data?.currentRound ?? 1) > 1)}
-          title={t("game.roundResults")}
-        />
+        {!game.unranked && (
+          <ResultsList
+            results={standings(lobbyState.players, roundResults, (data?.currentRound ?? 1) > 1)}
+            title={t("game.roundResults")}
+          />
+        )}
         <button
           onClick={() => conn.sendMessage({ type: "next-round" })}
           className="px-6 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
         >
           {t("game.nextRound")}
         </button>
-        {roundData && (
-          <RoundDebrief game={game} data={roundData} players={lobbyState.players} />
-        )}
+        {roundData && <RoundAfterwards game={game} data={roundData} players={lobbyState.players} />}
       </div>
     );
   }
@@ -194,20 +195,20 @@ export default function HostLobby() {
     const roundData = lobbyState.gameData as StageRoundData | null;
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
-        <ResultsList
-          results={withGains(finalResults, roundResults, (data?.currentRound ?? 1) > 1)}
-          title={t("game.finalResults")}
-          honourRounds
-        />
+        {!game.unranked && (
+          <ResultsList
+            results={withGains(finalResults, roundResults, (data?.currentRound ?? 1) > 1)}
+            title={t("game.finalResults")}
+            honourRounds
+          />
+        )}
         <button
           onClick={() => conn.sendMessage({ type: "restart" })}
           className="px-6 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
         >
           {t("play.backToLobby")}
         </button>
-        {roundData && (
-          <RoundDebrief game={game} data={roundData} players={lobbyState.players} />
-        )}
+        {roundData && <RoundAfterwards game={game} data={roundData} players={lobbyState.players} />}
       </div>
     );
   }
@@ -274,5 +275,27 @@ export default function HostLobby() {
           : t("lobby.needMorePlayers", { count: game.minPlayers })}
       </button>
     </div>
+  );
+}
+
+/**
+ * What the host sees of a round once it is over: the stage's own class summary
+ * where it brings one — a flow has no questions to walk back through — and the
+ * question-by-question debrief otherwise.
+ */
+function RoundAfterwards({
+  game,
+  data,
+  players,
+}: {
+  game: NonNullable<ReturnType<typeof getGame>>;
+  data: StageRoundData;
+  players: LobbyState["players"];
+}) {
+  const Summary = getStage(game, data.stageId)?.ClassSummary;
+  return Summary ? (
+    <Summary data={data} players={players} />
+  ) : (
+    <RoundDebrief game={game} data={data} players={players} />
   );
 }

@@ -49,6 +49,7 @@ export default function ZeroStage({ question, submit }: StageProps<ZeroQuestion>
               className="text-2xl text-gray-500"
             />
             <input
+              aria-label={`${question.variable}${index + 1}`}
               type="text"
               inputMode="text"
               value={value}

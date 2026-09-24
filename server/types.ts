@@ -32,6 +32,18 @@ export interface GameHandler {
   onMessage?: (state: LobbyState, payload: unknown, sender: Conn) => unknown;
 
   /**
+   * What one player may see of the game data, when it is not the host.
+   *
+   * The round is built with its answer key in it — the server grades against
+   * it — and every player's answers go into it as they arrive. Sent to every
+   * device as it stands, both would be one devtools tab away from the whole
+   * class. This is the view a player's own device gets instead; the host gets
+   * the round as it stands. Leave it out only for a game whose data holds
+   * nothing a player should not see.
+   */
+  forViewer?: (state: LobbyState, viewerId: string) => unknown;
+
+  /**
    * Called the moment the round actually starts being played — after the rules
    * screen and after the countdown.
    *

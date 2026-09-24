@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { RobotCell, RobotFacing } from "../../../../shared/games/java";
 import Icon from "../../../components/icons";
 import { sameCell } from "../../../../shared/games/java";
@@ -49,6 +50,7 @@ export default function RobotGrid({
   answer,
   answerFacing,
 }: RobotGridProps) {
+  const { t } = useTranslation();
   /** Which step of the route stood here — 1 is the first move away from start. */
   const stepAt = (cell: RobotCell): number | null => {
     if (!path) return null;
@@ -129,6 +131,10 @@ export default function RobotGrid({
             <button
               key={`${x},${y}`}
               onClick={() => onPick(cell)}
+              aria-label={t(isStart ? "games.java.robotStartCell" : "games.java.robotCell", {
+                row: y + 1,
+                column: x + 1,
+              })}
               className={`${className} hover:border-game-solid`}
             >
               {content}

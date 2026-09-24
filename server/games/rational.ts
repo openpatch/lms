@@ -130,6 +130,8 @@ function randomOperand(allowNegatives: boolean, denominators: number[]): Fractio
 
 const arrangeStage: StageHandler<ArrangeQuestion> = {
   id: "arrange",
+  // Each value is written on its card; placing it is the task.
+  forPlayer: (question) => question,
 
   createQuestions({ settings }) {
     const allowNegatives = Boolean(settings.allowNegatives);
@@ -272,6 +274,8 @@ function readDirection(raw: unknown): OrderDirection {
 
 const orderStage: StageHandler<OrderQuestion> = {
   id: "order",
+  // Each value is written on its card; ordering them is the task.
+  forPlayer: (question) => question,
 
   createQuestions({ settings }) {
     const withAbsolute = Boolean(settings.withAbsolute);
@@ -315,6 +319,7 @@ const orderStage: StageHandler<OrderQuestion> = {
 
 const calculateStage: StageHandler<CalculateQuestion> = {
   id: "calculate",
+  forPlayer: (question) => ({ ...question, result: { n: 0, d: 1, latex: "" } }),
 
   createQuestions({ settings }) {
     const allowNegatives = Boolean(settings.allowNegatives);
@@ -445,6 +450,7 @@ function buildSignsTerm(withBrackets: boolean): SignsTerm | null {
 
 const signsStage: StageHandler<SignsQuestion> = {
   id: "signs",
+  forPlayer: (question) => ({ ...question, result: 0 }),
 
   createQuestions({ settings }) {
     const withBrackets = Boolean(settings.withBrackets);
@@ -479,6 +485,7 @@ function readAsk(raw: unknown): ChangeAsk {
 
 const changeStage: StageHandler<ChangeQuestion> = {
   id: "change",
+  forPlayer: (question) => ({ ...question, answer: 0 }),
 
   createQuestions({ settings }) {
     const twoChanges = Boolean(settings.twoChanges);

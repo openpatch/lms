@@ -46,13 +46,23 @@ function useTimer(startTime: number, duration: number, active: boolean) {
 
 /** Green/red flash after an answer lands. */
 function FeedbackFlash({ feedback }: { feedback: "correct" | "wrong" | null }) {
-  if (!feedback) return null;
+  const { t } = useTranslation();
   return (
-    <div
-      className={`fixed inset-0 pointer-events-none z-50 animate-feedback-flash ${
-        feedback === "correct" ? "bg-green-400/20" : "bg-red-400/20"
-      }`}
-    />
+    <>
+      {feedback && (
+        <div
+          className={`fixed inset-0 pointer-events-none z-50 animate-feedback-flash ${
+            feedback === "correct" ? "bg-green-400/20" : "bg-red-400/20"
+          }`}
+        />
+      )}
+      {/* The flash in words. A tint across the screen says nothing to a
+          screen reader, and nothing to anyone who cannot tell the two colours
+          apart; the region stays mounted so each new verdict is announced. */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {feedback ? t(feedback === "correct" ? "game.answerCorrect" : "game.answerWrong") : ""}
+      </div>
+    </>
   );
 }
 
@@ -288,6 +298,7 @@ export default function StageShell({
     settings: data.settings,
     isHost,
     playerId,
+    players: state.players,
   };
 
   const questionNumber = question
@@ -321,7 +332,7 @@ export default function StageShell({
               </span>
             )}
           </div>
-          {!isHost && (
+          {!isHost && !game.unranked && (
             <div className="shrink-0 flex items-center gap-2 sm:gap-4">
               <StreakBadge streak={streak} />
               <div className="text-lg font-bold text-gray-700 tabular-nums whitespace-nowrap">

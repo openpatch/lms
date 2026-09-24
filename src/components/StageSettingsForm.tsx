@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   GameSettings,
@@ -5,13 +6,72 @@ import type {
   SettingsValue,
   StageSpec,
 } from "../../shared/framework";
-import { resolveGameSettings } from "../../shared/framework";
+import { isWebAddress, resolveGameSettings } from "../../shared/framework";
 import type { GameDefinition } from "../lib/game-registry";
 
 interface FieldProps {
   field: SettingsField;
   value: SettingsValue;
   onChange: (value: SettingsValue) => void;
+}
+
+/**
+ * A web address. Kept as a draft while it is typed, and only handed on once it
+ * is an address: the server keeps nothing that is not one, so passing on every
+ * keystroke would have the half-typed address come back empty and wipe the
+ * field under the teacher's fingers.
+ */
+function UrlField({
+  field,
+  value,
+  onChange,
+}: {
+  field: Extract<SettingsField, { type: "url" }>;
+  value: string;
+  onChange: (value: SettingsValue) => void;
+}) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState(value);
+  const [stored, setStored] = useState(value);
+  // The server's value wins when it changes, unless the teacher is part-way
+  // through typing something that is not an address yet — that draft is
+  // theirs to finish. Adjusted while rendering rather than in an effect, so the
+  // field never shows one frame of the stale draft.
+  if (value !== stored) {
+    setStored(value);
+    if (draft.trim() === "" || isWebAddress(draft)) setDraft(value);
+  }
+  const invalid = draft.trim() !== "" && !isWebAddress(draft);
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor={`setting-${field.key}`}>
+        {t(field.labelKey)}
+      </label>
+      <input
+        id={`setting-${field.key}`}
+        type="url"
+        inputMode="url"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        value={draft}
+        placeholder="https://"
+        aria-invalid={invalid || undefined}
+        aria-describedby={field.hintKey ? `setting-${field.key}-hint` : undefined}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          if (isWebAddress(e.target.value) || e.target.value.trim() === "") onChange(e.target.value.trim());
+        }}
+        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none aria-invalid:border-rose-400"
+      />
+      {field.hintKey && (
+        <p id={`setting-${field.key}-hint`} className="mt-1 text-sm text-gray-500">
+          {t(field.hintKey)}
+        </p>
+      )}
+    </div>
+  );
 }
 
 /** Renders one setting from its schema entry. */
@@ -93,6 +153,10 @@ function Field({ field, value, onChange }: FieldProps) {
         </div>
       </div>
     );
+  }
+
+  if (field.type === "url") {
+    return <UrlField field={field} value={String(value ?? "")} onChange={onChange} />;
   }
 
   if (field.type === "select") {

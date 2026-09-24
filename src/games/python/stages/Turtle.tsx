@@ -22,6 +22,7 @@ export default function TurtleStage({ question, submit }: StageProps<TurtleQuest
             <button
               key={index}
               onClick={() => submit(String(index))}
+              aria-label={t("games.python.turtleOption", { number: index + 1 })}
               className="aspect-square rounded-xl border-2 border-gray-200 bg-white p-2 transition-all hover:border-game-solid hover:bg-game-50 active:scale-95"
             >
               <TurtlePicture drawing={drawing} />
