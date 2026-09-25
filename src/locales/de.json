@@ -868,7 +868,12 @@
         "index": "die Position in einem Feld",
         "open": "ob ein Fenster offen ist",
         "city": "den Namen einer Stadt",
-        "seconds": "eine Anzahl von Sekunden"
+        "seconds": "eine Anzahl von Sekunden",
+        "temperature": "eine Temperatur wie 21.5 Grad",
+        "letter": "einen einzelnen Buchstaben",
+        "logged": "ob jemand angemeldet ist",
+        "email": "eine E-Mail-Adresse",
+        "floor": "ein Stockwerk in einem Gebäude"
       },
       "typeOf": {
         "students": "Eine Anzahl ist eine ganze Zahl — int.",

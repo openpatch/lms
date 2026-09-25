@@ -868,7 +868,12 @@
         "index": "a position in an array",
         "open": "whether a window is open",
         "city": "the name of a city",
-        "seconds": "a number of seconds"
+        "seconds": "a number of seconds",
+        "temperature": "a temperature like 21.5 degrees",
+        "letter": "a single letter",
+        "logged": "whether someone is logged in",
+        "email": "an email address",
+        "floor": "a floor in a building"
       },
       "typeOf": {
         "students": "A count is a whole number — int.",
