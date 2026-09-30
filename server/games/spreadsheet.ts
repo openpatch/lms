@@ -71,6 +71,35 @@ function sum(values: number[]): number {
 
 type Draft<Q> = Omit<Q, "id">;
 
+/**
+ * Where a sheet keeps its one fixed value. Not always the same cell: a class
+ * that has seen `$F$1` in every answer picks the option with `$F$1` in it
+ * without reading the rest.
+ */
+function parameterCell(columns: string[] = ["E", "F", "G"], rows: number[] = [1, 2, 3]): string {
+  return `${pick(columns)}${pick(rows)}`;
+}
+
+/** `F2` → `$F$2`. */
+function absolute(cell: string): string {
+  return `$${cell[0]}$${cell.slice(1)}`;
+}
+
+/** `F2` → `F$2`: enough when a formula is only ever copied down. */
+function rowFixed(cell: string): string {
+  return `${cell[0]}$${cell.slice(1)}`;
+}
+
+/** `F2` → `$F2`: fixes the column, which copying down never moves anyway. */
+function columnFixed(cell: string): string {
+  return `$${cell}`;
+}
+
+/** Where a relative reference ends up after the formula is copied `rows` down. */
+function drifted(cell: string, rows: number): string {
+  return `${cell[0]}${Number(cell.slice(1)) + rows}`;
+}
+
 function signature(question: Draft<SpreadsheetChoiceQuestion>): string {
   return JSON.stringify([
     question.promptKey,
@@ -150,6 +179,21 @@ const NAMES = ["Ali", "Ben", "Clara", "Deniz", "Emma", "Finn", "Greta", "Hana", 
 const KIOSK = ["Brezel", "Apfel", "Wasser", "Müsliriegel", "Käsebrötchen", "Apfelschorle", "Banane"];
 const CLASSES = ["5a", "5b", "6a", "6b", "7a", "7b", "8a", "8b"];
 
+const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+
+/** The highest peak of a few European countries, in metres, rounded. */
+const MOUNTAINS: [string, number][] = [
+  ["Mont Blanc", 4806],
+  ["Dufourspitze", 4634],
+  ["Großglockner", 3798],
+  ["Mulhacén", 3479],
+  ["Zugspitze", 2962],
+  ["Olymp", 2918],
+  ["Triglav", 2864],
+  ["Gerlach", 2655],
+  ["Rysy", 2499],
+];
+
 const PRODUCTS: [string, number][] = [
   ["Fahrradlicht", 18],
   ["Powerbank", 25],
@@ -205,6 +249,11 @@ const SERIES: Series[] = [
   { id: "population", label: "A: Stadt", header: "B: Einwohner (Mio.)", functions: ALL_FUNCTIONS, items: () => POPULATION },
   { id: "kiosk", label: "A: Artikel", header: "B: verkauft", functions: ALL_FUNCTIONS, items: randomValues(KIOSK, 12, 95) },
   { id: "laps", label: "A: Klasse", header: "B: Runden", functions: ALL_FUNCTIONS, items: randomValues(CLASSES, 18, 64) },
+  { id: "steps", label: "A: Tag", header: "B: Schritte", functions: ALL_FUNCTIONS, items: () => WEEKDAYS.map((day) => [day, randomInt(30, 140) * 100]) },
+  { id: "screen", label: "A: Tag", header: "B: Bildschirmzeit (min)", functions: ALL_FUNCTIONS, items: () => WEEKDAYS.map((day) => [day, randomInt(8, 40) * 5]) },
+  { id: "bottles", label: "A: Klasse", header: "B: Pfandflaschen", functions: ALL_FUNCTIONS, items: randomValues(CLASSES, 20, 150) },
+  { id: "height", label: "A: Name", header: "B: Größe (cm)", functions: ["MAX", "MIN", "MITTELWERT"], items: randomValues(NAMES, 142, 184) },
+  { id: "mountains", label: "A: Berg", header: "B: Höhe (m)", functions: ["MAX", "MIN", "MITTELWERT"], items: () => MOUNTAINS },
 ];
 
 function applyFunction(fn: SheetFunction, values: number[]): number {
@@ -336,6 +385,64 @@ function functionReverse(): Draft<FunctionQuestion> {
   };
 }
 
+/**
+ * The result is on the sheet and one value is not: which number is missing?
+ * Read backwards, a SUMME or MITTELWERT has to be understood rather than
+ * evaluated.
+ */
+function functionMissing(): Draft<FunctionQuestion> {
+  const fn = pick(["SUMME", "SUMME", "MITTELWERT"] as const);
+  const series = pick(
+    SERIES.filter(
+      (candidate) =>
+        candidate.functions.includes(fn) &&
+        candidate.items().every(([, value]) => Number.isInteger(value)),
+    ),
+  );
+  const sheet = dataSheet(series);
+  const values = [...sheet.values];
+  const index = randomInt(0, values.length - 1);
+  if (fn === "MITTELWERT") {
+    // Nudged so the mean is a whole number and reads without rounding.
+    const rest = sum(values) - values[index];
+    const count = values.length;
+    values[index] += (count - ((rest + values[index]) % count)) % count;
+  }
+  const missing = values[index];
+  const result = applyFunction(fn, values);
+  // A missing value equal to the mean is read off the result cell, not worked out.
+  if (missing === result) return functionMissing();
+  const cell = `B${index + 2}`;
+  const others = sum(values) - missing;
+  const rows = sheet.rows.map((row, rowIndex) => {
+    if (rowIndex === values.length) return { cells: [row.cells[0], "", sheetNumber(result)] };
+    if (rowIndex === index) return { cells: [row.cells[0], row.cells[1], "?"] };
+    return { cells: [row.cells[0], row.cells[1], sheetNumber(values[rowIndex])] };
+  });
+  return {
+    kind: "function",
+    promptKey: "games.spreadsheet.prompts.functionMissing",
+    promptParams: { cell, result: `B${sheet.last + 1}` },
+    headers: sheet.headers,
+    rows,
+    formula: { address: `B${sheet.last + 1}`, text: `=${fn}(B2:B${sheet.last})` },
+    ...choice(
+      sheetNumber(missing),
+      [
+        // The mean taken as if it were the sum, or over one value too few.
+        ...(fn === "MITTELWERT" ? [result - others, result * (values.length - 1) - others] : []),
+        result,
+        // The sum of the others, or the mean mistaken for the missing value.
+        fn === "MITTELWERT" ? result * values.length : others,
+        Math.round(result / values.length),
+        ...shuffled(values.filter((_, other) => other !== index)),
+      ]
+        .filter((value) => value >= 0)
+        .map(sheetNumber),
+    ),
+  };
+}
+
 const COLUMNS = ["A", "B", "C", "D", "E"];
 
 /** How many cells does a range cover? Row and column counts, and ";" against ":". */
@@ -418,6 +525,11 @@ const RULES: Rule[] = [
   { id: "rain", label: "A: Stadt", header: "B: Regen Juli (mm)", unit: "mm", then: "trocken", otherwise: "nass", comparisons: ["<", "<="], items: cityValues("rain") },
   { id: "jump", label: "A: Name", header: "B: Weitsprung (m)", unit: "m", then: "Urkunde", otherwise: "keine", comparisons: [">=", ">"], items: () => NAMES.map((name) => [name, randomInt(28, 46) / 10]) },
   { id: "frost", label: "A: Stadt", header: "B: Januar (°C)", unit: "°C", then: "Frost", otherwise: "kein Frost", comparisons: ["<", "<="], items: cityValues("jan") },
+  { id: "coaster", label: "A: Name", header: "B: Größe (cm)", unit: "cm", then: "darf fahren", otherwise: "zu klein", comparisons: [">=", ">"], items: randomValues(NAMES, 118, 162) },
+  { id: "speed", label: "A: Uhrzeit", header: "B: Tempo (km/h)", unit: "km/h", then: "zu schnell", otherwise: "ok", comparisons: [">", ">="], items: randomValues(["7:02", "7:18", "7:31", "7:45", "8:03", "8:12", "8:26", "8:40"], 36, 68) },
+  { id: "battery", label: "A: Gerät", header: "B: Akku (%)", unit: "%", then: "laden", otherwise: "ok", comparisons: ["<", "<="], items: randomValues(["Handy", "Tablet", "Laptop", "Kopfhörer", "Uhr", "Kamera", "Powerbank"], 4, 95) },
+  { id: "ticket", label: "A: Name", header: "B: Alter", unit: "Jahre", then: "ermäßigt", otherwise: "voll", comparisons: ["<", "<="], items: randomValues(NAMES, 6, 45) },
+  { id: "sun", label: "A: Stadt", header: "B: Sonne Juli (h)", unit: "h", then: "sonnig", otherwise: "wechselhaft", comparisons: [">=", ">"], items: cityValues("sun") },
 ];
 
 interface RuleSheet {
@@ -426,6 +538,8 @@ interface RuleSheet {
   names: string[];
   /** Taken from a middle value, so both results occur and one row sits on it. */
   threshold: number;
+  /** The cell the threshold is kept in. */
+  parameter: string;
 }
 
 function ruleSheet(rule: Rule): RuleSheet {
@@ -436,6 +550,7 @@ function ruleSheet(rule: Rule): RuleSheet {
     values,
     names: items.map(([name]) => name),
     threshold: pick([...values].sort((a, b) => a - b).slice(1, 4)),
+    parameter: parameterCell(),
   };
 }
 
@@ -446,7 +561,7 @@ function ruleRows(sheet: RuleSheet, column: (index: number) => string): SheetRow
 }
 
 function ruleParameter(sheet: RuleSheet) {
-  return { parameterAddress: "F1", parameterValue: `${sheetNumber(sheet.threshold)} ${sheet.rule.unit}` };
+  return { parameterAddress: sheet.parameter, parameterValue: `${sheetNumber(sheet.threshold)} ${sheet.rule.unit}` };
 }
 
 function ifFormula(row: number, op: string, address: string, then: string, otherwise: string) {
@@ -455,7 +570,7 @@ function ifFormula(row: number, op: string, address: string, then: string, other
 
 const quoted = (text: string) => `"${text}"`;
 
-function ruleFormula(sheet: RuleSheet, row: number, op: Comparison, address = "$F$1") {
+function ruleFormula(sheet: RuleSheet, row: number, op: Comparison, address = absolute(sheet.parameter)) {
   return ifFormula(row, op, address, quoted(sheet.rule.then), quoted(sheet.rule.otherwise));
 }
 
@@ -466,22 +581,23 @@ function conditionFormula(): Draft<ConditionQuestion> {
   const op = pick(rule.comparisons);
   const then = quoted(rule.then);
   const otherwise = quoted(rule.otherwise);
-  const correct = ifFormula(2, op, "$F$1", then, otherwise);
+  const fixed = absolute(sheet.parameter);
+  const correct = ifFormula(2, op, fixed, then, otherwise);
   return {
     kind: "condition",
     promptKey: "games.spreadsheet.prompts.conditionColumn",
-    promptParams: { then: rule.then, otherwise: rule.otherwise },
+    promptParams: { then: rule.then, otherwise: rule.otherwise, param: sheet.parameter },
     headers: ["", rule.label, rule.header, "C"],
     rows: ruleRows(sheet, (index) =>
       compare(op, sheet.values[index], sheet.threshold) ? rule.then : rule.otherwise,
     ),
     ...ruleParameter(sheet),
     ...choice(correct, [
-      ifFormula(2, BOUNDARY_SIBLING[op], "$F$1", then, otherwise),
+      ifFormula(2, BOUNDARY_SIBLING[op], fixed, then, otherwise),
       ...shuffled([
-        ifFormula(2, op, "$F$1", otherwise, then),
-        ifFormula(2, op, "F1", then, otherwise),
-        ifFormula(2, op, "$F$1", rule.then, rule.otherwise),
+        ifFormula(2, op, fixed, otherwise, then),
+        ifFormula(2, op, sheet.parameter, then, otherwise),
+        ifFormula(2, op, fixed, rule.then, rule.otherwise),
       ]),
     ]),
   };
@@ -534,6 +650,7 @@ function conditionCount(): Draft<ConditionQuestion> {
 /** WENN with numbers: free shipping above a minimum, or a discount. */
 function conditionPrice(): Draft<ConditionQuestion> {
   const shipping = Math.random() < 0.5;
+  const cell = parameterCell();
   const minimum = shipping ? pick([30, 40, 50]) : pick([50, 80, 100]);
   const amount = shipping ? pick([4, 5, 6]) : pick([5, 10, 15]);
   const orders = shuffled([minimum - 10, minimum - 1, minimum, minimum + 5, minimum + 20]).slice(0, 4);
@@ -543,19 +660,19 @@ function conditionPrice(): Draft<ConditionQuestion> {
   const reached = order >= minimum;
   const answer = shipping ? (reached ? order : order + amount) : reached ? order - amount : order;
   const text = shipping
-    ? ifFormula(row, ">=", "$F$1", `B${row}`, `B${row}+${amount}`)
-    : ifFormula(row, ">=", "$F$1", `B${row}-${amount}`, `B${row}`);
+    ? ifFormula(row, ">=", absolute(cell), `B${row}`, `B${row}+${amount}`)
+    : ifFormula(row, ">=", absolute(cell), `B${row}-${amount}`, `B${row}`);
   return {
     kind: "condition",
     promptKey: shipping
       ? "games.spreadsheet.prompts.conditionShipping"
       : "games.spreadsheet.prompts.conditionDiscount",
-    promptParams: { address: `C${row}`, fee: amount, amount },
+    promptParams: { address: `C${row}`, fee: amount, amount, param: cell },
     headers: ["", "A: Bestellung", "B: Warenwert (€)", "C: Endpreis (€)"],
     rows: orders.map((value, rowIndex) => ({
       cells: [rowIndex + 2, `#${101 + rowIndex}`, value, rowIndex === index ? "?" : ""],
     })),
-    parameterAddress: "F1",
+    parameterAddress: cell,
     parameterValue: `${minimum} €`,
     formula: { address: `C${row}`, text },
     ...choice(String(answer), [order, order + amount, order - amount, amount, 0].map(String)),
@@ -565,14 +682,16 @@ function conditionPrice(): Draft<ConditionQuestion> {
 /** Which comparison says "at least", "less than", "not equal"? */
 function conditionComparison(): Draft<ConditionQuestion> {
   const op = pick(Object.keys(COMPARISON_NAMES) as Comparison[]);
-  const condition = (other: Comparison) => `B2${other}$F$1`;
+  const row = randomInt(2, 6);
+  const cell = parameterCell();
+  const condition = (other: Comparison) => `B${row}${other}${absolute(cell)}`;
   return {
     kind: "condition",
     promptKey: "games.spreadsheet.prompts.conditionComparison",
-    promptParams: { comparison: COMPARISON_NAMES[op] },
+    promptParams: { comparison: COMPARISON_NAMES[op], address: `B${row}`, param: cell },
     headers: [],
     rows: [],
-    formula: { address: "C2", text: '=WENN(…;"ja";"nein")' },
+    formula: { address: `C${row}`, text: '=WENN(…;"ja";"nein")' },
     ...choice(condition(op), [
       condition(BOUNDARY_SIBLING[op]),
       ...shuffled(Object.keys(COMPARISON_NAMES) as Comparison[]).map(condition),
@@ -654,8 +773,9 @@ function referenceCopyable(): Draft<ReferenceQuestion> {
   const tail = pick(["percent", "percent", "fee", "currency"] as const);
   const { operator, tail: withTail, parameter } = TAILS[tail];
   const startRow = randomInt(2, 4);
-  const parameterRow = randomInt(1, 3);
-  const fixed = `$F$${parameterRow}`;
+  const cell = parameterCell();
+  const [column, parameterRow] = [cell[0], cell.slice(1)];
+  const fixed = absolute(cell);
   const correct = `=B${startRow}${operator}${withTail(fixed)}`;
   const products = shuffled(PRODUCTS).slice(0, 3);
   const { display, params } = parameter();
@@ -672,15 +792,15 @@ function referenceCopyable(): Draft<ReferenceQuestion> {
     rows: products.map(([name, price], index) => ({
       cells: [startRow + index, name, price, index === 0 ? "?" : "↓ kopieren"],
     })),
-    parameterAddress: `F${parameterRow}`,
+    parameterAddress: cell,
     parameterValue: display,
     ...choice(
       correct,
       shuffled([
         `=$B$${startRow}${operator}${withTail(fixed)}`,
-        `=B${startRow}${operator}${withTail(`F${parameterRow}`)}`,
-        `=B$${startRow}${operator}${withTail(`F$${parameterRow}`)}`,
-        `=B${startRow}${operator}${withTail(`$F${parameterRow}`)}`,
+        `=B${startRow}${operator}${withTail(cell)}`,
+        `=B$${startRow}${operator}${withTail(`${column}$${parameterRow}`)}`,
+        `=B${startRow}${operator}${withTail(columnFixed(cell))}`,
       ]),
     ),
   };
@@ -742,44 +862,129 @@ function referenceAfterCopy(): Draft<ReferenceQuestion> {
   };
 }
 
-/** A price table: one formula for right and down needs mixed references. */
+/** Tables filled by one formula copied right and down: a value down the side times one along the top. */
+const MIXED_TABLES: { id: string; corner: string; side: () => number[]; top: () => number[] }[] = [
+  { id: "prices", corner: "Preis € \\ Anzahl", side: () => shuffled([2, 3, 4, 5, 6]).slice(0, 3), top: () => shuffled([1, 2, 3, 5, 10]).slice(0, 3).sort((a, b) => a - b) },
+  { id: "times", corner: "·", side: () => shuffled([2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 3).sort((a, b) => a - b), top: () => shuffled([2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 3).sort((a, b) => a - b) },
+  { id: "distance", corner: "km/h \\ Stunden", side: () => shuffled([30, 50, 60, 80, 100]).slice(0, 3).sort((a, b) => a - b), top: () => [1, 2, 3] },
+  { id: "tickets", corner: "Preis € \\ Personen", side: () => shuffled([4, 6, 8, 9, 12]).slice(0, 3).sort((a, b) => a - b), top: () => shuffled([2, 3, 4, 5]).slice(0, 3).sort((a, b) => a - b) },
+];
+
+/**
+ * One formula for a whole table needs mixed references. The table does not
+ * always start in A1, so the answer is not always `=$A2*B$1`.
+ */
 function referenceMixed(): Draft<ReferenceQuestion> {
-  const prices = shuffled([2, 3, 4, 5, 6]).slice(0, 3);
-  const amounts = shuffled([1, 2, 3, 5, 10]).slice(0, 3).sort((a, b) => a - b);
-  const correct = "=$A2*B$1";
+  const table = pick(MIXED_TABLES);
+  const side = table.side();
+  const top = table.top();
+  // Where the corner cell sits: anywhere from A1 to B3.
+  const c = pick(["A", "B"]);
+  const h = randomInt(1, 3);
+  const x = String.fromCharCode(c.charCodeAt(0) + 1);
+  const r = h + 1;
+  const correct = `=$${c}${r}*${x}$${h}`;
+  const lead = c === "B" ? [""] : [];
+  const columns = ["A", "B", "C", "D", "E"].slice(0, lead.length + 4);
+  const blank = (row: number) => ({ cells: [row, ...columns.map(() => "")] });
   return {
     kind: "reference",
     promptKey: "games.spreadsheet.prompts.mixedFormula",
-    promptParams: {},
-    headers: ["", "A", "B", "C", "D"],
+    promptParams: { context: table.id, cell: `${x}${r}`, column: c, row: h },
+    headers: ["", ...columns],
     rows: [
-      { cells: [1, "Preis € \\ Anzahl", ...amounts] },
-      ...prices.map((price, index) => ({
-        cells: [index + 2, price, index === 0 ? "?" : "…", "…", "…"],
+      ...rowsBetween(1, h - 1).map(blank),
+      { cells: [h, ...lead, table.corner, ...top] },
+      ...side.map((value, index) => ({
+        cells: [r + index, ...lead, value, index === 0 ? "?" : "…", "…", "…"],
       })),
     ],
-    ...choice(correct, shuffled(["=A2*B1", "=$A$2*$B$1", "=A$2*$B1", "=$A2*$B1", "=A2*B$1", "=$A2*B1"])),
+    ...choice(
+      correct,
+      shuffled([
+        `=${c}${r}*${x}${h}`,
+        `=$${c}$${r}*$${x}$${h}`,
+        `=${c}$${r}*$${x}${h}`,
+        `=$${c}${r}*$${x}${h}`,
+        `=${c}${r}*${x}$${h}`,
+        `=$${c}${r}*${x}${h}`,
+      ]),
+    ),
   };
 }
 
 /** Each city's share of the total: the total cell must stay fixed. */
 function referenceShare(): Draft<ReferenceQuestion> {
   const series = pick(SERIES.filter((candidate) => candidate.functions.includes("SUMME")));
-  const items = distinctItems(series.items(), 5);
+  const items = distinctItems(series.items(), randomInt(4, 6));
   const total = sum(items.map(([, value]) => value));
-  const correct = "=B2/$B$7";
+  const totalRow = items.length + 2;
+  const correct = `=B2/$B$${totalRow}`;
   return {
     kind: "reference",
     promptKey: "games.spreadsheet.prompts.shareFormula",
-    promptParams: {},
+    promptParams: { total: `B${totalRow}` },
     headers: ["", series.label, series.header, "C: Anteil"],
     rows: [
       ...items.map(([name, value], index) => ({
         cells: [index + 2, name, sheetNumber(value), index === 0 ? "?" : "↓ kopieren"],
       })),
-      { cells: [7, "Summe", sheetNumber(total), ""] },
+      { cells: [totalRow, "Summe", sheetNumber(total), ""] },
     ],
-    ...choice(correct, shuffled(["=B2/B7", "=$B$2/B7", "=B2/$B$2", "=B$2/B7", "=B2/SUMME(B2:B6)"])),
+    ...choice(
+      correct,
+      shuffled([
+        `=B2/B${totalRow}`,
+        `=$B$2/B${totalRow}`,
+        "=B2/$B$2",
+        `=B$2/B${totalRow}`,
+        `=B2/SUMME(B2:B${totalRow - 1})`,
+      ]),
+    ),
+  };
+}
+
+/**
+ * A formula copied down, and the value it shows further down. Without its `$`
+ * the reference has moved to an empty cell, which a spreadsheet reads as 0 —
+ * so a missing `$` gives a wrong number, not an error message.
+ */
+function referenceValue(): Draft<ReferenceQuestion> {
+  const fee = Math.random() < 0.5;
+  const cell = parameterCell(["E", "F"], [1, 2]);
+  const parameter = pick([2, 3, 4, 5]);
+  const products = distinctItems(PRODUCTS, 4);
+  const row = randomInt(3, 5);
+  const price = products[row - 2][1];
+  const kept = Math.random() < 0.5;
+  const reference = kept ? pick([absolute(cell), rowFixed(cell)]) : drifted(cell, row - 2);
+  // An empty cell counts as 0.
+  const read = kept ? parameter : 0;
+  const operator = fee ? "+" : "*";
+  const answer = fee ? price + read : price * read;
+  const first = products[0][1];
+  return {
+    kind: "reference",
+    promptKey: fee ? "games.spreadsheet.prompts.valueFee" : "games.spreadsheet.prompts.valueCount",
+    promptParams: { row, param: cell },
+    headers: ["", "A: Produkt", "B: Preis (€)", fee ? "C: mit Versand (€)" : "C: Gesamt (€)"],
+    rows: products.map(([name, value], index) => ({
+      cells: [index + 2, name, value, index + 2 === row ? "?" : "…"],
+    })),
+    parameterAddress: cell,
+    parameterValue: fee ? `${parameter} €` : String(parameter),
+    formula: { address: `C${row}`, text: `=B${row}${operator}${reference}` },
+    ...choice(
+      String(answer),
+      [
+        fee ? price + parameter : price * parameter,
+        fee ? price : 0,
+        fee ? first + parameter : first * parameter,
+        "#BEZUG!",
+        fee ? parameter : price,
+        fee ? price + parameter + 1 : price * (parameter + 1),
+      ].map(String),
+    ),
   };
 }
 
@@ -806,6 +1011,14 @@ function exponentialPreset(percents: number[], scale: number): [number, number] 
 }
 
 const GROWTH: GrowthContext[] = [
+  { id: "tank", model: "linearUp", label: "A: Minute", header: "B: Wasser (l)", preset: () => [randomInt(0, 20) * 10, randomInt(2, 8) * 5] },
+  { id: "training", model: "linearUp", label: "A: Woche", header: "B: Laufstrecke (km)", preset: () => [randomInt(2, 5), pick([0.5, 1, 1.5, 2])] },
+  { id: "snow", model: "linearDown", label: "A: Tag", header: "B: Schneehöhe (cm)", preset: () => [randomInt(40, 80), randomInt(3, 9)] },
+  { id: "fuel", model: "linearDown", label: "A: Etappe", header: "B: Tank (l)", preset: () => [randomInt(40, 60), randomInt(4, 9)] },
+  { id: "town", model: "expUp", label: "A: Jahr", header: "B: Einwohner", preset: () => exponentialPreset([10, 20], 4000) },
+  { id: "views", model: "expUp", label: "A: Tag", header: "B: Aufrufe", preset: () => exponentialPreset([50, 100], 400) },
+  { id: "phone", model: "expDown", label: "A: Jahr", header: "B: Wert (€)", preset: () => exponentialPreset([20, 50], 800) },
+  { id: "ball", model: "expDown", label: "A: Aufprall", header: "B: Sprunghöhe (cm)", preset: () => exponentialPreset([20, 50], 200) },
   { id: "savings", model: "linearUp", label: "A: Woche", header: "B: Erspartes (€)", preset: () => [randomInt(0, 10) * 5, randomInt(1, 4) * 5] },
   { id: "sunflower", model: "linearUp", label: "A: Woche", header: "B: Höhe (cm)", preset: () => [randomInt(5, 30), randomInt(6, 15)] },
   { id: "candle", model: "linearDown", label: "A: Stunde", header: "B: Länge (cm)", preset: () => [randomInt(22, 35), randomInt(2, 5)] },
@@ -819,12 +1032,20 @@ const GROWTH: GrowthContext[] = [
   { id: "squares", model: "quadratic", label: "A: Seite (cm)", header: "B: Fläche (cm²)", preset: () => [randomInt(1, 5), 0] },
 ];
 
-const GROWTH_FORMULAS: Record<Exclude<GrowthModel, "quadratic">, string> = {
-  linearUp: "=B2+$E$1",
-  linearDown: "=B2-$E$1",
-  expUp: "=B2*(1+$E$1)",
-  expDown: "=B2*(1-$E$1)",
-};
+type SteadyModel = Exclude<GrowthModel, "quadratic">;
+
+/** The formula in B3 for each model, reading its step from `address`. */
+function growthFormulaText(model: SteadyModel, address: string): string {
+  if (model === "linearUp") return `=B2+${address}`;
+  if (model === "linearDown") return `=B2-${address}`;
+  if (model === "expUp") return `=B2*(1+${address})`;
+  return `=B2*(1-${address})`;
+}
+
+const STEADY_MODELS: SteadyModel[] = ["linearUp", "linearDown", "expUp", "expDown"];
+
+/** A growth sheet's step sits beside the table, not always in the same cell. */
+const growthCell = () => parameterCell(["D", "E", "F"], [1, 2]);
 
 /** Same direction, the other kind of growth: the mix-up that matters. */
 const GROWTH_TWIN: Record<GrowthModel, GrowthModel> = {
@@ -871,27 +1092,39 @@ function growthRows(labels: number[], values: (number | string)[]): SheetRow[] {
 }
 
 function growthParameter(model: GrowthModel, step: number): string {
-  return model.startsWith("exp") ? `${step} %` : String(step);
+  return model.startsWith("exp") ? `${step} %` : sheetNumber(step);
 }
 
 /** A story about growth: which formula goes in B3? */
 function growthFormula(): Draft<GrowthQuestion> {
   const context = pick(GROWTH.filter((candidate) => candidate.model !== "quadratic"));
-  const model = context.model as Exclude<GrowthModel, "quadratic">;
+  const model = context.model as SteadyModel;
   const { step, values, labels } = growthSeries(context, 4);
-  const correct = GROWTH_FORMULAS[model];
-  const twin = GROWTH_FORMULAS[GROWTH_TWIN[model] as Exclude<GrowthModel, "quadratic">];
-  const fixed = correct.replace("B2", "$B$2").replace("$E$1", "E1");
+  const cell = growthCell();
+  const fixed = absolute(cell);
+  const correct = growthFormulaText(model, fixed);
+  const twin = growthFormulaText(GROWTH_TWIN[model] as SteadyModel, fixed);
+  // The step read from a cell that is not the parameter cell at all.
+  const elsewhere = absolute(pick(["D1", "E1", "E2", "F1", "F2"].filter((other) => other !== cell)));
   return {
     kind: "growth",
     model,
     promptKey: "games.spreadsheet.prompts.growthFormula",
-    promptParams: { context: context.id },
+    promptParams: { context: context.id, param: cell },
     headers: ["", context.label, context.header],
     rows: growthRows(labels, values),
-    parameterAddress: "E1",
+    parameterAddress: cell,
     parameterValue: growthParameter(model, step),
-    ...choice(correct, [twin, ...shuffled([fixed, "=B2*$E$1", correct.replace("$E$1", "E1"), ...Object.values(GROWTH_FORMULAS)])]),
+    ...choice(correct, [
+      twin,
+      ...shuffled([
+        growthFormulaText(model, cell).replace("B2", "$B$2"),
+        `=B2*${fixed}`,
+        growthFormulaText(model, cell),
+        growthFormulaText(model, elsewhere),
+        ...STEADY_MODELS.map((other) => growthFormulaText(other, fixed)),
+      ]),
+    ]),
   };
 }
 
@@ -919,7 +1152,8 @@ function growthModelQuestion(): Draft<GrowthQuestion> {
 /** Continue the simulation by one row. */
 function growthNext(): Draft<GrowthQuestion> {
   const context = pick(GROWTH.filter((candidate) => candidate.model !== "quadratic"));
-  const model = context.model as Exclude<GrowthModel, "quadratic">;
+  const model = context.model as SteadyModel;
+  const cell = growthCell();
   const { step, values, labels } = growthSeries(context, 4);
   const [, , third, fourth] = values;
   const answer = fourth;
@@ -946,9 +1180,9 @@ function growthNext(): Draft<GrowthQuestion> {
     promptParams: { cell: "B5" },
     headers: ["", context.label, context.header],
     rows: growthRows(labels, [...values.slice(0, 3), "?"]),
-    parameterAddress: "E1",
+    parameterAddress: cell,
     parameterValue: growthParameter(model, step),
-    formula: { address: "B3", text: GROWTH_FORMULAS[model] },
+    formula: { address: "B3", text: growthFormulaText(model, absolute(cell)) },
     ...choice(sheetNumber(answer), distractors),
   };
 }
@@ -956,7 +1190,8 @@ function growthNext(): Draft<GrowthQuestion> {
 /** Read the parameter back from the numbers: what is in E1? */
 function growthParameterQuestion(): Draft<GrowthQuestion> {
   const context = pick(GROWTH.filter((candidate) => candidate.model !== "quadratic"));
-  const model = context.model as Exclude<GrowthModel, "quadratic">;
+  const model = context.model as SteadyModel;
+  const cell = growthCell();
   const { start, step, values, labels } = growthSeries(context, 4);
   const exponential = model.startsWith("exp");
   const up = model.endsWith("Up") ? 1 : -1;
@@ -964,17 +1199,17 @@ function growthParameterQuestion(): Draft<GrowthQuestion> {
   const answer = growthParameter(model, step);
   const distractors = exponential
     ? [sheetNumber(difference), sheetNumber(1 + (up * step) / 100), `${100 + up * step} %`, `${step * 2} %`]
-    : [`${step} %`, String(step * 2), String(start), sheetNumber(values[1]), sheetNumber(values[3]), String(step * 3)];
+    : [`${sheetNumber(step)} %`, sheetNumber(step * 2), sheetNumber(start), sheetNumber(values[1]), sheetNumber(values[3]), sheetNumber(step * 3)];
   return {
     kind: "growth",
     model,
     promptKey: "games.spreadsheet.prompts.growthParameter",
-    promptParams: {},
+    promptParams: { param: cell },
     headers: ["", context.label, context.header],
     rows: growthRows(labels, values),
-    parameterAddress: "E1",
+    parameterAddress: cell,
     parameterValue: "?",
-    formula: { address: "B3", text: GROWTH_FORMULAS[model] },
+    formula: { address: "B3", text: growthFormulaText(model, absolute(cell)) },
     ...choice(answer, distractors),
   };
 }
@@ -1099,6 +1334,124 @@ const CHARTS: (() => ChartDraft)[] = [
     promptParams: {},
     headers: ["", "A: Stadt", "B: Sonne Juli (h)", "C: Juli (°C)"],
     rows: shuffled(CITIES).slice(0, 7).map((entry, index) => ({ cells: [index + 2, entry.city, entry.sun, entry.jul] })),
+  }),  /*
+   * The same kind of sheet does not decide the chart — the question does. The
+   * kiosk's sales, compared item by item, are columns; the same sales as parts of
+   * everything sold are a pie. These sheets come twice on purpose.
+   */
+  // Change over time → line.
+  () => {
+    let fever = pick([37.2, 37.5, 37.8]);
+    const hours = ["6 Uhr", "9 Uhr", "12 Uhr", "15 Uhr", "18 Uhr", "21 Uhr"];
+    return {
+      answer: "line",
+      promptKey: "games.spreadsheet.prompts.feverChart",
+      promptParams: {},
+      headers: ["", "A: Uhrzeit", "B: Temperatur (°C)"],
+      rows: hours.map((hour, index) => {
+        if (index > 0) fever = Math.round((fever + randomInt(-4, 6) / 10) * 10) / 10;
+        return { cells: [index + 2, hour, sheetNumber(fever)] };
+      }),
+    };
+  },
+  () => {
+    let balance = randomInt(4, 12) * 10;
+    const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun"];
+    return {
+      answer: "line",
+      promptKey: "games.spreadsheet.prompts.balanceChart",
+      promptParams: {},
+      headers: ["", "A: Monat", "B: Kontostand (€)"],
+      rows: months.map((month, index) => {
+        if (index > 0) balance = Math.max(0, balance + randomInt(-3, 5) * 5);
+        return { cells: [index + 2, month, balance] };
+      }),
+    };
+  },
+  // Comparing categories → columns.
+  () => ({
+    answer: "bar",
+    promptKey: "games.spreadsheet.prompts.julyTempChart",
+    promptParams: {},
+    headers: ["", "A: Stadt", "B: Juli (°C)"],
+    rows: shuffled(CITIES).slice(0, 5).map((entry, index) => ({ cells: [index + 2, entry.city, entry.jul] })),
+  }),
+  () => ({
+    answer: "bar",
+    promptKey: "games.spreadsheet.prompts.mountainChart",
+    promptParams: {},
+    headers: ["", "A: Berg", "B: Höhe (m)"],
+    rows: shuffled(MOUNTAINS).slice(0, 5).map(([name, height], index) => ({ cells: [index + 2, name, height] })),
+  }),
+  () => ({
+    answer: "bar",
+    promptKey: "games.spreadsheet.prompts.bottleChart",
+    promptParams: {},
+    headers: ["", "A: Klasse", "B: Pfandflaschen"],
+    rows: shuffled(CLASSES).slice(0, 5).map((name, index) => ({ cells: [index + 2, name, randomInt(20, 150)] })),
+  }),
+  // Parts of a whole → pie.
+  () => ({
+    answer: "pie",
+    promptKey: "games.spreadsheet.prompts.kioskShareChart",
+    promptParams: {},
+    headers: ["", "A: Artikel", "B: verkauft"],
+    rows: shuffled(KIOSK).slice(0, 5).map((item, index) => ({ cells: [index + 2, item, randomInt(12, 95)] })),
+  }),
+  () => {
+    const parts = ["Schlaf", "Schule", "Freizeit", "Essen", "Hausaufgaben"];
+    const hours = [randomInt(8, 10), randomInt(6, 8), 0, randomInt(1, 2), randomInt(1, 2)];
+    hours[2] = 24 - sum(hours);
+    return {
+      answer: "pie",
+      promptKey: "games.spreadsheet.prompts.dayChart",
+      promptParams: {},
+      headers: ["", "A: Tätigkeit", "B: Stunden"],
+      rows: parts.map((part, index) => ({ cells: [index + 2, part, hours[index]] })),
+    };
+  },
+  () => {
+    const candidates = shuffled(NAMES).slice(0, 4);
+    const votes = shares(candidates.length).map((share) => Math.max(1, Math.round((share * 28) / 100)));
+    return {
+      answer: "pie",
+      promptKey: "games.spreadsheet.prompts.electionChart",
+      promptParams: {},
+      headers: ["", "A: Kandidat*in", "B: Stimmen"],
+      rows: candidates.map((name, index) => ({ cells: [index + 2, name, votes[index]] })),
+    };
+  },
+  // How two quantities relate → scatter.
+  () => ({
+    answer: "scatter",
+    promptKey: "games.spreadsheet.prompts.shoeChart",
+    promptParams: {},
+    headers: ["", "A: Name", "B: Größe (cm)", "C: Schuhgröße"],
+    rows: shuffled(NAMES)
+      .slice(0, 7)
+      .map((name, index) => {
+        const height = randomInt(145, 185);
+        return { cells: [index + 2, name, height, Math.round(height / 4.4 + randomInt(-1, 1))] };
+      }),
+  }),
+  () => ({
+    answer: "scatter",
+    promptKey: "games.spreadsheet.prompts.studyChart",
+    promptParams: {},
+    headers: ["", "A: Name", "B: Lernzeit (min)", "C: Punkte"],
+    rows: shuffled(NAMES)
+      .slice(0, 7)
+      .map((name, index) => {
+        const minutes = randomInt(1, 12) * 10;
+        return { cells: [index + 2, name, minutes, Math.min(30, Math.round(8 + minutes / 6 + randomInt(-4, 4)))] };
+      }),
+  }),
+  () => ({
+    answer: "scatter",
+    promptKey: "games.spreadsheet.prompts.rainSunChart",
+    promptParams: {},
+    headers: ["", "A: Stadt", "B: Regen Juli (mm)", "C: Sonne Juli (h)"],
+    rows: shuffled(CITIES).slice(0, 7).map((entry, index) => ({ cells: [index + 2, entry.city, entry.rain, entry.sun] })),
   }),
 ];
 
@@ -1143,8 +1496,13 @@ function checkFunction(verdict: FormulaVerdict): Draft<CheckQuestion> {
 function checkCopy(verdict: "correct" | "reference"): Draft<CheckQuestion> {
   const row = randomInt(3, 5);
   const wrong = verdict === "reference";
+  const cell = parameterCell();
   // Only the row has to be fixed when copying down, so F$1 is as right as $F$1.
-  const fixed = wrong ? pick([`F${row - 1}`, `$F${row - 1}`]) : pick(["$F$1", "$F$1", "F$1"]);
+  // Left relative, the reference has moved down with the formula.
+  const moved = drifted(cell, row - 2);
+  const fixed = wrong
+    ? pick([moved, columnFixed(moved)])
+    : pick([absolute(cell), absolute(cell), rowFixed(cell)]);
   const base = {
     kind: "check" as const,
     options: FORMULA_VERDICTS,
@@ -1154,12 +1512,12 @@ function checkCopy(verdict: "correct" | "reference"): Draft<CheckQuestion> {
 
   if (scenario === "rule") {
     const rule = pick(RULES);
-    const sheet = ruleSheet(rule);
+    const sheet = { ...ruleSheet(rule), parameter: cell };
     const op = pick(rule.comparisons);
     return {
       ...base,
       promptKey: "games.spreadsheet.prompts.checkRule",
-      promptParams: { row, then: rule.then, comparison: COMPARISON_NAMES[op] },
+      promptParams: { row, then: rule.then, comparison: COMPARISON_NAMES[op], param: cell },
       headers: ["", rule.label, rule.header, "C"],
       rows: ruleRows(sheet, (index) => (index + 2 === row ? "?" : "…")),
       ...ruleParameter(sheet),
@@ -1169,18 +1527,22 @@ function checkCopy(verdict: "correct" | "reference"): Draft<CheckQuestion> {
 
   if (scenario === "share") {
     const series = pick(SERIES.filter((candidate) => candidate.functions.includes("SUMME")));
-    const items = distinctItems(series.items(), 5);
-    const total = wrong ? pick([`B${7 + row - 2}`, `$B${7 + row - 2}`]) : pick(["$B$7", "B$7"]);
+    const items = distinctItems(series.items(), randomInt(4, 6));
+    const totalRow = items.length + 2;
+    const totalCell = `B${totalRow}`;
+    const total = wrong
+      ? pick([drifted(totalCell, row - 2), columnFixed(drifted(totalCell, row - 2))])
+      : pick([absolute(totalCell), rowFixed(totalCell)]);
     return {
       ...base,
       promptKey: "games.spreadsheet.prompts.checkShare",
-      promptParams: { row },
+      promptParams: { row, total: totalCell },
       headers: ["", series.label, series.header, "C: Anteil"],
       rows: [
         ...items.map(([name, value], index) => ({
           cells: [index + 2, name, sheetNumber(value), index + 2 === row ? "?" : "…"],
         })),
-        { cells: [7, "Summe", sheetNumber(sum(items.map(([, value]) => value))), ""] },
+        { cells: [totalRow, "Summe", sheetNumber(sum(items.map(([, value]) => value))), ""] },
       ],
       formula: { address: `C${row}`, text: `=B${row}/${total}` },
     };
@@ -1191,12 +1553,12 @@ function checkCopy(verdict: "correct" | "reference"): Draft<CheckQuestion> {
   return {
     ...base,
     promptKey: `games.spreadsheet.prompts.check${scenario[0].toUpperCase()}${scenario.slice(1)}`,
-    promptParams: { row, ...params },
+    promptParams: { row, param: cell, ...params },
     headers: ["", "A: Produkt", "B: Preis (€)", "C: neuer Preis"],
     rows: shuffled(PRODUCTS)
       .slice(0, 4)
       .map(([name, price], index) => ({ cells: [index + 2, name, price, index + 2 === row ? "?" : "…"] })),
-    parameterAddress: "F1",
+    parameterAddress: cell,
     parameterValue: display,
     formula: { address: `C${row}`, text: `=B${row}${operator}${tail(fixed)}` },
   };
@@ -1224,10 +1586,22 @@ function stage<Q extends SpreadsheetChoiceQuestion>(
 }
 
 export default createStageGame(spreadsheetSpec, [
-  stage<ReferenceQuestion>("references", [referenceCopyable, referenceAfterCopy, referenceMixed, referenceShare]),
+  stage<ReferenceQuestion>("references", [
+    referenceCopyable,
+    referenceAfterCopy,
+    referenceMixed,
+    referenceShare,
+    referenceValue,
+  ]),
   stage<GrowthQuestion>("growth", [growthFormula, growthModelQuestion, growthNext, growthParameterQuestion]),
   stage<ChartQuestion>("charts", [chartQuestion]),
-  stage<FunctionQuestion>("functions", [functionValue, functionGoal, functionReverse, functionCellCount]),
+  stage<FunctionQuestion>("functions", [
+    functionValue,
+    functionGoal,
+    functionReverse,
+    functionCellCount,
+    functionMissing,
+  ]),
   stage<ConditionQuestion>("conditions", [
     conditionFormula,
     conditionValue,

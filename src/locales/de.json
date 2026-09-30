@@ -180,24 +180,24 @@
         "rainfallChart": "Mit welchem Diagramm lassen sich die jährlichen Niederschlagsmengen der europäischen Städte am besten vergleichen?",
         "functionValue": "Welcher Wert erscheint in {{cell}}?",
         "conditionValue": "Was zeigt {{address}}?",
-        "conditionShipping": "Ab dem Warenwert in F1 ist der Versand frei, sonst kommen {{fee}} € dazu. Was zeigt {{address}}?",
-        "checkPercent": "In Spalte C soll jeder Preis um den Prozentsatz aus F1 steigen. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
+        "conditionShipping": "Ab dem Warenwert in {{param}} ist der Versand frei, sonst kommen {{fee}} € dazu. Was zeigt {{address}}?",
+        "checkPercent": "In Spalte C soll jeder Preis um den Prozentsatz aus {{param}} steigen. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
         "functionGoal": "In {{cell}} soll $t(games.spreadsheet.goals.{{series}}.{{goal}}) stehen. Welche Formel gehört hinein?",
         "checkGoal": "In {{cell}} soll $t(games.spreadsheet.goals.{{series}}.{{goal}}) stehen. Stimmt die Formel in {{cell}}?",
         "functionReverse": "In {{cell}} steht {{value}}. Welche Formel hat diesen Wert berechnet?",
         "cellCount": "Wie viele Zellen rechnet =SUMME({{range}}) zusammen?",
-        "conditionColumn": "Spalte C zeigt „{{then}}“ oder „{{otherwise}}“, je nach dem Wert in F1. Welche Formel stand in C2, bevor sie nach unten kopiert wurde?",
+        "conditionColumn": "Spalte C zeigt „{{then}}“ oder „{{otherwise}}“, je nach dem Wert in {{param}}. Welche Formel stand in C2, bevor sie nach unten kopiert wurde?",
         "conditionCount": "Die Formel aus C2 wurde bis C6 nach unten kopiert. Wie oft zeigt Spalte C „{{then}}“?",
-        "conditionDiscount": "Ab dem Warenwert in F1 gibt es {{amount}} € Rabatt. Was zeigt {{address}}?",
-        "conditionComparison": "Welche Bedingung ist genau dann WAHR, wenn der Wert in B2 $t(games.spreadsheet.comparisons.{{comparison}}) der Wert in F1 ist?",
+        "conditionDiscount": "Ab dem Warenwert in {{param}} gibt es {{amount}} € Rabatt. Was zeigt {{address}}?",
+        "conditionComparison": "Welche Bedingung ist genau dann WAHR, wenn der Wert in {{address}} $t(games.spreadsheet.comparisons.{{comparison}}) der Wert in {{param}} ist?",
         "currencyFormula": "In Spalte C sollen die Preise aus Spalte B in {{currency}} umgerechnet werden. Der Kurs (1 € = {{rate}} {{currency}}) steht in {{address}}. Welche Formel lässt sich korrekt nach unten kopieren?",
         "afterCopy": "Die Formel aus {{from}} wird nach {{to}} kopiert. Welche Formel steht dann in {{to}}?",
-        "mixedFormula": "In B2 soll der Preis aus Spalte A mal der Anzahl aus Zeile 1 stehen. Welche Formel lässt sich nach rechts und nach unten kopieren und füllt die ganze Tabelle richtig?",
-        "shareFormula": "Spalte C soll den Anteil jeder Zeile an der Summe in B7 zeigen. Welche Formel gehört in C2 und lässt sich nach unten kopieren?",
+        "mixedFormula": "$t(games.spreadsheet.mixedContexts.{{context}}) In {{cell}} soll der Wert aus Spalte {{column}} mal dem Wert aus Zeile {{row}} stehen. Welche Formel lässt sich nach rechts und nach unten kopieren und füllt die ganze Tabelle richtig?",
+        "shareFormula": "Spalte C soll den Anteil jeder Zeile an der Summe in {{total}} zeigen. Welche Formel gehört in C2 und lässt sich nach unten kopieren?",
         "growthFormula": "$t(games.spreadsheet.growthContexts.{{context}}) Welche Formel gehört in B3 und kann nach unten kopiert werden?",
         "growthModel": "Wie verändern sich die Werte in Spalte B?",
         "growthNext": "Die Formel aus B3 wurde nach unten kopiert. Welcher Wert erscheint in {{cell}}?",
-        "growthParameter": "Die Formel aus B3 wurde nach unten kopiert. Welcher Wert steht in E1?",
+        "growthParameter": "Die Formel aus B3 wurde nach unten kopiert. Welcher Wert steht in {{param}}?",
         "plantChart": "Mit welchem Diagramm sieht man am besten, wie die Sonnenblume Woche für Woche wächst?",
         "batteryChart": "Mit welchem Diagramm sieht man am besten, wie sich der Handy-Akku im Laufe des Tages entleert?",
         "julyRainChart": "Mit welchem Diagramm lassen sich die Regenmengen im Juli dieser Städte am besten vergleichen?",
@@ -207,10 +207,24 @@
         "pocketMoneyChart": "Wofür wird das Taschengeld ausgegeben? Mit welchem Diagramm sieht man am besten, welchen Teil des Ganzen jede Ausgabe ausmacht?",
         "iceChart": "Hängt der Eisverkauf am Kiosk mit der Temperatur zusammen? Mit welchem Diagramm erkennt man das am besten?",
         "sunshineChart": "Sind sonnige Städte im Juli auch wärmer? Mit welchem Diagramm erkennt man den Zusammenhang am besten?",
-        "checkFee": "Auf jeden Preis in Spalte C soll die Gebühr aus F1 kommen. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
-        "checkCurrency": "Spalte C soll die Preise in {{currency}} zeigen, der Kurs steht in F1. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
-        "checkShare": "Spalte C soll den Anteil jeder Zeile an der Summe in B7 zeigen. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
-        "checkRule": "Spalte C soll „{{then}}“ zeigen, wenn der Wert in B $t(games.spreadsheet.comparisons.{{comparison}}) der Wert in F1 ist. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?"
+        "checkFee": "Auf jeden Preis in Spalte C soll die Gebühr aus {{param}} kommen. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
+        "checkCurrency": "Spalte C soll die Preise in {{currency}} zeigen, der Kurs steht in {{param}}. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
+        "checkShare": "Spalte C soll den Anteil jeder Zeile an der Summe in {{total}} zeigen. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
+        "checkRule": "Spalte C soll „{{then}}“ zeigen, wenn der Wert in B $t(games.spreadsheet.comparisons.{{comparison}}) der Wert in {{param}} ist. Die Formel wurde von C2 nach unten kopiert. Stimmt sie in C{{row}}?",
+        "valueFee": "Auf jeden Preis kommen die Versandkosten aus {{param}}. Die Formel wurde von C2 nach unten kopiert. Welcher Wert erscheint in C{{row}}?",
+        "valueCount": "Spalte C soll zeigen, was die Menge aus {{param}} von jedem Produkt kostet. Die Formel wurde von C2 nach unten kopiert. Welcher Wert erscheint in C{{row}}?",
+        "functionMissing": "{{result}} zeigt das Ergebnis der Formel. Welche Zahl steht in {{cell}}?",
+        "feverChart": "Mit welchem Diagramm sieht man am besten, wie sich das Fieber im Laufe des Tages verändert?",
+        "balanceChart": "Mit welchem Diagramm sieht man am besten, wie sich der Kontostand von Monat zu Monat entwickelt?",
+        "julyTempChart": "Mit welchem Diagramm lassen sich die Julitemperaturen dieser Städte am besten vergleichen?",
+        "mountainChart": "Mit welchem Diagramm lassen sich die Höhen dieser Berge am besten vergleichen?",
+        "bottleChart": "Welche Klasse hat die meisten Pfandflaschen gesammelt? Mit welchem Diagramm lassen sich die Klassen am besten vergleichen?",
+        "kioskShareChart": "Welchen Teil aller verkauften Artikel am Schulkiosk macht jeder Artikel aus? Mit welchem Diagramm sieht man das am besten?",
+        "dayChart": "So verteilen sich die 24 Stunden eines Schultags. Mit welchem Diagramm sieht man am besten, welchen Teil des Tages jede Tätigkeit einnimmt?",
+        "electionChart": "Bei der Klassensprecherwahl hat jede Person ihre Stimme abgegeben. Mit welchem Diagramm sieht man am besten, welchen Anteil aller Stimmen jede*r bekommen hat?",
+        "shoeChart": "Haben größere Menschen auch größere Füße? Mit welchem Diagramm erkennt man den Zusammenhang am besten?",
+        "studyChart": "Bringt längeres Lernen mehr Punkte im Test? Mit welchem Diagramm erkennt man den Zusammenhang am besten?",
+        "rainSunChart": "Haben Städte mit mehr Regen im Juli weniger Sonnenstunden? Mit welchem Diagramm erkennt man den Zusammenhang am besten?"
       },
       "chartKinds": {
         "line": "Liniendiagramm",
@@ -229,12 +243,12 @@
         "references": {
           "name": "Zellbezüge beim Kopieren",
           "summary": "Relative und absolute Zellbezüge richtig einsetzen",
-          "rules": "Wähle bei {{questionsPerRound}} Aufgaben die Formel, die sich fehlerfrei kopieren lässt, oder sage voraus, was nach dem Kopieren in einer Zelle steht. Relative Bezüge wandern mit, $ hält Spalte oder Zeile fest. Du hast {{duration}} Sekunden."
+          "rules": "Wähle bei {{questionsPerRound}} Aufgaben die Formel, die sich fehlerfrei kopieren lässt, oder sage voraus, was nach dem Kopieren in einer Zelle steht – als Formel oder als Wert. Relative Bezüge wandern mit, $ hält Spalte oder Zeile fest. Du hast {{duration}} Sekunden."
         },
         "growth": {
           "name": "Wachstum simulieren",
           "summary": "Lineares und exponentielles Wachstum simulieren",
-          "rules": "Wähle bei {{questionsPerRound}} Aufgaben die passende Formel, erkenne das Wachstumsmodell, rechne die Simulation weiter oder lies den Parameter aus E1 ab. Gleicher Zuwachs oder gleicher Prozentsatz? Du hast {{duration}} Sekunden."
+          "rules": "Wähle bei {{questionsPerRound}} Aufgaben die passende Formel, erkenne das Wachstumsmodell, rechne die Simulation weiter oder lies den Parameter aus seiner Zelle ab. Gleicher Zuwachs oder gleicher Prozentsatz? Du hast {{duration}} Sekunden."
         },
         "charts": {
           "name": "Das passende Diagramm",
@@ -244,7 +258,7 @@
         "functions": {
           "name": "SUMME, MAX, MIN und MITTELWERT",
           "summary": "SUMME, MAX, MIN und MITTELWERT über einen Bereich",
-          "rules": "Lies bei {{questionsPerRound}} Tabellen, was eine Funktion ausrechnet, finde die passende Formel oder zähle die Zellen eines Bereichs. Achte auf den Bereich: B2:B6 umfasst alle Zellen von B2 bis B6, B2;B6 nur zwei. Du hast {{duration}} Sekunden."
+          "rules": "Lies bei {{questionsPerRound}} Tabellen, was eine Funktion ausrechnet, finde die passende Formel, zähle die Zellen eines Bereichs oder schließe vom Ergebnis auf einen fehlenden Wert. Achte auf den Bereich: B2:B6 umfasst alle Zellen von B2 bis B6, B2;B6 nur zwei. Du hast {{duration}} Sekunden."
         },
         "conditions": {
           "name": "Die WENN-Funktion",
@@ -302,6 +316,34 @@
           "max": "die meisten Runden einer Klasse",
           "min": "die wenigsten Runden einer Klasse",
           "average": "die durchschnittliche Rundenzahl pro Klasse"
+        },
+        "steps": {
+          "sum": "die Schritte der ganzen Woche zusammen",
+          "max": "die meisten Schritte an einem Tag",
+          "min": "die wenigsten Schritte an einem Tag",
+          "average": "die durchschnittliche Schrittzahl pro Tag"
+        },
+        "screen": {
+          "sum": "die Bildschirmzeit der ganzen Woche",
+          "max": "die längste Bildschirmzeit an einem Tag",
+          "min": "die kürzeste Bildschirmzeit an einem Tag",
+          "average": "die durchschnittliche Bildschirmzeit pro Tag"
+        },
+        "bottles": {
+          "sum": "die Zahl aller gesammelten Pfandflaschen",
+          "max": "die meisten Pfandflaschen einer Klasse",
+          "min": "die wenigsten Pfandflaschen einer Klasse",
+          "average": "die durchschnittliche Zahl an Pfandflaschen pro Klasse"
+        },
+        "height": {
+          "max": "die Größe der größten Person",
+          "min": "die Größe der kleinsten Person",
+          "average": "die durchschnittliche Körpergröße"
+        },
+        "mountains": {
+          "max": "die Höhe des höchsten Bergs",
+          "min": "die Höhe des niedrigsten Bergs",
+          "average": "die durchschnittliche Höhe der Berge"
         }
       },
       "comparisons": {
@@ -313,15 +355,23 @@
         "notEqual": "nicht genauso groß wie"
       },
       "growthContexts": {
-        "savings": "Jede Woche kommt derselbe Betrag (E1) ins Sparschwein.",
-        "sunflower": "Eine Sonnenblume wächst jede Woche um dieselbe Höhe (E1).",
-        "candle": "Eine Kerze wird jede Stunde um dieselbe Länge (E1) kürzer.",
-        "prepaid": "Vom Handyguthaben wird jeden Monat derselbe Betrag (E1) abgebucht.",
-        "interest": "Ein Sparkonto wird jedes Jahr mit dem Zinssatz aus E1 verzinst.",
-        "bacteria": "Eine Bakterienkultur wächst jede Stunde um den Prozentsatz aus E1.",
-        "followers": "Ein Kanal gewinnt jeden Monat den Prozentsatz aus E1 an Followern dazu.",
-        "ebike": "Ein E-Bike verliert jedes Jahr den Prozentsatz aus E1 an Wert.",
-        "medicine": "Der Körper baut jede Stunde den Prozentsatz aus E1 des Wirkstoffs ab."
+        "savings": "Jede Woche kommt derselbe Betrag ({{param}}) ins Sparschwein.",
+        "sunflower": "Eine Sonnenblume wächst jede Woche um dieselbe Höhe ({{param}}).",
+        "candle": "Eine Kerze wird jede Stunde um dieselbe Länge ({{param}}) kürzer.",
+        "prepaid": "Vom Handyguthaben wird jeden Monat derselbe Betrag ({{param}}) abgebucht.",
+        "interest": "Ein Sparkonto wird jedes Jahr mit dem Zinssatz aus {{param}} verzinst.",
+        "bacteria": "Eine Bakterienkultur wächst jede Stunde um den Prozentsatz aus {{param}}.",
+        "followers": "Ein Kanal gewinnt jeden Monat den Prozentsatz aus {{param}} an Followern dazu.",
+        "ebike": "Ein E-Bike verliert jedes Jahr den Prozentsatz aus {{param}} an Wert.",
+        "medicine": "Der Körper baut jede Stunde den Prozentsatz aus {{param}} des Wirkstoffs ab.",
+        "tank": "Ein Wassertank wird jede Minute um dieselbe Menge ({{param}}) voller.",
+        "training": "Beim Lauftraining kommt jede Woche dieselbe Strecke ({{param}}) dazu.",
+        "snow": "Die Schneedecke schmilzt jeden Tag um dieselbe Höhe ({{param}}).",
+        "fuel": "Auf jeder Etappe verbraucht das Auto dieselbe Menge Benzin ({{param}}).",
+        "town": "Eine Kleinstadt wächst jedes Jahr um den Prozentsatz aus {{param}}.",
+        "views": "Die Aufrufe eines Videos steigen jeden Tag um den Prozentsatz aus {{param}}.",
+        "phone": "Ein Smartphone verliert jedes Jahr den Prozentsatz aus {{param}} an Wert.",
+        "ball": "Ein Ball springt nach jedem Aufprall um den Prozentsatz aus {{param}} weniger hoch."
       },
       "models": {
         "linearUp": "lineares Wachstum",
@@ -329,6 +379,12 @@
         "expUp": "exponentielles Wachstum",
         "expDown": "exponentielle Abnahme",
         "quadratic": "quadratisches Wachstum"
+      },
+      "mixedContexts": {
+        "prices": "Eine Preistabelle: Preis mal Anzahl.",
+        "times": "Eine Einmaleins-Tabelle.",
+        "distance": "Eine Wegtabelle: Geschwindigkeit mal Fahrzeit.",
+        "tickets": "Eine Eintrittstabelle: Preis mal Personenzahl."
       }
     },
     "example": {
