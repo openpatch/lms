@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useAutoScroll } from "../lib/useAutoScroll";
+import { usePointerDrag } from "../lib/usePointerDrag";
 import { useTranslation } from "react-i18next";
 import type { ParsonsQuestion } from "../../shared/parsons";
 import type { StageProps } from "../lib/game-registry";
@@ -8,23 +9,44 @@ import { StageActionBar } from "./StageShell";
 
 const MAX_INDENT = 3;
 
+/** How far one indentation step is drawn, when the player sets it. */
+const STEP_REM = 1.5;
+
 /** How far a pointer travels before it is carrying a line rather than tapping
  *  one. A finger never comes down and up on the same pixel. */
 const DRAG_THRESHOLD = 6;
 
-/** A line in hand, between picking it up and letting it go. */
+/** A line in hand, and what the program would look like if it were let go. */
 interface Drag {
   /** Which of the offered lines is being carried. */
   line: number;
-  /** Where it was picked up: its place in the program, or the pool below. */
-  from: number | "pool";
+  /** Where inside the line the pointer took hold, so it does not jump. */
+  grabX: number;
+  grabY: number;
+  /** Where the drag began, which is what tells a drag from a tap. */
   startX: number;
   startY: number;
   x: number;
   y: number;
-  /** Where it would land: a place in the program, or back in the pool. */
-  over: number | "pool" | null;
+  width: number;
+  height: number;
+  /**
+   * The program as it would be if released now. A line carried over the pool
+   * is simply absent from it — which is what makes dragging one back out of
+   * the program work without a second mechanism.
+   */
+  order: number[];
+  indents: number[];
+  /** Whether the pointer is over the pool, where letting go puts it back. */
+  overPool: boolean;
   moved: boolean;
+}
+
+/** Whether a point is inside an element, for hit-testing a drop. */
+function within(element: HTMLElement | null, x: number, y: number): boolean {
+  if (!element) return false;
+  const box = element.getBoundingClientRect();
+  return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
 }
 
 /**
@@ -50,25 +72,7 @@ function isFinger(e: React.PointerEvent): boolean {
   return e.pointerType === "touch" || e.pointerType === "pen";
 }
 
-/** What the pointer is over: a position in the program, the program's empty
- *  space, or the pool. */
-function targetAt(x: number, y: number): number | "pool" | null {
-  const el = document.elementFromPoint(x, y);
-  if (!(el instanceof Element)) return null;
-  const slot = el.closest("[data-parsons-slot]");
-  if (slot instanceof HTMLElement) {
-    const at = Number(slot.dataset.parsonsSlot);
-    return Number.isInteger(at) ? at : null;
-  }
-  const zone = el.closest("[data-parsons-zone]");
-  if (zone instanceof HTMLElement) {
-    return zone.dataset.parsonsZone === "pool" ? "pool" : Number.MAX_SAFE_INTEGER;
-  }
-  return null;
-}
-
 interface Draft {
-  questionId: number;
   /** Offered lines, in the order the player put them. */
   order: number[];
   /** The indent chosen for each placed line. */
@@ -113,9 +117,19 @@ export interface ParsonsPuzzleProps extends StageProps<ParsonsQuestion> {
   CodeLine: React.ComponentType<{ text: string }>;
 }
 
-export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuzzleProps) {
+export default function ParsonsPuzzle({ question, ...rest }: ParsonsPuzzleProps) {
+  if (!question) return null;
+  // Keyed by the question, so a new puzzle starts with an empty program.
+  return <Board key={question.id} question={question} {...rest} />;
+}
+
+function Board({
+  question,
+  submit,
+  CodeLine,
+}: ParsonsPuzzleProps & { question: ParsonsQuestion }) {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState<Draft | null>(null);
+  const [draft, setDraft] = useState<Draft>({ order: [], indents: [] });
   /**
    * The drag lives in a ref and is mirrored into state only to be drawn.
    *
@@ -135,25 +149,21 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
   /** Set when a drag ends, so the click it produces does not also place the
    *  line that was just carried somewhere on purpose. */
   const swallowClick = useRef(false);
-
-  // A long program is taller than a phone. Held near the edge, a drag scrolls
-  // the page, and what the line is over is read again as the rows go past.
-  const autoScroll = useAutoScroll(() => {
-    const held = dragRef.current;
-    if (held?.moved) show({ ...held, over: targetAt(held.x, held.y) });
-  });
-
-  if (!question) return null;
+  const programRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+  const poolRef = useRef<HTMLDivElement>(null);
 
   const freeIndent = question.indents == null;
-  const current: Draft =
-    draft && draft.questionId === question.id
-      ? draft
-      : { questionId: question.id, order: [], indents: [] };
-  const { order, indents } = current;
+  const { order, indents } = draft;
 
-  const update = (next: Partial<Draft>) => setDraft({ ...current, ...next });
-  const pool = question.lines.map((_, index) => index).filter((index) => !order.includes(index));
+  const update = (next: Partial<Draft>) => setDraft({ ...draft, ...next });
+
+  /** The program as it stands, or as the drag in hand would leave it. */
+  const shownOrder = drag?.moved ? drag.order : order;
+  const shownIndents = drag?.moved ? drag.indents : indents;
+  const pool = question.lines
+    .map((_, index) => index)
+    .filter((index) => !shownOrder.includes(index));
 
   const place = (line: number) => {
     // A new line starts at the indent of the one above it — the usual next guess.
@@ -184,41 +194,31 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
     update({ indents: next });
   };
 
-  /** Drops the carried line where the pointer left it. */
-  const drop = (line: number, target: number | "pool" | null) => {
-    const at = order.indexOf(line);
-    const without = order.filter((l) => l !== line);
-    const keptIndents = indents.filter((_, i) => i !== at);
+  /** One indentation step, in pixels, from whatever the root font size is. */
+  const stepPixels = () =>
+    STEP_REM * parseFloat(getComputedStyle(document.documentElement).fontSize || "16");
 
-    if (target == null || target === "pool") {
-      update({ order: without, indents: keptIndents });
-      return;
-    }
-    const to = Math.max(0, Math.min(target, without.length));
-    // A line keeps the indent it had; one arriving from the pool takes the one
-    // above it, which is the guess the tapping path has always made.
-    const indent =
-      at !== -1
-        ? indents[at]
-        : freeIndent
-          ? (keptIndents[to - 1] ?? 0)
-          : (question.indents?.[line] ?? 0);
-    update({
-      order: [...without.slice(0, to), line, ...without.slice(to)],
-      indents: [...keptIndents.slice(0, to), indent, ...keptIndents.slice(to)],
-    });
-  };
+  /**
+   * Where a placed line is drawn. With the indentation up to the player the row
+   * itself moves right — shifted, not widened — so that dragging a line right
+   * and the line sitting further right are the same thing. A fixed indentation
+   * is only shown, as spaces in the code.
+   */
+  const shift = (indent: number): React.CSSProperties | undefined =>
+    freeIndent
+      ? { marginInlineStart: `${indent * STEP_REM}rem`, width: `calc(100% - ${indent * STEP_REM}rem)` }
+      : undefined;
 
   /**
    * Picking a line up.
    *
-   * The handlers sit on the row and on the pool button, and neither goes away
-   * while it is being carried — the row is only faded. Taking the element that
-   * holds the pointer capture out of the page mid-drag means the release never
-   * reaches anything and the line stays stuck in hand, which is exactly what
-   * happened the first time this was built for another station.
+   * Nothing is captured: the drag is followed on the window, which sees the
+   * pointer wherever it goes — capture on a row is lost the moment React
+   * replaces the row, and then the release never arrives and the line stays
+   * stuck in hand.
    */
-  const startDrag = (line: number, from: number | "pool", e: React.PointerEvent) => {
+  const startDrag = (line: number, e: React.PointerEvent) => {
+    if (e.button !== 0) return;
     // The arrows and the ✕ are buttons in their own right
     if (e.target instanceof Element && e.target.closest("button[aria-label]")) return;
     if (isFinger(e) && !(e.target instanceof Element && e.target.closest("[data-parsons-grip]"))) return;
@@ -227,47 +227,122 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
     // only ever throw away a flag nobody is waiting on — and a line dragged out
     // of the pool leaves no button behind for its own click to land on.
     swallowClick.current = false;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    show({ line, from, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, over: null, moved: false });
+    const box = e.currentTarget.getBoundingClientRect();
+    show({
+      line,
+      grabX: e.clientX - box.left,
+      grabY: e.clientY - box.top,
+      startX: e.clientX,
+      startY: e.clientY,
+      x: e.clientX,
+      y: e.clientY,
+      width: box.width,
+      height: box.height,
+      order,
+      indents,
+      overPool: !order.includes(line),
+      moved: false,
+    });
   };
 
-  const moveDrag = (e: React.PointerEvent) => {
+  const moveDrag = (e: Pick<PointerEvent, "clientX" | "clientY">) => {
     const held = dragRef.current;
     if (!held) return;
-    const far =
-      held.moved || Math.hypot(e.clientX - held.startX, e.clientY - held.startY) >= DRAG_THRESHOLD;
-    if (!far) return;
-    show({ ...held, moved: true, x: e.clientX, y: e.clientY, over: targetAt(e.clientX, e.clientY) });
-    autoScroll.follow(e.currentTarget, e.clientX, e.clientY);
+    const moved =
+      held.moved ||
+      Math.hypot(e.clientX - held.startX, e.clientY - held.startY) >= DRAG_THRESHOLD;
+    if (!moved) return;
+
+    // The program without the carried line.
+    const at = order.indexOf(held.line);
+    const without = order.filter((l) => l !== held.line);
+    const keptIndents = indents.filter((_, i) => i !== at);
+
+    /*
+     * The pool is the only thing that takes a line back — not "anywhere outside
+     * the program". Letting go a little below the last row is a near miss, not
+     * a decision to discard the line.
+     */
+    const overPool = within(poolRef.current, e.clientX, e.clientY);
+    let nextOrder = without;
+    let nextIndents = keptIndents;
+    if (!overPool) {
+      // The line lands before the first row whose middle is below the pointer.
+      // Measured on the rows themselves, so the gaps between them and the
+      // program's padding all count as somewhere definite.
+      const rows = [
+        ...(programRef.current?.querySelectorAll<HTMLElement>("[data-parsons-line]") ?? []),
+      ].filter((row) => Number(row.dataset.parsonsLine) !== held.line);
+      let to = rows.length;
+      for (let i = 0; i < rows.length; i++) {
+        const box = rows[i].getBoundingClientRect();
+        if (e.clientY < box.top + box.height / 2) {
+          to = i;
+          break;
+        }
+      }
+      /*
+       * How far right the line is dropped is how far it is indented. The
+       * measurement is of the line's own left edge, not the pointer, so where
+       * it was taken hold of does not change where it lands — and a line
+       * carried straight up or down keeps the indent it had. Measured against
+       * the list rather than the program's box, so its padding is not read as
+       * an indentation the player did not make.
+       */
+      const origin = (listRef.current ?? programRef.current)?.getBoundingClientRect().left ?? 0;
+      const indent = freeIndent
+        ? Math.min(MAX_INDENT, Math.max(0, Math.round((e.clientX - held.grabX - origin) / stepPixels())))
+        : (question.indents?.[held.line] ?? 0);
+      nextOrder = [...without.slice(0, to), held.line, ...without.slice(to)];
+      nextIndents = [...keptIndents.slice(0, to), indent, ...keptIndents.slice(to)];
+    }
+
+    show({
+      ...held,
+      x: e.clientX,
+      y: e.clientY,
+      order: nextOrder,
+      indents: nextIndents,
+      overPool,
+      moved: true,
+    });
   };
 
   const endDrag = () => {
-    autoScroll.stop();
     const held = dragRef.current;
     if (!held) return;
     show(null);
-    if (held.moved) {
-      swallowClick.current = true;
-      drop(held.line, held.over);
-    }
+    if (!held.moved) return;
+    swallowClick.current = true;
+    // Committed once, on release: the answer is where the line was put down,
+    // not every position it passed through.
+    update({ order: held.order, indents: held.indents });
   };
 
-  /** The handlers every line carries, wherever it is drawn. */
-  const grip = (line: number, from: number | "pool") => ({
-    onPointerDown: (e: React.PointerEvent) => startDrag(line, from, e),
-    onPointerMove: moveDrag,
-    onPointerUp: endDrag,
-    onPointerCancel: () => {
-      autoScroll.stop();
-      show(null);
-    },
+  // A long program is taller than a phone. Held near the edge, a drag scrolls
+  // the page, and where the line would land is measured again as the rows go
+  // past a pointer that is holding still.
+  const autoScroll = useAutoScroll(() => {
+    const held = dragRef.current;
+    if (held?.moved) moveDrag({ clientX: held.x, clientY: held.y });
   });
 
+  usePointerDrag(
+    (e) => {
+      moveDrag(e);
+      if (dragRef.current?.moved) autoScroll.follow(programRef.current, e.clientX, e.clientY);
+    },
+    () => {
+      autoScroll.stop();
+      endDrag();
+    },
+  );
+
   const carried = drag?.moved ? drag.line : null;
-  const complete = pool.length === 0;
+  const complete = pool.length === 0 && !drag?.moved;
 
   return (
-    <div key={question.id} className="animate-question-in flex w-full max-w-xl flex-col gap-4">
+    <div className="animate-question-in flex w-full max-w-xl flex-col gap-4">
       {/* What the program is for, before how to assemble it. Without the first
           sentence the puzzle can be done by the shape of the lines alone —
           this one opens a block, that one must sit inside it — and then it is
@@ -281,81 +356,92 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
 
       {/* The program being built */}
       <div
-        data-parsons-zone="program"
+        ref={programRef}
         className={`min-h-[5rem] rounded-xl border-2 border-dashed p-2 transition-colors ${
-          drag?.moved && drag.over !== "pool" && drag.over != null
+          drag?.moved && !drag.overPool
             ? "border-game-solid bg-game-100"
             : "border-game-200 bg-game-50"
         }`}
       >
-        {order.length === 0 ? (
+        {shownOrder.length === 0 ? (
           <p className="py-4 text-center text-sm text-gray-400">{t("parsons.empty")}</p>
         ) : (
-          <ol className="flex flex-col gap-1">
-            {order.map((line, position) => (
-              <li
-                key={line}
-                data-parsons-slot={position}
-                {...grip(line, position)}
-                className={`flex touch-manipulation items-center gap-1 rounded-lg border bg-white px-2 py-1 select-none ${
-                  drag?.moved && drag.over === position
-                    ? "border-game-solid ring-2 ring-game-200"
-                    : "border-game-200"
-                } ${carried === line ? "opacity-40" : ""} cursor-grab active:cursor-grabbing`}
-              >
-                <Grip />
-                {freeIndent && (
-                  <>
-                    <IconButton
-                      label={t("parsons.outdent")}
-                      onClick={() => setIndent(position, -1)}
-                      disabled={indents[position] === 0}
-                    >
-                      ◀
-                    </IconButton>
-                    <IconButton
-                      label={t("parsons.indent")}
-                      onClick={() => setIndent(position, 1)}
-                      disabled={indents[position] === MAX_INDENT}
-                    >
-                      ▶
-                    </IconButton>
-                  </>
-                )}
-                <code className="flex-1 overflow-x-auto whitespace-pre font-mono text-sm text-slate-800 sm:text-base">
-                  {"    ".repeat(indents[position])}
-                  <CodeLine text={question.lines[line]} />
-                </code>
-                <IconButton label={t("parsons.up")} onClick={() => move(position, -1)} disabled={position === 0}>
-                  ↑
-                </IconButton>
-                <IconButton
-                  label={t("parsons.down")}
-                  onClick={() => move(position, 1)}
-                  disabled={position === order.length - 1}
+          <ol ref={listRef} className="flex flex-col gap-1">
+            {shownOrder.map((line, position) =>
+              carried === line ? (
+                /* The hole the carried line would drop into, the size it left,
+                   so the others move apart and the gap says where it lands. */
+                <li
+                  key={line}
+                  data-parsons-line={line}
+                  aria-hidden="true"
+                  className="rounded-lg border-2 border-dashed border-game-solid bg-white/60"
+                  style={{ ...shift(shownIndents[position]), height: drag?.height }}
+                />
+              ) : (
+                /* Keyed by the line, not by where it sits: a line keeps its
+                   element as the program is rearranged. */
+                <li
+                  key={line}
+                  data-parsons-line={line}
+                  onPointerDown={(e) => startDrag(line, e)}
+                  style={shift(shownIndents[position])}
+                  className="flex cursor-grab touch-manipulation items-center gap-1 rounded-lg border border-game-200 bg-white px-2 py-1 select-none active:cursor-grabbing"
                 >
-                  ↓
-                </IconButton>
-                <IconButton label={t("parsons.back")} onClick={() => remove(position)}>
-                  ✕
-                </IconButton>
-              </li>
-            ))}
+                  <Grip />
+                  {freeIndent && (
+                    <>
+                      <IconButton
+                        label={t("parsons.outdent")}
+                        onClick={() => setIndent(position, -1)}
+                        disabled={shownIndents[position] === 0}
+                      >
+                        ◀
+                      </IconButton>
+                      <IconButton
+                        label={t("parsons.indent")}
+                        onClick={() => setIndent(position, 1)}
+                        disabled={shownIndents[position] === MAX_INDENT}
+                      >
+                        ▶
+                      </IconButton>
+                    </>
+                  )}
+                  <code className="flex-1 overflow-x-auto whitespace-pre font-mono text-sm text-slate-800 sm:text-base">
+                    {!freeIndent && "    ".repeat(shownIndents[position])}
+                    <CodeLine text={question.lines[line]} />
+                  </code>
+                  <IconButton label={t("parsons.up")} onClick={() => move(position, -1)} disabled={position === 0}>
+                    ↑
+                  </IconButton>
+                  <IconButton
+                    label={t("parsons.down")}
+                    onClick={() => move(position, 1)}
+                    disabled={position === shownOrder.length - 1}
+                  >
+                    ↓
+                  </IconButton>
+                  <IconButton label={t("parsons.back")} onClick={() => remove(position)}>
+                    ✕
+                  </IconButton>
+                </li>
+              ),
+            )}
           </ol>
         )}
       </div>
 
       {/* The lines still waiting. Also where a line is dropped to take it back. */}
       <div
-        data-parsons-zone="pool"
+        ref={poolRef}
         className={`flex min-h-[3rem] flex-col gap-1 rounded-xl p-1 transition-colors ${
-          drag?.moved && drag.over === "pool" ? "bg-gray-200" : ""
+          drag?.moved && drag.overPool ? "bg-gray-200" : ""
         }`}
       >
         {pool.map((line) => (
           <button
             key={line}
-            {...grip(line, "pool")}
+            onPointerDown={(e) => startDrag(line, e)}
             onClick={() => {
               if (swallowClick.current) {
                 swallowClick.current = false;
@@ -385,13 +471,22 @@ export default function ParsonsPuzzle({ question, submit, CodeLine }: ParsonsPuz
         </GameButton>
       </StageActionBar>
 
-      {/* The line under the finger, deaf to the pointer so it never hides the
-          row it is being carried to. */}
+      {/* The line under the pointer, held where it was taken hold of. Fixed to
+          the viewport and deaf to the pointer, so it neither drifts with a
+          scrolling ancestor nor gets in the way of the rows it passes over. */}
       {drag?.moved && (
         <div
-          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-game-solid bg-white px-3 py-2 font-mono text-sm whitespace-pre shadow-lg"
-          style={{ left: drag.x, top: drag.y }}
+          aria-hidden="true"
+          className={`pointer-events-none fixed top-0 left-0 z-50 flex items-center gap-1 overflow-hidden rounded-lg border-2 bg-white px-1 font-mono text-sm whitespace-pre shadow-lg sm:text-base ${
+            drag.overPool ? "border-dashed border-gray-400 opacity-60" : "border-game-solid"
+          }`}
+          style={{
+            width: drag.width,
+            height: drag.height,
+            transform: `translate(${drag.x - drag.grabX}px, ${drag.y - drag.grabY}px)`,
+          }}
         >
+          <Grip />
           <CodeLine text={question.lines[drag.line]} />
         </div>
       )}

@@ -1388,7 +1388,7 @@
   },
   "parsons": {
     "plain": "Bringe die Zeilen in die richtige Reihenfolge.",
-    "withIndent": "Lege Reihenfolge und Einrückung fest.",
+    "withIndent": "Lege Reihenfolge und Einrückung fest – lass eine Zeile weiter rechts los, um sie einzurücken.",
     "empty": "Tippe unten auf eine Zeile, um sie ins Programm zu setzen.",
     "up": "nach oben",
     "down": "nach unten",

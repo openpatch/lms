@@ -1388,7 +1388,7 @@
   },
   "parsons": {
     "plain": "Put the lines back in the right order.",
-    "withIndent": "Set both the order and the indentation.",
+    "withIndent": "Set both the order and the indentation — drop a line further right to indent it.",
     "empty": "Tap a line below to put it into the program.",
     "up": "move up",
     "down": "move down",
