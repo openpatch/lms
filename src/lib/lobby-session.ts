@@ -70,13 +70,27 @@ export function useLobbySession(code: string, role: ConnectionRole = "player"): 
       setGameData(conn.lobbyState.gameData);
       setCountdownEndsAt(conn.lobbyState.countdownEndsAt);
       setGameStarted(false);
+    } else if (conn.lobbyState.phase === "finished") {
+      // A student returning after the round ended receives the lobby state,
+      // including their totals, rather than the earlier "finished" message.
+      setFinalResults(
+        conn.lobbyState.players
+          .filter((player) => !player.isHost)
+          .map((player) => ({
+            playerId: player.id,
+            playerName: player.name,
+            score: player.score,
+            crowns: player.crowns,
+          }))
+          .sort((a, b) => b.score - a.score),
+      );
     } else if (conn.lobbyState.phase === "lobby") {
       setGameStarted(false);
       setCountdownEndsAt(null);
       setRoundResults([]);
       setFinalResults([]);
     }
-  }, [conn.lobbyState?.phase, conn.lobbyState?.gameData, conn.lobbyState?.countdownEndsAt]);
+  }, [conn.lobbyState?.phase, conn.lobbyState?.gameData, conn.lobbyState?.countdownEndsAt, conn.lobbyState?.players]);
 
   return { conn, gameData, gameStarted, countdownEndsAt, roundResults, finalResults };
 }

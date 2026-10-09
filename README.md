@@ -6,6 +6,10 @@ game at the same time.
 
 Teachers need an account; students do not.
 
+Students can join with the same code even after a game starts. They enter the
+current round with its remaining time. Returning in the same browser restores
+their player, answers and scores, including after accidentally closing a tab.
+
 ## Getting started
 
 Needs Node 24 or newer — the server uses the built-in `node:sqlite`, so there is

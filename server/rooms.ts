@@ -139,8 +139,10 @@ export class Room {
     this.sockets.set(connectionId, socket);
   }
 
-  detach(connectionId: string): void {
+  detach(connectionId: string, socket: WebSocket): boolean {
+    if (this.sockets.get(connectionId) !== socket) return false;
     this.sockets.delete(connectionId);
+    return true;
   }
 
   save(): void {

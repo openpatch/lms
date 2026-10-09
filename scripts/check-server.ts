@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import WebSocket from "ws";
 import type { ClientMessage, ServerMessage } from "../shared/types";
+import type { StageRoundData } from "../shared/framework";
 import { DatabaseSync } from "node:sqlite";
 
 const PORT = 3999;
@@ -83,6 +84,7 @@ class TestClient {
   }
 
   ready(): Promise<void> {
+    if (this.socket.readyState === WebSocket.OPEN) return Promise.resolve();
     return new Promise((resolve, reject) => {
       this.socket.once("open", () => resolve());
       this.socket.once("error", reject);
@@ -124,8 +126,12 @@ class TestClient {
     return false;
   }
 
-  close() {
-    this.socket.close();
+  close(): Promise<void> {
+    if (this.socket.readyState === WebSocket.CLOSED) return Promise.resolve();
+    return new Promise((resolve) => {
+      this.socket.once("close", () => resolve());
+      this.socket.close();
+    });
   }
 }
 
@@ -229,7 +235,8 @@ async function main() {
       pretenderError?.message === "Not the host of this lobby",
     );
 
-    const player = new TestClient(code, randomUUID());
+    const playerId = randomUUID();
+    const player = new TestClient(code, playerId);
     await player.ready();
     player.send({ type: "join", name: "Alice" });
     check(
@@ -252,13 +259,34 @@ async function main() {
       ),
     );
 
+    host.send({
+      type: "update-settings",
+      settings: { stages: ["tap"], stageSettings: { tap: { duration: 30 } } },
+    });
     host.send({ type: "start" });
+    const duringRules = new TestClient(code, randomUUID());
+    await duringRules.ready();
+    duringRules.send({ type: "join", name: "During Rules" });
+    check(
+      "students can join while the host explains",
+      await duringRules.waitUntil("lobby-state", (m) =>
+        m.state.phase === "explanation" && m.state.players.some((p) => p.name === "During Rules"),
+      ),
+    );
     // A host explains for as long as they like before starting the countdown,
     // and the round is built the moment the rules go up. Long enough here that
     // a round which started counting behind them would show it.
     await new Promise((r) => setTimeout(r, 1_500));
     host.send({ type: "begin-countdown" });
     check("countdown is broadcast", !!(await player.waitFor("countdown")));
+    const duringCountdown = new TestClient(code, randomUUID());
+    await duringCountdown.ready();
+    duringCountdown.send({ type: "join", name: "During Countdown" });
+    check(
+      "students joining during the countdown use the same deadline",
+      (await duringCountdown.waitFor("countdown"))?.countdownEndsAt ===
+        (await player.waitFor("countdown"))?.countdownEndsAt,
+    );
     const started = (await player.waitFor("game-start")) as
       | { serverNow: number; gameData: { startTime: number; duration: number } }
       | undefined;
@@ -270,11 +298,30 @@ async function main() {
       `${alreadyGone}ms of the round was already spent`,
     );
 
-    const stray = new TestClient(code, randomUUID());
+    const lateId = randomUUID();
+    const stray = new TestClient(code, lateId);
     await stray.ready();
     stray.send({ type: "join", name: "Late" });
-    const strayError = await stray.waitFor("error");
-    check("nobody joins mid-game", strayError?.message === "Game already in progress");
+    check(
+      "students can join mid-game with zero points",
+      await stray.waitUntil("lobby-state", (m) =>
+        m.state.phase === "playing" &&
+        m.state.players.some((p) => p.id === lateId && p.score === 0 && p.crowns === 0),
+      ),
+    );
+    const lateStart = await stray.waitFor("game-start");
+    check(
+      "late arrivals receive the current round without restarting its clock",
+      !!lateStart && (lateStart.gameData as StageRoundData).startTime === started?.gameData.startTime,
+    );
+    stray.send({ type: "game-action", payload: { action: "click" } });
+    check(
+      "a late arrival can play the current round",
+      await stray.waitUntil("game-state", (m) =>
+        (m.gameData as StageRoundData).extra.clicks != null &&
+        ((m.gameData as StageRoundData).extra.clicks as Record<string, number>)[lateId] === 1,
+      ),
+    );
 
     // Cutting a round short is the host's alone, and it has to work while the
     // clock still has seconds left on it — that is the whole point of it.
@@ -293,11 +340,51 @@ async function main() {
     for (let tap = 0; tap < 5; tap++) {
       player.send({ type: "game-action", payload: { action: "click" } });
     }
-    await new Promise((r) => setTimeout(r, 300));
+    await host.waitUntil("game-state", (m) =>
+      ((m.gameData as StageRoundData).extra.clicks as Record<string, number>)[playerId] === 5,
+    );
+
+    player.close();
+    check(
+      "closing the browser marks the player disconnected",
+      await host.waitUntil("lobby-state", (m) =>
+        m.state.players.some((p) => p.id === playerId && !p.connected),
+      ),
+    );
+    const returnedPlayer = new TestClient(code, playerId);
+    await returnedPlayer.ready();
+    returnedPlayer.send({ type: "join", name: "Alice" });
+    const resumed = await returnedPlayer.waitFor("game-start");
+    check(
+      "returning in the same browser restores progress in the same round",
+      !!resumed && (resumed.gameData as StageRoundData).startTime === started?.gameData.startTime &&
+        ((resumed.gameData as StageRoundData).extra.clicks as Record<string, number>)[playerId] === 5,
+    );
+    check(
+      "returning restores one player rather than adding a duplicate",
+      await returnedPlayer.waitUntil("lobby-state", (m) =>
+        m.state.players.filter((p) => p.id === playerId).length === 1 &&
+        m.state.players.some((p) => p.id === playerId && p.connected),
+      ),
+    );
+
+    // A quick reopen can arrive before the previous socket has closed.
+    const replacedPlayer = new TestClient(code, playerId);
+    await replacedPlayer.ready();
+    replacedPlayer.send({ type: "join", name: "Alice" });
+    await replacedPlayer.waitFor("game-start");
+    await returnedPlayer.close();
+    replacedPlayer.send({ type: "game-action", payload: { action: "click" } });
+    check(
+      "a replacement connection stays attached when the old socket closes",
+      await replacedPlayer.waitUntil("game-state", (m) =>
+        ((m.gameData as StageRoundData).extra.clicks as Record<string, number>)[playerId] === 6,
+      ),
+    );
 
     host.send({ type: "end-round" });
     // The example game has one stage, so its round ending is the game ending.
-    const cutShort = await player.waitFor("finished");
+    const cutShort = await replacedPlayer.waitFor("finished");
     check("the host can end a round before the clock does", !!cutShort);
     check(
       "and everyone is still scored for it",
@@ -309,6 +396,21 @@ async function main() {
     const idle = cutShort?.roundResults.find((r) => r.playerName === "Teacher Testing");
     check("whoever took the round is crowned for it", alice?.wonRound === true && alice?.crowns === 1);
     check("and whoever did not is not", idle?.wonRound !== true && (idle?.crowns ?? 0) === 0);
+    check(
+      "late arrivals are included in the round's results",
+      (cutShort?.roundResults.find((r) => r.playerId === lateId)?.score ?? 0) > 0,
+    );
+
+    const afterFinish = new TestClient(code, playerId);
+    await afterFinish.ready();
+    check(
+      "returning after the game ends preserves scores and crowns",
+      await afterFinish.waitUntil("lobby-state", (m) =>
+        m.state.phase === "finished" && m.state.players.some((p) =>
+          p.id === playerId && p.score === alice?.score && p.crowns === 1,
+        ),
+      ),
+    );
 
     const impostor = new TestClient(code, randomUUID());
     await impostor.ready();
@@ -320,7 +422,7 @@ async function main() {
     host.send({ type: "close-lobby" });
     const hostClosed = await host.waitFor("lobby-closed");
     check("the host is told the lobby closed", hostClosed?.reason === "host-closed");
-    const playerClosed = await player.waitFor("lobby-closed");
+    const playerClosed = await afterFinish.waitFor("lobby-closed");
     check("so is everyone still in it", playerClosed?.reason === "host-closed");
 
     const reopened = await createLobby(cookie);
@@ -711,7 +813,8 @@ async function main() {
     const ghostClosed = await ghost.waitFor("lobby-closed");
     check("unknown code is told to stop reconnecting", ghostClosed?.reason === "not-found");
 
-    for (const client of [host, player, stray, impostor, ghost, pretender, teacherAsPlayer])
+    for (const client of [host, player, stray, impostor, ghost, pretender, teacherAsPlayer,
+      duringRules, duringCountdown, returnedPlayer, replacedPlayer, afterFinish, meddler])
       client.close();
 
     console.log("restart recovery");

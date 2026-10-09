@@ -117,6 +117,7 @@ export default function HostLobby() {
   if (phase === "explanation" && lobbyState) {
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-8">
+        <JoinCode code={code ?? ""} compact />
         <StageRules game={game} gameData={gameData} isHost={true} />
         <button
           onClick={() => conn.sendMessage({ type: "begin-countdown" })}
@@ -133,6 +134,7 @@ export default function HostLobby() {
     return (
       <div className="max-w-2xl mx-auto">
         <Countdown endsAt={countdownEndsAt}>
+          <JoinCode code={code ?? ""} compact />
           <StageRules game={game} gameData={gameData} isHost={true} />
         </Countdown>
       </div>
@@ -151,12 +153,15 @@ export default function HostLobby() {
           playerId={hostId}
           sendMessage={conn.sendGameAction}
           hostAction={
-            <button
-              onClick={() => conn.sendMessage({ type: "end-round" })}
-              className="rounded-xl border-2 border-gray-300 px-6 py-2 font-semibold text-gray-600 transition-colors hover:border-game-solid hover:text-game-ink"
-            >
-              {t("game.endRound")}
-            </button>
+            <>
+              <JoinCode code={code ?? ""} compact />
+              <button
+                onClick={() => conn.sendMessage({ type: "end-round" })}
+                className="rounded-xl border-2 border-gray-300 px-6 py-2 font-semibold text-gray-600 transition-colors hover:border-game-solid hover:text-game-ink"
+              >
+                {t("game.endRound")}
+              </button>
+            </>
           }
         />
       </div>
@@ -169,6 +174,7 @@ export default function HostLobby() {
     const roundData = lobbyState.gameData as StageRoundData | null;
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
+        <JoinCode code={code ?? ""} compact />
         <div className="text-sm font-semibold uppercase text-game-ink">
           {t("game.round", { current: data?.currentRound ?? 0, total: data?.totalRounds ?? 0 })}
         </div>
@@ -195,6 +201,7 @@ export default function HostLobby() {
     const roundData = lobbyState.gameData as StageRoundData | null;
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
+        <JoinCode code={code ?? ""} compact />
         {!game.unranked && (
           <ResultsList
             results={withGains(finalResults, roundResults, (data?.currentRound ?? 1) > 1)}

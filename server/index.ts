@@ -232,7 +232,8 @@ function onConnect(room: Room, connectionId: string, ws: WebSocket) {
 
   ws.on("message", (data) => onMessage(room, connectionId, ws, data.toString()));
   ws.on("close", () => {
-    room.detach(connectionId);
+    // A reopened browser may already have replaced this socket.
+    if (!room.detach(connectionId, ws)) return;
     const player = room.state.players.find((p) => p.id === connectionId);
     if (player) {
       player.connected = false;
@@ -243,7 +244,7 @@ function onConnect(room: Room, connectionId: string, ws: WebSocket) {
   ws.on("error", (error) => console.error(`Connection ${connectionId} error:`, error));
 }
 
-/** Catch a reconnecting client up on a round that is already under way. */
+/** Catch a joining or reconnecting client up on the current round. */
 function resendPhase(room: Room, connectionId: string) {
   if (room.state.phase === "countdown" && room.state.countdownEndsAt) {
     room.send(connectionId, {
@@ -315,12 +316,7 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
         break;
       }
 
-      // New player — can only join during lobby
-      if (state.phase !== "lobby") {
-        send(ws, { type: "error", message: "Game already in progress" });
-        return;
-      }
-
+      // A student can arrive at any point while the lobby is still open.
       const spec = getGameSpec(state.gameId);
       const playerCount = state.players.filter((p) => !p.isHost).length;
       if (spec && playerCount >= spec.maxPlayers) {
@@ -338,6 +334,7 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
       });
       room.save();
       room.broadcastLobbyState();
+      resendPhase(room, connectionId);
       break;
     }
 

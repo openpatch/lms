@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router";
 import { useLobbySession } from "../lib/lobby-session";
+import { getStableId } from "../lib/connection";
 import { getGame } from "../lib/game-registry";
 import { useActiveGame } from "../lib/game-theme";
 import Icon from "../components/icons";
@@ -90,9 +91,8 @@ export default function Play() {
     );
   }
 
-  const myPlayer = lobbyState.players.find(
-    (p) => p.name === playerName && !p.isHost,
-  );
+  const stableId = getStableId(code ?? "");
+  const myPlayer = lobbyState.players.find((p) => p.id === stableId && !p.isHost);
   const myPlayerId = myPlayer?.id ?? "";
 
   // Explanation phase: show rules, waiting for host to start countdown

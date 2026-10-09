@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 
-export default function JoinCode({ code }: { code: string }) {
+export default function JoinCode({ code, compact = false }: { code: string; compact?: boolean }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
@@ -19,11 +19,14 @@ export default function JoinCode({ code }: { code: string }) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <p className="text-sm text-gray-500">{t("lobby.shareCode")}</p>
+      {!compact && <p className="text-sm text-gray-500">{t("lobby.shareCode")}</p>}
       <div className="flex items-stretch gap-3">
         <button
           onClick={copy}
-          className="text-5xl font-mono font-bold tracking-widest text-game-ink bg-game-50 border-2 border-game-300 rounded-xl px-8 py-4 hover:border-game-solid transition-colors"
+          title={copied ? t("lobby.copied") : t("lobby.copyCode")}
+          className={`font-mono font-bold tracking-widest text-game-ink bg-game-50 border-2 border-game-300 rounded-xl hover:border-game-solid transition-colors ${
+            compact ? "text-xl px-3 py-2" : "text-5xl px-8 py-4"
+          }`}
         >
           {code}
         </button>
@@ -48,12 +51,14 @@ export default function JoinCode({ code }: { code: string }) {
           </svg>
         </button>
       </div>
-      <button
-        onClick={copy}
-        className="text-sm text-gray-500 hover:text-game-ink transition-colors"
-      >
-        {copied ? t("lobby.copied") : t("lobby.copyCode")}
-      </button>
+      {!compact && (
+        <button
+          onClick={copy}
+          className="text-sm text-gray-500 hover:text-game-ink transition-colors"
+        >
+          {copied ? t("lobby.copied") : t("lobby.copyCode")}
+        </button>
+      )}
       {showQr && (
         <div className="flex flex-col items-center gap-2 mt-2">
           <div className="rounded-xl border-2 border-game-200 bg-white p-4">
