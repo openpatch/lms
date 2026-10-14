@@ -395,7 +395,7 @@ export class Room {
     return run <= 1 ? this.state.code : `${this.state.code}-${run}`;
   }
 
-  restart(): void {
+  restart(gameId?: string): void {
     clearTimeout(this.countdownTimer);
     clearTimeout(this.roundTimer);
     this.countdownTimer = undefined;
@@ -413,8 +413,28 @@ export class Room {
     // the first: the scores above have just been wiped, and the round numbering
     // is about to start at 1 again.
     this.state.run = (this.state.run ?? 1) + 1;
+    if (gameId) this.switchGame(gameId);
     this.save();
     this.broadcastLobbyState();
+  }
+
+  /**
+   * Play something else in this room. The class stays where it is and keeps
+   * the code it joined with; only the game and its settings change, and the
+   * settings go back to that game's defaults, since another game's stage
+   * selection means nothing to this one.
+   *
+   * Only between games: a round in progress belongs to the game it was built
+   * for. Callers broadcast; this only changes the state.
+   */
+  switchGame(gameId: string): boolean {
+    if (this.state.phase !== "lobby") return false;
+    const spec = getGameSpec(gameId);
+    if (!spec || !gameHandlers[gameId]) return false;
+    if (gameId === this.state.gameId) return true;
+    this.state.gameId = gameId;
+    this.state.settings = defaultGameSettings(spec);
+    return true;
   }
 
   /** Tell everyone the lobby is gone, hang up, and forget it. */

@@ -133,7 +133,11 @@ export type ClientMessage =
   | { type: "host"; gameId: string }
   | { type: "start" }
   | { type: "begin-countdown" }
-  | { type: "restart" }
+  /** Back to the lobby for another game — a different one when `gameId` is
+   *  given, with the same class and the same code. Host only. */
+  | { type: "restart"; gameId?: string }
+  /** Swap the game a lobby is waiting to play. Host only, lobby phase only. */
+  | { type: "change-game"; gameId: string }
   | { type: "next-round" }
   /** Stop the round now, whatever the clock says. Host only. */
   | { type: "end-round" }

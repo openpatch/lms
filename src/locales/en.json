@@ -122,7 +122,11 @@
     "shareCode": "Share this code with your class",
     "playerJoined": "{{name}} joined",
     "playerLeft": "{{name}} left",
-    "needMorePlayers": "At least {{count}} players needed"
+    "needMorePlayers": "At least {{count}} players needed",
+    "changeGame": "Change game",
+    "anotherGame": "Play another game",
+    "anotherGameHint": "The class stays in the lobby with the same code.",
+    "currentGame": "Current game"
   },
   "join": {
     "title": "Join Game",

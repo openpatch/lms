@@ -122,7 +122,11 @@
     "shareCode": "Teile diesen Code mit deiner Klasse",
     "playerJoined": "{{name}} ist beigetreten",
     "playerLeft": "{{name}} hat verlassen",
-    "needMorePlayers": "Mindestens {{count}} Spieler nötig"
+    "needMorePlayers": "Mindestens {{count}} Spieler nötig",
+    "changeGame": "Spiel wechseln",
+    "anotherGame": "Anderes Spiel spielen",
+    "anotherGameHint": "Die Klasse bleibt in der Lobby, der Code bleibt gleich.",
+    "currentGame": "Aktuelles Spiel"
   },
   "join": {
     "title": "Spiel beitreten",

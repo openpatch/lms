@@ -385,7 +385,18 @@ function onMessage(room: Room, connectionId: string, ws: WebSocket, raw: string)
         send(ws, { type: "error", message: "Only host can restart" });
         return;
       }
-      room.restart();
+      room.restart(typeof msg.gameId === "string" ? msg.gameId : undefined);
+      break;
+    }
+
+    case "change-game": {
+      if (!isHost) {
+        send(ws, { type: "error", message: "Only host can change the game" });
+        return;
+      }
+      if (typeof msg.gameId !== "string" || !room.switchGame(msg.gameId)) return;
+      room.save();
+      room.broadcastLobbyState();
       break;
     }
 

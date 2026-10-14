@@ -4,6 +4,7 @@ import { useParams, useNavigate, Link } from "react-router";
 import JoinCode from "../components/JoinCode";
 import PlayerList from "../components/PlayerList";
 import ResultsList from "../components/ResultsList";
+import GamePicker from "../components/GamePicker";
 import RoundDebrief from "../components/RoundDebrief";
 import { standings, withGains } from "../components/results";
 import Countdown from "../components/Countdown";
@@ -22,9 +23,25 @@ export default function HostLobby() {
   const { t } = useTranslation();
   const { gameId, code } = useParams();
   const navigate = useNavigate();
-  const game = gameId ? getGame(gameId) : undefined;
   const [opening, setOpening] = useState(false);
+  /** Whether the list of games to switch to is open. */
+  const [picking, setPicking] = useState(false);
+
+  const { conn, gameData, gameStarted, countdownEndsAt, roundResults, finalResults } =
+    useLobbySession(code ?? "", "host");
+
+  // The lobby, not the URL, says which game is on: the host can switch it
+  // between games, and the address catches up below.
+  const activeGameId = conn.lobbyState?.gameId ?? gameId;
+  const game = activeGameId ? getGame(activeGameId) : undefined;
   useActiveGame(game);
+
+  useEffect(() => {
+    const switched = conn.lobbyState?.gameId;
+    if (code && switched && switched !== gameId) {
+      void navigate(lobbyPath(switched, code), { replace: true });
+    }
+  }, [conn.lobbyState?.gameId, gameId, code, navigate]);
 
   /**
    * Straight from the lobby that just ended into the next one.
@@ -50,9 +67,6 @@ export default function HostLobby() {
       void navigate(`/arena/${gameId}`);
     }
   };
-
-  const { conn, gameData, gameStarted, countdownEndsAt, roundResults, finalResults } =
-    useLobbySession(code ?? "", "host");
 
   // Send "host" message on every connect (handles reconnect)
   useEffect(() => {
@@ -209,12 +223,33 @@ export default function HostLobby() {
             honourRounds
           />
         )}
-        <button
-          onClick={() => conn.sendMessage({ type: "restart" })}
-          className="px-6 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
-        >
-          {t("play.backToLobby")}
-        </button>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={() => conn.sendMessage({ type: "restart" })}
+            className="px-6 py-3 bg-game-solid text-white font-semibold rounded-xl hover:bg-game-solid-hover transition-colors"
+          >
+            {t("play.backToLobby")}
+          </button>
+          <button
+            onClick={() => setPicking((open) => !open)}
+            aria-expanded={picking}
+            className="rounded-xl border-2 border-gray-300 px-6 py-2.5 font-semibold text-gray-600 transition-colors hover:border-game-solid hover:text-game-ink"
+          >
+            {t("lobby.anotherGame")}
+          </button>
+        </div>
+        {picking && (
+          <div className="w-full bg-white rounded-2xl border border-gray-200 p-6">
+            <p className="text-sm text-gray-500 mb-4">{t("lobby.anotherGameHint")}</p>
+            <GamePicker
+              current={game.id}
+              onPick={(next) => {
+                setPicking(false);
+                conn.sendMessage({ type: "restart", gameId: next });
+              }}
+            />
+          </div>
+        )}
         {roundData && <RoundAfterwards game={game} data={roundData} players={lobbyState.players} />}
       </div>
     );
@@ -232,6 +267,13 @@ export default function HostLobby() {
         </div>
         <div className="shrink-0 flex items-center gap-3">
           <button
+            onClick={() => setPicking((open) => !open)}
+            aria-expanded={picking}
+            className="text-sm font-medium text-game-ink/70 hover:text-game-ink transition-colors"
+          >
+            {t("lobby.changeGame")}
+          </button>
+          <button
             onClick={() => conn.sendMessage({ type: "close-lobby" })}
             className="text-sm font-medium text-game-ink/70 hover:text-red-600 transition-colors"
           >
@@ -242,6 +284,20 @@ export default function HostLobby() {
           </Link>
         </div>
       </div>
+
+      {picking && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-1">{t("lobby.changeGame")}</h2>
+          <p className="text-sm text-gray-500 mb-4">{t("lobby.anotherGameHint")}</p>
+          <GamePicker
+            current={game.id}
+            onPick={(next) => {
+              setPicking(false);
+              if (next !== game.id) conn.sendMessage({ type: "change-game", gameId: next });
+            }}
+          />
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border-2 border-game-200 p-8 mb-6">
         <JoinCode code={code ?? ""} />

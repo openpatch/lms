@@ -418,6 +418,29 @@ async function main() {
     const impostorError = await impostor.waitFor("error");
     check("only the host can restart", impostorError?.message === "Only host can restart");
 
+    console.log("switching games in the same lobby");
+    host.send({ type: "restart", gameId: "terme" });
+    check(
+      "another game starts in the same lobby, with the class still in it",
+      await afterFinish.waitUntil("lobby-state", (m) =>
+        m.state.code === code &&
+        m.state.phase === "lobby" &&
+        m.state.gameId === "terme" &&
+        m.state.players.some((p) => p.id === playerId && p.score === 0),
+      ),
+    );
+    impostor.send({ type: "change-game", gameId: "example" });
+    const switchError = await impostor.waitUntil(
+      "error",
+      (m) => m.message === "Only host can change the game",
+    );
+    check("only the host can change the game", switchError);
+    host.send({ type: "change-game", gameId: "example" });
+    check(
+      "the host can change the game again before it starts",
+      await afterFinish.waitUntil("lobby-state", (m) => m.state.gameId === "example"),
+    );
+
     console.log("closing a lobby");
     host.send({ type: "close-lobby" });
     const hostClosed = await host.waitFor("lobby-closed");
