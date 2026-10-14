@@ -489,17 +489,18 @@
       "arrangePromptAdjust": "Marken verschieben, um sie genauer zu setzen",
       "orderPromptAsc": "Tippe die Zahlen nacheinander an — die kleinste zuerst",
       "orderPromptDesc": "Tippe die Zahlen nacheinander an — die größte zuerst",
-      "numerator": "Zähler",
-      "denominator": "Nenner",
       "result": "Ergebnis",
       "answerHint": {
-        "fraction": "Für eine ganze Zahl den Nenner leer lassen. Gleichwertige Brüche zählen als richtig.",
+        "fraction": "Mit / schreibst du einen Bruch. Gleichwertige Brüche und gemischte Zahlen zählen als richtig.",
         "decimal": "Gib das Ergebnis als Dezimalzahl ein, z. B. 0,75.",
-        "both": "Gib das Ergebnis als Bruch (3/4) oder als Dezimalzahl (0,75) ein."
+        "both": "Gib das Ergebnis als Bruch (mit /) oder als Dezimalzahl (0,75) ein."
       },
       "signPrompt": "Ist das Ergebnis positiv oder negativ?",
       "changeAskResult": "Klicke auf dem Zahlenstrahl an, wo du landest.",
       "changeAskChange": "Welche Änderung führt vom Start zum Endzustand?",
+      "wallPrompt": "Jeder Stein ist das Produkt der beiden Steine darunter. Fülle die leeren Steine aus.",
+      "wallBrick": "Stein der Mauer",
+      "wallHint": "Fehlt unten ein Stein, musst du dividieren. Dezimalzahlen schreibst du mit Komma, z. B. -0,5.",
       "contexts": {
         "temperature": "Temperatur",
         "account": "Kontostand",
@@ -531,6 +532,21 @@
           "name": "Änderungen",
           "summary": "Einer Änderung auf dem Zahlenstrahl folgen",
           "rules": "Verfolge {{questionsPerRound}} Änderungen: Ordne den Endzustand auf dem Zahlenstrahl ein oder gib die Änderung an, die dorthin führt. Du hast {{duration}} Sekunden."
+        },
+        "powers": {
+          "name": "Minuszeichen zählen",
+          "summary": "Viele Faktoren, Potenzen und Gegenzahlen",
+          "rules": "Berechne {{questionsPerRound}} Produkte, Potenzen und Gegenzahlen — ohne Taschenrechner. Zähle die Minuszeichen: Bei einer geraden Anzahl ist das Ergebnis positiv, bei einer ungeraden negativ. Achte auf die Klammer: (−3)² = 9, aber −3² = −9. Du hast {{duration}} Sekunden."
+        },
+        "terms": {
+          "name": "Punkt vor Strich",
+          "summary": "Terme in der richtigen Reihenfolge berechnen",
+          "rules": "Berechne {{questionsPerRound}} Terme mit positiven und negativen Zahlen. Zuerst Klammern, dann Potenzen, dann mal und geteilt, zuletzt plus und minus. Je schneller du richtig antwortest, desto mehr Punkte gibt es. Du hast {{duration}} Sekunden."
+        },
+        "wall": {
+          "name": "Mal-Mauern",
+          "summary": "Zahlenmauern mit negativen Zahlen ausfüllen",
+          "rules": "Fülle {{questionsPerRound}} Mal-Mauern aus: Jeder Stein ist das Produkt der beiden Steine darunter. Fehlt unten ein Stein, findest du ihn durch Dividieren. Jeder richtige Stein bringt Punkte. Du hast {{duration}} Sekunden."
         }
       }
     },
@@ -1286,6 +1302,17 @@
     "answerModeValue": "Ergebnis eingeben",
     "answerModeSign": "Nur das Vorzeichen",
     "withBrackets": "Terme mit Klammern einbeziehen",
+    "powersParts": "Aufgaben",
+    "powersPartProducts": "Viele Faktoren",
+    "powersPartPowers": "Potenzen",
+    "powersPartOpposites": "Minus vor der Klammer",
+    "withPowers": "Potenzen einbeziehen",
+    "withDecimals": "Dezimalzahlen einbeziehen",
+    "wallSize": "Steine in der untersten Reihe",
+    "wallMode": "Gegebene Steine",
+    "wallModeBoth": "Gemischt",
+    "wallModeUp": "Unterste Reihe (nur multiplizieren)",
+    "wallModeMixed": "Verstreut (auch dividieren)",
     "askMode": "Aufgabentyp",
     "askModeBoth": "Gemischt",
     "askModeResult": "Endzustand einordnen",

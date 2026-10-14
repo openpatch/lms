@@ -132,6 +132,80 @@ const twoChanges: SettingsField = {
   default: false,
 };
 
+/** Which kinds of term the "powers" stage deals out. */
+export type PowersPart = "products" | "powers" | "opposites";
+
+const ALL_POWERS_PARTS: PowersPart[] = ["products", "powers", "opposites"];
+
+const powersParts: SettingsField = {
+  type: "multi",
+  key: "powersParts",
+  labelKey: "settings.powersParts",
+  options: [
+    { value: "products", labelKey: "settings.powersPartProducts" },
+    { value: "powers", labelKey: "settings.powersPartPowers" },
+    { value: "opposites", labelKey: "settings.powersPartOpposites" },
+  ],
+  default: ["products", "powers", "opposites"],
+};
+
+const withPowers: SettingsField = {
+  type: "toggle",
+  key: "withPowers",
+  labelKey: "settings.withPowers",
+  default: true,
+};
+
+const withDecimals: SettingsField = {
+  type: "toggle",
+  key: "withDecimals",
+  labelKey: "settings.withDecimals",
+  default: false,
+};
+
+/** A wall takes a while to fill, so a round has fewer of them and more time. */
+const wallsPerRound: SettingsField = {
+  type: "select",
+  key: "questionsPerRound",
+  labelKey: "settings.questionsPerRound",
+  options: [2, 3, 4, 5, 6],
+  default: 4,
+};
+
+const wallDuration: SettingsField = {
+  type: "range",
+  key: "duration",
+  labelKey: "settings.duration",
+  min: 90,
+  max: 300,
+  step: 30,
+  default: 180,
+  unit: "s",
+};
+
+const wallSize: SettingsField = {
+  type: "select",
+  key: "wallSize",
+  labelKey: "settings.wallSize",
+  options: [3, 4],
+  default: 3,
+};
+
+/** Which bricks of a wall are given: the bottom row, or any that pin it down. */
+export type WallMode = "up" | "mixed";
+
+const wallMode: SettingsField = {
+  type: "choice",
+  key: "wallMode",
+  labelKey: "settings.wallMode",
+  options: [
+    { value: "both", labelKey: "settings.wallModeBoth" },
+    { value: "up", labelKey: "settings.wallModeUp" },
+    { value: "mixed", labelKey: "settings.wallModeMixed" },
+  ],
+  default: "both",
+};
+
 /** Reads the notation of a stage's resolved settings. */
 export function readNotation(settings: StageSettings): RationalNotation {
   const value = settings.notation;
@@ -178,6 +252,50 @@ export function orderSolution(question: OrderQuestion): number[] {
   return question.items
     .map((_, index) => index)
     .sort((a, b) => sign * (toValue(question.items[a]) - toValue(question.items[b])));
+}
+
+/** Reads the kinds of term a "powers" round may use. Never empty. */
+export function readPowersParts(settings: StageSettings): PowersPart[] {
+  const raw = settings.powersParts;
+  const picked = Array.isArray(raw)
+    ? ALL_POWERS_PARTS.filter((part) => raw.includes(part))
+    : [];
+  return picked.length > 0 ? picked : ALL_POWERS_PARTS;
+}
+
+/**
+ * What one player sent for a wall: one entry per hidden brick, in the order of
+ * `WallQuestion.hidden`. Anything else is not a wall at all.
+ */
+export function readWallAnswer(raw: string | undefined, count: number): string[] | null {
+  if (raw == null) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || parsed.length !== count) return null;
+  return parsed.map((entry) => (typeof entry === "string" ? entry : ""));
+}
+
+/** The row of brick `index` in a wall `size` bricks wide, counted from the
+ *  bottom, and its place in that row. */
+export function wallPosition(size: number, index: number): { row: number; col: number } {
+  let row = 0;
+  let start = 0;
+  while (index >= start + size - row) {
+    start += size - row;
+    row++;
+  }
+  return { row, col: index - start };
+}
+
+/** The index of the brick at `row`, `col`. */
+export function wallIndex(size: number, row: number, col: number): number {
+  let start = 0;
+  for (let r = 0; r < row; r++) start += size - r;
+  return start + col;
 }
 
 /** Reads the answer mode of the "signs" stage. */
@@ -232,6 +350,27 @@ export const rationalSpec: GameSpec = {
       rulesKey: "games.rational.stages.change.rules",
       settings: [questionsPerRound, duration, askMode, twoChanges],
     },
+    {
+      id: "powers",
+      nameKey: "games.rational.stages.powers.name",
+      summaryKey: "games.rational.stages.powers.summary",
+      rulesKey: "games.rational.stages.powers.rules",
+      settings: [questionsPerRound, duration, powersParts, answerMode],
+    },
+    {
+      id: "terms",
+      nameKey: "games.rational.stages.terms.name",
+      summaryKey: "games.rational.stages.terms.summary",
+      rulesKey: "games.rational.stages.terms.rules",
+      settings: [questionsPerRound, duration, withPowers, withDecimals],
+    },
+    {
+      id: "wall",
+      nameKey: "games.rational.stages.wall.name",
+      summaryKey: "games.rational.stages.wall.summary",
+      rulesKey: "games.rational.stages.wall.rules",
+      settings: [wallsPerRound, wallDuration, wallSize, wallMode, withDecimals],
+    },
   ],
 };
 
@@ -268,10 +407,13 @@ export interface CalculateQuestion extends StageQuestion {
   result: RationalValue;
 }
 
+/** A term to work out. Also the question of the "powers" and "terms"
+ *  stages, which are played the same way. */
 export interface SignsQuestion extends StageQuestion {
   /** The whole term as LaTeX, e.g. "(-3)\cdot(+4)". */
   termLatex: string;
-  /** The value of the term; never 0, so its sign is always well defined. */
+  /** The value of the term; never 0, so its sign is always well defined.
+   *  A whole number, except in a "terms" round with decimals. */
   result: number;
 }
 
@@ -291,4 +433,18 @@ export interface ChangeQuestion extends StageQuestion {
   answer: number;
   lineMin: number;
   lineMax: number;
+}
+
+/**
+ * A multiplication wall: every brick is the product of the two below it.
+ * Bricks are numbered row by row from the bottom, left to right — see
+ * `wallPosition` and `wallIndex`.
+ */
+export interface WallQuestion extends StageQuestion {
+  /** How many bricks the bottom row has. */
+  size: number;
+  /** Every brick's value; the hidden ones are blanked for the player. */
+  bricks: RationalValue[];
+  /** The bricks the player fills in, in the order the answer lists them. */
+  hidden: number[];
 }

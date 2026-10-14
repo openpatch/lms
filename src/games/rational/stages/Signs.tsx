@@ -75,13 +75,8 @@ export default function SignsStage({ question, submit, settings }: StageProps<Si
   );
 }
 
-export function SignsRulesExample() {
-  // The sign rules are meant to be derived, so the example shows the pattern
-  const examples = [
-    ["(-3) \\cdot (+4)", "-12"],
-    ["(-3) \\cdot (-4)", "+12"],
-    ["-5 - (-7)", "+2"],
-  ];
+/** A few terms beside their values, the way every term stage explains itself. */
+function TermExamples({ examples }: { examples: string[][] }) {
   return (
     <div className="flex flex-col items-center gap-2 text-gray-500">
       {examples.map(([term, result]) => (
@@ -94,5 +89,45 @@ export function SignsRulesExample() {
         </div>
       ))}
     </div>
+  );
+}
+
+export function SignsRulesExample() {
+  // The sign rules are meant to be derived, so the example shows the pattern
+  return (
+    <TermExamples
+      examples={[
+        ["(-3) \\cdot (+4)", "-12"],
+        ["(-3) \\cdot (-4)", "+12"],
+        ["-5 - (-7)", "+2"],
+      ]}
+    />
+  );
+}
+
+export function PowersRulesExample() {
+  // Count the minus signs: an even number of them makes the result positive
+  return (
+    <TermExamples
+      examples={[
+        ["(-1) \\cdot (-2) \\cdot (-3)", "-6"],
+        ["(-2)^{4}", "16"],
+        ["-3^{2}", "-9"],
+        ["-(-7)", "7"],
+      ]}
+    />
+  );
+}
+
+export function TermsRulesExample() {
+  // Brackets, powers, then dot before dash
+  return (
+    <TermExamples
+      examples={[
+        ["12 + 8 : (-2)", "8"],
+        ["(-4) : (3 - 11)", "0.5"],
+        ["14 - 4 \\cdot (-2)^{3}", "46"],
+      ]}
+    />
   );
 }

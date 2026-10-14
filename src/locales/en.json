@@ -489,17 +489,18 @@
       "arrangePromptAdjust": "Drag the marks to place them more exactly",
       "orderPromptAsc": "Tap the numbers one after another — smallest first",
       "orderPromptDesc": "Tap the numbers one after another — largest first",
-      "numerator": "Numerator",
-      "denominator": "Denominator",
       "result": "Result",
       "answerHint": {
-        "fraction": "Leave the denominator empty for a whole number. Equivalent fractions count as correct.",
+        "fraction": "Type / to write a fraction. Equivalent fractions and mixed numbers count as correct.",
         "decimal": "Enter the result as a decimal, e.g. 0.75.",
-        "both": "Enter the result as a fraction (3/4) or as a decimal (0.75)."
+        "both": "Enter the result as a fraction (type /) or as a decimal (0.75)."
       },
       "signPrompt": "Is the result positive or negative?",
       "changeAskResult": "Click on the number line where you end up.",
       "changeAskChange": "Which change leads from the start to the end state?",
+      "wallPrompt": "Every brick is the product of the two bricks below it. Fill in the empty bricks.",
+      "wallBrick": "Brick of the wall",
+      "wallHint": "If a brick is missing at the bottom, you have to divide. Write decimals like -0.5.",
       "contexts": {
         "temperature": "Temperature",
         "account": "Account balance",
@@ -531,6 +532,21 @@
           "name": "Changes",
           "summary": "Follow a change on the number line",
           "rules": "Follow {{questionsPerRound}} changes: place the end state on the number line, or name the change that leads there. You have {{duration}} seconds."
+        },
+        "powers": {
+          "name": "Count the minus signs",
+          "summary": "Many factors, powers and opposite numbers",
+          "rules": "Work out {{questionsPerRound}} products, powers and opposite numbers — without a calculator. Count the minus signs: an even number makes the result positive, an odd number makes it negative. Mind the bracket: (−3)² = 9, but −3² = −9. You have {{duration}} seconds."
+        },
+        "terms": {
+          "name": "Order of operations",
+          "summary": "Work out terms in the right order",
+          "rules": "Work out {{questionsPerRound}} terms with positive and negative numbers. Brackets first, then powers, then multiplication and division, and addition and subtraction last. The faster you answer correctly, the more points you get. You have {{duration}} seconds."
+        },
+        "wall": {
+          "name": "Multiplication walls",
+          "summary": "Fill in number walls with negative numbers",
+          "rules": "Fill in {{questionsPerRound}} multiplication walls: every brick is the product of the two bricks below it. If a brick is missing at the bottom, find it by dividing. Every correct brick earns points. You have {{duration}} seconds."
         }
       }
     },
@@ -1286,6 +1302,17 @@
     "answerModeValue": "Type the value",
     "answerModeSign": "Sign only",
     "withBrackets": "Include terms with brackets",
+    "powersParts": "Tasks",
+    "powersPartProducts": "Many factors",
+    "powersPartPowers": "Powers",
+    "powersPartOpposites": "Minus before a bracket",
+    "withPowers": "Include powers",
+    "withDecimals": "Include decimals",
+    "wallSize": "Bricks in the bottom row",
+    "wallMode": "Given bricks",
+    "wallModeBoth": "Mixed",
+    "wallModeUp": "Bottom row (multiply only)",
+    "wallModeMixed": "Scattered (divide too)",
     "askMode": "Question type",
     "askModeBoth": "Mixed",
     "askModeResult": "Place the end state",

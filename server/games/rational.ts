@@ -4,6 +4,9 @@ import {
   readNotation,
   readOperations,
   readOrderAnswer,
+  readPowersParts,
+  readWallAnswer,
+  wallIndex,
 } from "../../shared/games/rational";
 import type {
   ArrangeQuestion,
@@ -15,6 +18,8 @@ import type {
   OrderQuestion,
   RationalNotation,
   SignsQuestion,
+  WallMode,
+  WallQuestion,
 } from "../../shared/games/rational";
 import { closenessPoints, speedPoints } from "../../shared/framework";
 import type {
@@ -24,16 +29,22 @@ import type {
   RationalValue,
 } from "../../shared/rational-math";
 import {
+  add,
   applyOperator,
+  divide,
   equals,
   isTerminating,
   makeValue,
+  multiply,
   operatorLatex,
   parseFraction,
+  parseRationalAnswer,
   reduce,
+  subtract,
+  toLatex,
   toValue,
 } from "../../shared/rational-math";
-import type { StageHandler } from "../framework";
+import type { AnswerTiming, AnswerVerdict, StageContext, StageHandler } from "../framework";
 import { createStageGame } from "../framework";
 
 // Denominators common in school material
@@ -362,7 +373,8 @@ const calculateStage: StageHandler<CalculateQuestion> = {
   },
 
   evaluate(question, answer, { questionMs }) {
-    const parsed = parseFraction(answer);
+    // Typed in a math field, so the answer is LaTeX
+    const parsed = parseRationalAnswer(answer);
     if (!parsed || !equals(parsed, question.result)) return { correct: false, points: 0 };
     return { correct: true, points: speedPoints(questionMs / 1000) };
   },
@@ -460,19 +472,31 @@ const signsStage: StageHandler<SignsQuestion> = {
     }));
   },
 
-  evaluate(question, answer, { questionMs }, { settings }) {
-    if (readAnswerMode(settings) === "sign") {
-      const correct = answer === (question.result < 0 ? "-" : "+");
-      // A coin flip is worth less than working the value out
-      return { correct, points: correct ? speedPoints(questionMs / 1000, 4, 20, 60) : 0 };
-    }
-    const parsed = parseFraction(answer);
-    if (!parsed || !equals(parsed, { n: question.result, d: 1 })) {
-      return { correct: false, points: 0 };
-    }
-    return { correct: true, points: speedPoints(questionMs / 1000) };
-  },
+  evaluate: gradeTermValue,
 };
+
+/** Grades a term's value — or, in sign mode, only its sign. Shared by the
+ *  stages that are played like this one. */
+function gradeTermValue(
+  question: SignsQuestion,
+  answer: string,
+  { questionMs }: AnswerTiming,
+  { settings }: StageContext,
+): AnswerVerdict {
+  if (readAnswerMode(settings) === "sign") {
+    const correct = answer === (question.result < 0 ? "-" : "+");
+    // A coin flip is worth less than working the value out
+    return { correct, points: correct ? speedPoints(questionMs / 1000, 4, 20, 60) : 0 };
+  }
+  const parsed = parseFraction(answer);
+  // "terms" with decimals has results such as -0.9, which String() writes out
+  // exactly and parseFraction turns back into -9/10
+  const expected = parseFraction(String(question.result));
+  if (!parsed || !expected || !equals(parsed, expected)) {
+    return { correct: false, points: 0 };
+  }
+  return { correct: true, points: speedPoints(questionMs / 1000) };
+}
 
 // ---------------------------------------------------------------------------
 // change — describing changes on the number line (EdM 4.2, 4.4)
@@ -556,11 +580,385 @@ const changeStage: StageHandler<ChangeQuestion> = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// powers — many factors, powers and the opposite number (Minuszeichen zählen)
+// ---------------------------------------------------------------------------
+
+/** A signed whole number between min and max, negative about half the time. */
+function signedInt(min: number, max: number): number {
+  return randomInt(min, max) * (Math.random() < 0.5 ? -1 : 1);
+}
+
+/** A product of three to five signed factors, with an odd number of minus
+ *  signs about as often as an even one — counting them is the work. */
+function makeProduct(): SignsQuestion | null {
+  const count = randomInt(3, 5);
+  const factors = Array.from({ length: count }, () =>
+    // Ones and twos keep five factors small enough to multiply in the head
+    signedInt(1, count === 3 ? 6 : count === 4 ? 4 : 3),
+  );
+  if (!factors.some((f) => f < 0) || factors.every((f) => Math.abs(f) === 1)) return null;
+  const result = factors.reduce((product, f) => product * f, 1);
+  if (Math.abs(result) > 200) return null;
+  return {
+    id: 0,
+    termLatex: factors.map((f) => operandLatex(f)).join(" \\cdot "),
+    result,
+  };
+}
+
+/** The largest exponent worth working out for a base of this size. */
+const MAX_EXPONENT_FOR: Record<number, number> = { 1: 12, 2: 6, 3: 4, 4: 3, 5: 3 };
+
+/** (−a)ⁿ, and its look-alike −aⁿ, where the exponent belongs to a alone. */
+function makePower(): SignsQuestion {
+  const base = randomInt(1, 5);
+  const exponent = randomInt(2, MAX_EXPONENT_FOR[base]);
+  const power = base ** exponent;
+  const roll = Math.random();
+  if (roll < 0.3) {
+    // No bracket: −3² = −(3 · 3)
+    return { id: 0, termLatex: `-${base}^{${exponent}}`, result: -power };
+  }
+  const value = exponent % 2 === 0 ? power : -power;
+  if (roll < 0.45) {
+    // A minus in front of the bracket turns the whole power round once more
+    return { id: 0, termLatex: `-\\left(-${base}\\right)^{${exponent}}`, result: -value };
+  }
+  return { id: 0, termLatex: `\\left(-${base}\\right)^{${exponent}}`, result: value };
+}
+
+/** −(−7), −(−(−7)): a minus in front of a bracket gives the opposite number. */
+function makeOpposite(): SignsQuestion {
+  const depth = randomInt(1, 3);
+  const inner = signedInt(2, 20);
+  let tex = inner < 0 ? `${inner}` : `+${inner}`;
+  for (let level = 0; level < depth; level++) tex = `-\\left(${tex}\\right)`;
+  return { id: 0, termLatex: tex, result: depth % 2 === 0 ? inner : -inner };
+}
+
+const powersStage: StageHandler<SignsQuestion> = {
+  id: "powers",
+  forPlayer: (question) => ({ ...question, result: 0 }),
+
+  createQuestions({ settings }) {
+    const parts = readPowersParts(settings);
+    return Array.from({ length: Number(settings.questionsPerRound) }, (_, id) => {
+      const part = pick(parts);
+      let question: SignsQuestion | null = null;
+      for (let attempt = 0; attempt < 50 && !question; attempt++) {
+        question =
+          part === "products" ? makeProduct() : part === "powers" ? makePower() : makeOpposite();
+      }
+      // Fallback with a sign worth counting
+      question ??= { id: 0, termLatex: "(-2) \\cdot 3 \\cdot (-5)", result: 30 };
+      return { ...question, id };
+    });
+  },
+
+  evaluate: gradeTermValue,
+};
+
+// ---------------------------------------------------------------------------
+// terms — the order of operations with signed numbers (Punkt vor Strich)
+// ---------------------------------------------------------------------------
+
+/** A number as it stands in a term: bracketed when negative, unless it leads. */
+function numberLatex(value: Fraction, leading = false): string {
+  const tex = toLatex(value, "decimal");
+  return value.n < 0 && !leading ? `\\left(${tex}\\right)` : tex;
+}
+
+const int = (value: number): Fraction => ({ n: value, d: 1 });
+
+/** A factor for a product: a whole number, or with decimals now and then a
+ *  half such as −1.5 — the book's −3 + 4 · (−1.5). */
+function termFactor(withDecimals: boolean): Fraction {
+  if (withDecimals && Math.random() < 0.4) {
+    return reduce({ n: pick([1, 3, 5]) * (Math.random() < 0.5 ? -1 : 1), d: 2 });
+  }
+  return int(signedInt(2, 9));
+}
+
+interface BuiltTerm {
+  tex: string;
+  value: Fraction;
+}
+
+type TermTemplate = (withDecimals: boolean) => BuiltTerm | null;
+
+const PLAIN_TEMPLATES: TermTemplate[] = [
+  // a + b · c — multiply first
+  (dec) => {
+    const a = int(signedInt(1, 20));
+    const b = termFactor(dec);
+    const c = termFactor(dec);
+    return {
+      tex: `${numberLatex(a, true)} + ${numberLatex(b)} \\cdot ${numberLatex(c)}`,
+      value: add(a, multiply(b, c)),
+    };
+  },
+  // a − b · c
+  (dec) => {
+    const a = int(signedInt(1, 20));
+    const b = int(randomInt(2, 9));
+    const c = termFactor(dec);
+    return {
+      tex: `${numberLatex(a, true)} - ${numberLatex(b)} \\cdot ${numberLatex(c)}`,
+      value: subtract(a, multiply(b, c)),
+    };
+  },
+  // a + b : c — divide first, and the quotient comes out whole
+  (dec) => {
+    const a = int(signedInt(1, 20));
+    const c = termFactor(dec);
+    const b = multiply(c, int(signedInt(2, 9)));
+    return {
+      tex: `${numberLatex(a, true)} + ${numberLatex(b)} : ${numberLatex(c)}`,
+      value: add(a, divide(b, c)),
+    };
+  },
+  // (a + b) · c — the bracket goes first
+  (dec) => {
+    const a = int(signedInt(1, 12));
+    const b = int(signedInt(1, 12));
+    const c = termFactor(dec);
+    const inner = add(a, b);
+    if (inner.n === 0) return null;
+    return {
+      tex: `\\left(${numberLatex(a, true)} + ${numberLatex(b)}\\right) \\cdot ${numberLatex(c)}`,
+      value: multiply(inner, c),
+    };
+  },
+  // a : (b − c)
+  () => {
+    const b = int(signedInt(1, 12));
+    const c = int(signedInt(1, 12));
+    const inner = subtract(b, c);
+    if (inner.n === 0) return null;
+    const a = multiply(inner, int(signedInt(2, 6)));
+    return {
+      tex: `${numberLatex(a, true)} : \\left(${numberLatex(b, true)} - ${numberLatex(c)}\\right)`,
+      value: divide(a, inner),
+    };
+  },
+  // a · b + c · d — two products, then the sum
+  (dec) => {
+    const a = termFactor(dec);
+    const b = int(signedInt(2, 9));
+    const c = int(signedInt(2, 9));
+    const d = int(signedInt(2, 9));
+    return {
+      tex: `${numberLatex(a, true)} \\cdot ${numberLatex(b)} + ${numberLatex(c)} \\cdot ${numberLatex(d)}`,
+      value: add(multiply(a, b), multiply(c, d)),
+    };
+  },
+];
+
+/** A signed base and a small exponent whose power stays easy: (−2)³, (−3)². */
+function smallPower(): { base: number; exponent: number } {
+  const base = -randomInt(2, 3);
+  return { base, exponent: base === -2 ? randomInt(2, 4) : 2 };
+}
+
+const POWER_TEMPLATES: TermTemplate[] = [
+  // a − b · (c)ⁿ — the book's 14 − 4 · (−2)³
+  () => {
+    const a = int(signedInt(1, 20));
+    const b = int(randomInt(2, 5));
+    const { base, exponent } = smallPower();
+    const power = int(base ** exponent);
+    return {
+      tex: `${numberLatex(a, true)} - ${numberLatex(b)} \\cdot \\left(${base}\\right)^{${exponent}}`,
+      value: subtract(a, multiply(b, power)),
+    };
+  },
+  // (c)ⁿ − a
+  () => {
+    const a = int(randomInt(2, 30));
+    const { base, exponent } = smallPower();
+    return {
+      tex: `\\left(${base}\\right)^{${exponent}} - ${numberLatex(a)}`,
+      value: subtract(int(base ** exponent), a),
+    };
+  },
+  // −cⁿ + a — without a bracket only c is raised
+  () => {
+    const a = int(signedInt(1, 20));
+    const c = randomInt(2, 4);
+    return {
+      tex: `-${c}^{2} + ${numberLatex(a)}`,
+      value: add(int(-(c * c)), a),
+    };
+  },
+];
+
+function makeTermsQuestion(withPowers: boolean, withDecimals: boolean): BuiltTerm {
+  const templates = withPowers ? [...PLAIN_TEMPLATES, ...POWER_TEMPLATES] : PLAIN_TEMPLATES;
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const term = pick(templates)(withDecimals);
+    if (!term) continue;
+    const { value } = term;
+    // A result to type without a calculator: not 0, not huge, at most two
+    // decimals — a half times a half is a quarter, and that is as far as it goes
+    if (value.n === 0 || Math.abs(toValue(value)) > 200 || ![1, 2, 4].includes(value.d)) continue;
+    return term;
+  }
+  return { tex: "12 + 8 : \\left(-2\\right)", value: int(8) };
+}
+
+const termsStage: StageHandler<SignsQuestion> = {
+  id: "terms",
+  forPlayer: (question) => ({ ...question, result: 0 }),
+
+  createQuestions({ settings }) {
+    const withPowers = Boolean(settings.withPowers);
+    const withDecimals = Boolean(settings.withDecimals);
+    return Array.from({ length: Number(settings.questionsPerRound) }, (_, id) => {
+      const term = makeTermsQuestion(withPowers, withDecimals);
+      return { id, termLatex: term.tex, result: toValue(term.value) };
+    });
+  },
+
+  evaluate: gradeTermValue,
+};
+
+// ---------------------------------------------------------------------------
+// wall — multiplication walls (Mal-Mauern)
+// ---------------------------------------------------------------------------
+
+/** The bricks of a whole wall, built up from its bottom row. */
+function buildWall(bottom: Fraction[]): Fraction[] {
+  const size = bottom.length;
+  const bricks = [...bottom];
+  for (let row = 1; row < size; row++) {
+    for (let col = 0; col < size - row; col++) {
+      bricks.push(
+        multiply(
+          bricks[wallIndex(size, row - 1, col)],
+          bricks[wallIndex(size, row - 1, col + 1)],
+        ),
+      );
+    }
+  }
+  return bricks;
+}
+
+/** Whether the given bricks pin the whole wall down, one product or one
+ *  quotient at a time — the way a student fills it in. No brick is ever 0, so
+ *  every division along the way is allowed. */
+function wallSolvable(size: number, given: Set<number>): boolean {
+  const known = new Set(given);
+  let progress = true;
+  while (progress) {
+    progress = false;
+    for (let row = 0; row < size - 1; row++) {
+      for (let col = 0; col < size - row - 1; col++) {
+        const trio = [
+          wallIndex(size, row + 1, col),
+          wallIndex(size, row, col),
+          wallIndex(size, row, col + 1),
+        ];
+        const missing = trio.filter((index) => !known.has(index));
+        if (missing.length === 1) {
+          known.add(missing[0]);
+          progress = true;
+        }
+      }
+    }
+  }
+  return known.size === (size * (size + 1)) / 2;
+}
+
+/** The bricks that stay visible: the bottom row, or — for "mixed" — as many
+ *  bricks as the bottom has, scattered so that some have to be divided out. */
+function givenBricks(size: number, mode: WallMode): Set<number> {
+  const bottom = new Set(Array.from({ length: size }, (_, col) => col));
+  if (mode === "up") return bottom;
+  const all = Array.from({ length: (size * (size + 1)) / 2 }, (_, index) => index);
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const given = new Set(shuffle(all).slice(0, size));
+    const hidesBottom = [...bottom].some((index) => !given.has(index));
+    if (hidesBottom && wallSolvable(size, given)) return given;
+  }
+  return bottom;
+}
+
+function readWallMode(raw: unknown): WallMode {
+  if (raw === "up" || raw === "mixed") return raw;
+  return Math.random() < 0.5 ? "up" : "mixed";
+}
+
+/** A bottom row whose wall stays small, with at least two minus signs in it. */
+function wallBottom(size: number, withDecimals: boolean): Fraction[] {
+  const magnitudes: Fraction[] = [int(1), int(2), int(2), int(3)];
+  if (withDecimals) magnitudes.push({ n: 1, d: 2 }, { n: 1, d: 2 }, int(4));
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const bottom = Array.from({ length: size }, () => {
+      const m = pick(magnitudes);
+      return Math.random() < 0.5 ? { n: -m.n, d: m.d } : m;
+    });
+    if (bottom.filter((f) => f.n < 0).length < 2) continue;
+    const bricks = buildWall(bottom);
+    const top = bricks[bricks.length - 1];
+    // Big enough to be worth working out, small enough to do in the head, and
+    // never finer than quarters
+    if (Math.abs(toValue(top)) > 300 || Math.abs(toValue(top)) < 2) continue;
+    if (bricks.some((f) => f.d > 4)) continue;
+    return bottom;
+  }
+  return size === 3 ? [int(-2), int(3), int(-1)] : [int(-2), int(3), int(-1), int(-2)];
+}
+
+const wallStage: StageHandler<WallQuestion> = {
+  id: "wall",
+  forPlayer: (question) => ({
+    ...question,
+    bricks: question.bricks.map((brick, index) =>
+      question.hidden.includes(index) ? { n: 0, d: 1, latex: "" } : brick,
+    ),
+  }),
+
+  createQuestions({ settings }) {
+    const size = Number(settings.wallSize) === 4 ? 4 : 3;
+    const withDecimals = Boolean(settings.withDecimals);
+    return Array.from({ length: Number(settings.questionsPerRound) }, (_, id) => {
+      const bricks = buildWall(wallBottom(size, withDecimals));
+      const given = givenBricks(size, readWallMode(settings.wallMode));
+      return {
+        id,
+        size,
+        bricks: bricks.map((brick) => makeValue(brick, "decimal")),
+        hidden: bricks.map((_, index) => index).filter((index) => !given.has(index)),
+      };
+    });
+  },
+
+  evaluate(question, answer, { questionMs }) {
+    const entries = readWallAnswer(answer, question.hidden.length);
+    if (!entries) return { correct: false, points: 0 };
+    const right = question.hidden.filter((brick, slot) => {
+      const parsed = parseRationalAnswer(entries[slot]);
+      return parsed != null && equals(parsed, question.bricks[brick]);
+    }).length;
+    // A wall takes half a minute or more, so the clock runs slower than for a
+    // single term — and every brick counts for its share
+    const share = right / question.hidden.length;
+    return {
+      correct: right === question.hidden.length,
+      points: Math.round(speedPoints(questionMs / 1000, 1) * share),
+    };
+  },
+};
+
 export default createStageGame(rationalSpec, [
   arrangeStage,
   orderStage,
   calculateStage,
   signsStage,
   changeStage,
+  powersStage,
+  termsStage,
+  wallStage,
 ]);
 

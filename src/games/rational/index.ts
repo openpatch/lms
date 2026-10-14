@@ -7,12 +7,19 @@ import {
   ChangeReview,
   OrderReview,
   SignsReview,
+  TermValueReview,
+  WallReview,
 } from "./stages/reviews";
 import ArrangeStage, { ArrangeRulesExample } from "./stages/Arrange";
 import CalculateStage, { CalculateRulesExample } from "./stages/Calculate";
 import ChangeStage, { ChangeRulesExample } from "./stages/Change";
 import OrderStage, { OrderRulesExample } from "./stages/Order";
-import SignsStage, { SignsRulesExample } from "./stages/Signs";
+import SignsStage, {
+  PowersRulesExample,
+  SignsRulesExample,
+  TermsRulesExample,
+} from "./stages/Signs";
+import WallStage, { WallRulesExample } from "./stages/Wall";
 
 export default defineGame(rationalSpec, {
   arrange: {
@@ -25,4 +32,8 @@ export default defineGame(rationalSpec, {
   calculate: { Component: CalculateStage, RulesExample: CalculateRulesExample, Review: CalculateReview },
   signs: { Component: SignsStage, RulesExample: SignsRulesExample, Review: SignsReview },
   change: { Component: ChangeStage, RulesExample: ChangeRulesExample, Review: ChangeReview },
+  // Both are a term to work out, played the way the sign duel is
+  powers: { Component: SignsStage, RulesExample: PowersRulesExample, Review: TermValueReview },
+  terms: { Component: SignsStage, RulesExample: TermsRulesExample, Review: TermValueReview },
+  wall: { Component: WallStage, RulesExample: WallRulesExample, Review: WallReview },
 });

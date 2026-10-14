@@ -115,6 +115,41 @@ export function parseFraction(input: string): Fraction | null {
   return reduce({ n, d });
 }
 
+/**
+ * Reads a single rational number as it arrives from a MathLive field —
+ * `\frac{3}{4}`, `-\frac{3}{4}`, `1\frac{1}{2}` (a mixed number), `0{,}75` —
+ * and falls back to the plain "n/d" and decimal forms of `parseFraction`.
+ * A whole calculation such as `\frac{1}{2}+\frac{1}{4}` is not a number and
+ * comes back as null: the player is to give the result, not repeat the task.
+ */
+export function parseRationalAnswer(input: string): Fraction | null {
+  const text = input
+    .replace(/\\left|\\right/g, "")
+    .replace(/\\[,;:! ]|~|\s/g, "")
+    .replace(/\{,\}/g, ",")
+    .replace(/[()]/g, "")
+    .replace(/−/g, "-")
+    .replace(/\\[dt]frac/g, "\\frac");
+
+  const match = /^([+-]?)(\d*)\\frac\{([^{}]+)\}\{([^{}]+)\}$/.exec(text);
+  if (!match) {
+    return text.includes("\\") || text.includes("{") ? null : parseFraction(text);
+  }
+
+  const [, sign, whole, top, bottom] = match;
+  const n = parseFraction(top);
+  const d = parseFraction(bottom);
+  if (!n || !d || d.n === 0) return null;
+  let value = divide(n, d);
+  if (whole !== "") {
+    // 1¾ is one and three quarters, not one times three quarters — so the
+    // fraction part of a mixed number has to be a plain proper fraction
+    if (!/^\d+$/.test(top) || !/^\d+$/.test(bottom)) return null;
+    value = add({ n: Number(whole), d: 1 }, value);
+  }
+  return sign === "-" ? { n: -value.n, d: value.d } : value;
+}
+
 /** The four operations used by the "calculate" stage. */
 export type RationalOperator = "+" | "-" | "*" | "/";
 

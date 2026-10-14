@@ -6,13 +6,25 @@ import type {
   ChangeQuestion,
   OrderQuestion,
   SignsQuestion,
+  WallQuestion,
 } from "../../../../shared/games/rational";
-import { orderSolution, readOrderAnswer } from "../../../../shared/games/rational";
-import { operatorLatex, toValue } from "../../../../shared/rational-math";
+import {
+  orderSolution,
+  readAnswerMode,
+  readOrderAnswer,
+  readWallAnswer,
+} from "../../../../shared/games/rational";
+import {
+  equals,
+  operatorLatex,
+  parseRationalAnswer,
+  toValue,
+} from "../../../../shared/rational-math";
 import type { ClassAnswer, StageReviewProps } from "../../../lib/game-registry";
 import { Given, Solution } from "../../../components/review-parts";
 import MathTex from "../../../components/Math";
 import NumberLine, { type NumberLineMarker } from "../../../components/NumberLine";
+import { WallBricks } from "./Wall";
 
 /**
  * What a player sees once the round is over.
@@ -258,6 +270,70 @@ export function SignsReview({ question, answer }: StageReviewProps<SignsQuestion
 
 /** The typed answer as a number. A minus sign is a minus sign, whichever of
  *  the two the keyboard produced. */
+/** A term worked out: the value — or, in a sign round, only the sign. Used by
+ *  the "powers" and "terms" stages. */
+export function TermValueReview({ question, answer, data }: StageReviewProps<SignsQuestion>) {
+  const signOnly = readAnswerMode(data.settings) === "sign";
+  return (
+    <>
+      <MathTex tex={question.termLatex} className="text-lg text-gray-800" />
+      <Given answer={answer} />
+      {!answer?.correct && (
+        <Solution>
+          {signOnly ? (question.result > 0 ? "+" : "−") : <MathTex tex={String(question.result)} />}
+        </Solution>
+      )}
+    </>
+  );
+}
+
+/** The wall as it was filled in: every brick the player wrote, marked, with
+ *  the right value beside the ones that were not it. */
+export function WallReview({ question, answer }: StageReviewProps<WallQuestion>) {
+  const entries = readWallAnswer(answer?.answer, question.hidden.length);
+  return (
+    <>
+      <WallBricks
+        size={question.size}
+        compact
+        renderBrick={(index, className) => {
+          const brick = question.bricks[index];
+          const slot = question.hidden.indexOf(index);
+          if (slot < 0) {
+            return (
+              <div className={`${className} bg-gray-100 border-gray-200 text-gray-700`}>
+                <MathTex tex={brick.latex} />
+              </div>
+            );
+          }
+          const given = entries?.[slot]?.trim() ?? "";
+          const parsed = given ? parseRationalAnswer(given) : null;
+          const right = parsed != null && equals(parsed, brick);
+          return (
+            <div
+              className={`${className} flex-col leading-tight ${
+                right ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "bg-rose-50 border-rose-300"
+              }`}
+            >
+              {right ? (
+                <MathTex tex={brick.latex} />
+              ) : (
+                <>
+                  <span className="text-xs text-rose-500 line-through">{given || "–"}</span>
+                  <span className="text-sm font-medium text-emerald-600">
+                    <MathTex tex={brick.latex} />
+                  </span>
+                </>
+              )}
+            </div>
+          );
+        }}
+      />
+      {!answer && <Given answer={answer} />}
+    </>
+  );
+}
+
 function asNumber(raw: string | undefined): number | null {
   if (raw == null) return null;
   const value = Number(raw.replace("−", "-").replace(",", ".").trim());

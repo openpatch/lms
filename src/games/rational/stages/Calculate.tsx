@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CalculateQuestion } from "../../../../shared/games/rational";
 import { readNotation } from "../../../../shared/games/rational";
@@ -7,6 +7,7 @@ import type { StageProps } from "../../../lib/game-registry";
 import GameButton from "../../../components/GameButton";
 import { StageActionBar } from "../../../components/StageShell";
 import MathTex from "../../../components/Math";
+import TermInput from "../../../components/TermInput";
 
 function termLatex(question: CalculateQuestion): string {
   const operator = operatorLatex(question.operator);
@@ -16,52 +17,28 @@ function termLatex(question: CalculateQuestion): string {
   return `${question.left.latex} ${operator} ${right} = \\; ?`;
 }
 
-const INPUT_CLASS =
-  "px-3 py-2 text-2xl text-center border-2 border-gray-200 rounded-lg focus:border-game-solid focus:outline-none";
-
-/** Add, subtract, multiply or divide two rational numbers. */
+/**
+ * Add, subtract, multiply or divide two rational numbers. The result goes into
+ * a math field, so a fraction is written as a fraction — "/" builds one, and
+ * the tablet keyboard has a key for it — rather than spelled out as "3/4".
+ */
 export default function CalculateStage({
   question,
   submit,
   settings,
 }: StageProps<CalculateQuestion>) {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState<{
-    questionId: number;
-    numerator: string;
-    denominator: string;
-  } | null>(null);
-  const firstInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    firstInputRef.current?.focus();
-  }, [question?.id]);
+  const [draft, setDraft] = useState<{ questionId: number; latex: string } | null>(null);
 
   if (!question) return null;
 
-  // A fractions-only round is entered as numerator over denominator; as soon as
-  // decimals are allowed a single field takes both notations.
   const notation = readNotation(settings);
-  const asFraction = notation === "fraction";
-
-  // Tagged with its question so the next one always starts from empty inputs
-  const current =
-    draft && draft.questionId === question.id
-      ? draft
-      : { questionId: question.id, numerator: "", denominator: "" };
+  // Tagged with its question so the next one always starts from an empty field
+  const latex = draft?.questionId === question.id ? draft.latex : "";
 
   const send = () => {
-    if (!current.numerator.trim()) return;
-    // The server takes "n/d", "n" and decimals alike
-    submit(
-      asFraction
-        ? `${current.numerator.trim()}/${current.denominator.trim() || "1"}`
-        : current.numerator.trim(),
-    );
-  };
-
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") send();
+    if (latex.trim() === "") return;
+    submit(latex);
   };
 
   return (
@@ -70,50 +47,26 @@ export default function CalculateStage({
         <MathTex tex={termLatex(question)} display className="text-4xl" />
       </div>
 
-      <div className="flex items-center gap-3">
-        {asFraction ? (
-          <div className="flex flex-col items-center">
-            <input
-              ref={firstInputRef}
-              type="text"
-              inputMode="numeric"
-              value={current.numerator}
-              onChange={(e) => setDraft({ ...current, numerator: e.target.value })}
-              onKeyDown={onKeyDown}
-              placeholder={t("games.rational.numerator")}
-              className={`w-32 ${INPUT_CLASS}`}
-            />
-            <div className="w-32 h-0.5 bg-gray-400 my-2" />
-            <input
-              type="text"
-              inputMode="numeric"
-              value={current.denominator}
-              onChange={(e) => setDraft({ ...current, denominator: e.target.value })}
-              onKeyDown={onKeyDown}
-              placeholder={t("games.rational.denominator")}
-              className={`w-32 ${INPUT_CLASS}`}
-            />
-          </div>
-        ) : (
-          <input
-            ref={firstInputRef}
-            type="text"
-            inputMode={notation === "decimal" ? "decimal" : "text"}
-            value={current.numerator}
-            onChange={(e) => setDraft({ ...current, numerator: e.target.value })}
-            onKeyDown={onKeyDown}
-            placeholder={t("games.rational.result")}
-            className={`w-44 ${INPUT_CLASS}`}
-          />
-        )}
-        <StageActionBar>
-          <GameButton onClick={send} disabled={!current.numerator.trim()}>
-            {t("game.submit")}
-          </GameButton>
-        </StageActionBar>
+      <div className="flex items-center gap-2 w-full max-w-md">
+        <MathTex tex="=" className="text-3xl text-gray-400" />
+        <TermInput
+          key={question.id}
+          value={latex}
+          onChange={(next) => setDraft({ questionId: question.id, latex: next })}
+          onSubmit={send}
+          ariaLabel={t("games.rational.result")}
+        />
       </div>
 
-      <p className="text-sm text-gray-400">{t(`games.rational.answerHint.${notation}`)}</p>
+      <p className="text-sm text-gray-400 text-center max-w-md">
+        {t(`games.rational.answerHint.${notation}`)}
+      </p>
+
+      <StageActionBar>
+        <GameButton onClick={send} disabled={latex.trim() === ""}>
+          {t("game.submit")}
+        </GameButton>
+      </StageActionBar>
     </div>
   );
 }
