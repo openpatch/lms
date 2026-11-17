@@ -1277,6 +1277,165 @@
       "progressOf": "Progress of {{name}}",
       "ownScore": "You scored {{earned}} of {{possible}} points.",
       "notFinished": "The time is up before you finished."
+    },
+    "rechner": {
+      "title": "Inside the Computer",
+      "description": "Build the best gaming PC, calculate in binary, read logic gates and program the mini processor.",
+      "kinds": {
+        "cpu": "Processor",
+        "gpu": "Graphics card",
+        "ram": "Memory",
+        "storage": "Storage"
+      },
+      "specs": {
+        "cpu": "{{cores}} cores · {{ghz}} GHz · gen. {{gen}}",
+        "gpu": "{{units}} compute units · {{vram}} GB · gen. {{gen}}",
+        "ram": "{{mhz}} MHz",
+        "hdd": "Hard disk (HDD)",
+        "sata": "SSD (SATA)",
+        "nvme": "SSD (NVMe)"
+      },
+      "build": {
+        "budget": "Budget",
+        "total": "Your PC costs",
+        "overBudget": "Over budget!",
+        "benchmark": "Benchmark",
+        "runTest_one": "Test run ({{count}} left)",
+        "runTest_other": "Test run ({{count}} left)",
+        "noRuns": "Pick one of each part and start a test run.",
+        "points": "{{score}} points"
+      },
+      "evaPrompt": "Input, processing, output or storage?",
+      "partPrompt": "Which part does this?",
+      "roles": {
+        "eingabe": "Input",
+        "verarbeitung": "Processing",
+        "ausgabe": "Output",
+        "speicherung": "Storage"
+      },
+      "devices": {
+        "tastatur": "Keyboard",
+        "maus": "Mouse",
+        "mikrofon": "Microphone",
+        "webcam": "Webcam",
+        "scanner": "Scanner",
+        "touchpad": "Touchpad",
+        "gamepad": "Gamepad",
+        "fingerabdruck": "Fingerprint sensor",
+        "barcode": "Barcode scanner at the till",
+        "prozessor": "Processor (CPU)",
+        "rechenwerk": "Arithmetic logic unit",
+        "steuerwerk": "Control unit",
+        "mikrocontroller": "Microcontroller in an alarm clock",
+        "bildschirm": "Screen",
+        "lautsprecher": "Speaker",
+        "drucker": "Printer",
+        "kopfhoerer": "Headphones",
+        "beamer": "Projector",
+        "druck3d": "3D printer",
+        "arbeitsspeicher": "Memory (RAM)",
+        "ssd": "SSD",
+        "festplatte": "Hard disk",
+        "usbstick": "USB stick",
+        "sdkarte": "SD card"
+      },
+      "jobs": {
+        "befehle": "runs the programs' instructions, calculates and compares",
+        "bereithalten": "keeps the programs and data in use ready – and forgets everything when switched off",
+        "dauerhaft": "keeps programs and files permanently",
+        "verbinden": "connects all the parts with each other",
+        "bild": "computes the picture for the screen",
+        "strom": "turns mains power into the voltages the parts need",
+        "waerme": "carries the heat away"
+      },
+      "parts": {
+        "prozessor": "Processor",
+        "arbeitsspeicher": "Memory",
+        "massenspeicher": "Storage",
+        "hauptplatine": "Mainboard",
+        "grafikkarte": "Graphics card",
+        "netzteil": "Power supply",
+        "luefter": "Fan and heat sink"
+      },
+      "toDecimalPrompt": "Which decimal number is this?",
+      "toBinaryPrompt": "Switch the cards to make this number:",
+      "decimal": "Decimal number",
+      "bitCard": "Card worth {{place}}",
+      "hex": {
+        "pickColour": "Which colour has this code?",
+        "pickCode": "Which code belongs to this colour?",
+        "rgb": "Red {{r}}, green {{g}}, blue {{b}}"
+      },
+      "calc": {
+        "addPrompt": "Work it out in columns. Tap the result digits – the carry row is your scratch paper.",
+        "mulPrompt": "Multiply. Tap the result digits.",
+        "carry": "Carry above column {{column}}",
+        "digit": "Result digit {{column}}, now {{value}}",
+        "overflowPrompt": "The register is {{bits}} bits wide. Is there an overflow?",
+        "overflow": "Overflow",
+        "overflowYes": "yes",
+        "overflowNo": "no"
+      },
+      "gate": {
+        "outputPrompt": "The switches are set like this. What comes out at Y?",
+        "tablePrompt": "Fill in the Y column of the truth table.",
+        "cell": "Y for {{row}}, now {{value}}"
+      },
+      "cpu": {
+        "cell": "Cell",
+        "bits": "Bit pattern",
+        "number": "Number",
+        "command": "Command",
+        "address": "Address",
+        "encodePrompt": "Which number stands for this command?",
+        "decodePrompt": "Which command is in this cell?",
+        "tracePrompt": "The program starts at cell 0. Which number is in cell {{cell}} at the end?",
+        "traceReview": "In cell {{cell}} at the end?",
+        "writePrompt": "Write a program that computes {{formula}} and stores it in cell {{cell}}.",
+        "slotCommand": "Command in cell {{cell}}",
+        "slotAddress": "Address for cell {{cell}}",
+        "testRun": "Test run",
+        "expected": "At the end cell {{cell}} should hold {{value}}.",
+        "endless": "The program never stops – an endless loop?",
+        "testResult": "Cell {{cell}} holds {{value}} (should be {{expected}}) – after {{steps}} commands."
+      },
+      "stages": {
+        "bauen": {
+          "name": "PC Builder",
+          "summary": "Put together the best gaming PC for the budget",
+          "rules": "Pick a processor, a graphics card, memory and storage. The PC must stay within budget and score as many benchmark points as possible. What a part is worth only shows in its datasheet – and in {{testRuns}} test runs per PC. Not everything expensive or with big numbers makes it faster! {{questionsPerRound}} PCs in {{duration}} seconds."
+        },
+        "eva": {
+          "name": "IPO Flash",
+          "summary": "Sort devices into input, processing, output and storage",
+          "rules": "Is the device for input, processing, output or storage? Or: which part does this job? The faster, the more points. {{questionsPerRound}} questions in {{duration}} seconds."
+        },
+        "binaer": {
+          "name": "Bit Cards",
+          "summary": "Convert between binary and decimal",
+          "rules": "Turn binary numbers into decimal ones – or switch the bit cards to make the decimal number. Each card is worth twice the one to its right. {{questionsPerRound}} numbers in {{duration}} seconds."
+        },
+        "farbcode": {
+          "name": "Colour Codes",
+          "summary": "Read hexadecimal colour codes like #FF8000",
+          "rules": "Web pages write colours as #RRGGBB: two hex digits each for red, green and blue. FF is full (255), 80 half (128), 00 off. Find the matching colour – or the matching code. {{questionsPerRound}} colours in {{duration}} seconds."
+        },
+        "rechnen": {
+          "name": "Binary Arithmetic",
+          "summary": "Add and multiply in columns in binary",
+          "rules": "Work it out in columns like in primary school – just with 0 and 1. 1 + 1 = 10: write 0, carry 1. Tap the result digits. {{questionsPerRound}} sums in {{duration}} seconds."
+        },
+        "gatter": {
+          "name": "Logic Gates",
+          "summary": "AND, OR, NOT: find outputs and truth tables",
+          "rules": "& is AND (all inputs 1), ≥1 is OR (at least one input 1), the ring at the output inverts (NOT). Work out what comes out at Y, or fill in the truth table. {{questionsPerRound}} circuits in {{duration}} seconds."
+        },
+        "prozessor": {
+          "name": "Mini Processor",
+          "summary": "Encode commands, trace programs and write your own",
+          "rules": "Every command is a number: command number · 32 + address. Translate commands, trace programs through memory and finally write one yourself – with a test run. {{questionsPerRound}} tasks in {{duration}} seconds."
+        }
+      }
     }
   },
   "settings": {
@@ -1471,7 +1630,39 @@
     "modelPartsAll": "The whole way, every time",
     "flowUrl": "Assessment address",
     "flowUrlHint": "The web address of a .bitflow file, e.g. one published with your Hyperbook. Every device fetches it from there.",
-    "minutes": "Time"
+    "minutes": "Time",
+    "testRuns": "Test runs per computer",
+    "evaTasks": "Tasks",
+    "evaTasksEva": "Input, processing, output",
+    "evaTasksBauteil": "Part for the job",
+    "binaryDirection": "Direction",
+    "binaryDirectionBeide": "alternating",
+    "binaryDirectionZuDezimal": "binary → decimal",
+    "binaryDirectionZuBinaer": "decimal → binary",
+    "bitCount": "Bits",
+    "showPlaceValues": "Show place values on the cards",
+    "hexDirection": "Direction",
+    "hexDirectionBeide": "alternating",
+    "hexDirectionCode": "code → colour",
+    "hexDirectionFarbe": "colour → code",
+    "binaryOps": "Operations",
+    "binaryOpsAdd": "Addition",
+    "binaryOpsMul": "Multiplication",
+    "register": "Fixed-width register (overflow)",
+    "gateTask": "Task",
+    "gateTaskBeide": "alternating",
+    "gateTaskAusgang": "Find the output",
+    "gateTaskTabelle": "Truth table",
+    "gateCircuit": "Circuits",
+    "gateCircuitGemischt": "single gates first, then connected",
+    "gateCircuitEinfach": "one gate",
+    "gateCircuitVerbunden": "connected gates",
+    "withXor": "Include XOR gates",
+    "cpuTasks": "Tasks",
+    "cpuTasksCode": "Command ↔ number",
+    "cpuTasksTrace": "Trace a program",
+    "cpuTasksWrite": "Write a program",
+    "rawCodes": "Show programs as numbers only"
   },
   "parsons": {
     "plain": "Put the lines back in the right order.",

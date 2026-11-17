@@ -11,6 +11,7 @@ import javaHandler from "./java";
 import bitflowHandler from "./bitflow";
 import intuitionHandler from "./intuition";
 import spreadsheetHandler from "./spreadsheet";
+import rechnerHandler from "./rechner";
 
 /**
  * Server-side game handler registry.
@@ -29,4 +30,5 @@ export const gameHandlers: Record<string, GameHandler> = {
   intuition: intuitionHandler,
   bitflow: bitflowHandler,
   spreadsheet: spreadsheetHandler,
+  rechner: rechnerHandler,
 };

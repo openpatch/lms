@@ -1277,6 +1277,165 @@
       "progressOf": "Fortschritt von {{name}}",
       "ownScore": "Du hast {{earned}} von {{possible}} Punkten erreicht.",
       "notFinished": "Die Zeit war um, bevor du fertig warst."
+    },
+    "rechner": {
+      "title": "Innenansichten des Computers",
+      "description": "Den besten Gaming-PC bauen, binär rechnen, Gatter lesen und den Mini-Prozessor programmieren.",
+      "kinds": {
+        "cpu": "Prozessor",
+        "gpu": "Grafikkarte",
+        "ram": "Arbeitsspeicher",
+        "storage": "Massenspeicher"
+      },
+      "specs": {
+        "cpu": "{{cores}} Kerne · {{ghz}} GHz · Gen. {{gen}}",
+        "gpu": "{{units}} Recheneinheiten · {{vram}} GB · Gen. {{gen}}",
+        "ram": "{{mhz}} MHz",
+        "hdd": "Festplatte (HDD)",
+        "sata": "SSD (SATA)",
+        "nvme": "SSD (NVMe)"
+      },
+      "build": {
+        "budget": "Budget",
+        "total": "Dein PC kostet",
+        "overBudget": "Über dem Budget!",
+        "benchmark": "Benchmark",
+        "runTest_one": "Testlauf (noch {{count}})",
+        "runTest_other": "Testlauf (noch {{count}})",
+        "noRuns": "Wähle von jedem Bauteil eins und starte einen Testlauf.",
+        "points": "{{score}} Punkte"
+      },
+      "evaPrompt": "Eingabe, Verarbeitung, Ausgabe oder Speicherung?",
+      "partPrompt": "Welches Bauteil macht das?",
+      "roles": {
+        "eingabe": "Eingabe",
+        "verarbeitung": "Verarbeitung",
+        "ausgabe": "Ausgabe",
+        "speicherung": "Speicherung"
+      },
+      "devices": {
+        "tastatur": "Tastatur",
+        "maus": "Maus",
+        "mikrofon": "Mikrofon",
+        "webcam": "Webcam",
+        "scanner": "Scanner",
+        "touchpad": "Touchpad",
+        "gamepad": "Gamepad",
+        "fingerabdruck": "Fingerabdrucksensor",
+        "barcode": "Barcode-Scanner an der Kasse",
+        "prozessor": "Prozessor (CPU)",
+        "rechenwerk": "Rechenwerk",
+        "steuerwerk": "Steuerwerk",
+        "mikrocontroller": "Mikrocontroller im Wecker",
+        "bildschirm": "Bildschirm",
+        "lautsprecher": "Lautsprecher",
+        "drucker": "Drucker",
+        "kopfhoerer": "Kopfhörer",
+        "beamer": "Beamer",
+        "druck3d": "3D-Drucker",
+        "arbeitsspeicher": "Arbeitsspeicher (RAM)",
+        "ssd": "SSD",
+        "festplatte": "Festplatte",
+        "usbstick": "USB-Stick",
+        "sdkarte": "SD-Karte"
+      },
+      "jobs": {
+        "befehle": "führt die Befehle der Programme aus, rechnet und vergleicht",
+        "bereithalten": "hält Programme und Daten bereit, mit denen gerade gearbeitet wird – und vergisst alles beim Ausschalten",
+        "dauerhaft": "bewahrt Programme und Dateien dauerhaft auf",
+        "verbinden": "verbindet alle Bauteile miteinander",
+        "bild": "berechnet das Bild für den Bildschirm",
+        "strom": "wandelt die Netzspannung in die Spannungen für die Bauteile um",
+        "waerme": "führt die Wärme ab"
+      },
+      "parts": {
+        "prozessor": "Prozessor",
+        "arbeitsspeicher": "Arbeitsspeicher",
+        "massenspeicher": "Massenspeicher",
+        "hauptplatine": "Hauptplatine",
+        "grafikkarte": "Grafikkarte",
+        "netzteil": "Netzteil",
+        "luefter": "Lüfter und Kühlkörper"
+      },
+      "toDecimalPrompt": "Welche Dezimalzahl ist das?",
+      "toBinaryPrompt": "Schalte die Karten so, dass diese Zahl entsteht:",
+      "decimal": "Dezimalzahl",
+      "bitCard": "Karte mit dem Wert {{place}}",
+      "hex": {
+        "pickColour": "Welche Farbe hat diesen Code?",
+        "pickCode": "Welcher Code gehört zu dieser Farbe?",
+        "rgb": "Rot {{r}}, Grün {{g}}, Blau {{b}}"
+      },
+      "calc": {
+        "addPrompt": "Rechne schriftlich. Tippe die Ergebnisstellen an – die Übertragszeile ist dein Schmierzettel.",
+        "mulPrompt": "Multipliziere. Tippe die Ergebnisstellen an.",
+        "carry": "Übertrag über Stelle {{column}}",
+        "digit": "Ergebnisstelle {{column}}, jetzt {{value}}",
+        "overflowPrompt": "Das Register hat {{bits}} Bit. Gibt es einen Überlauf?",
+        "overflow": "Überlauf",
+        "overflowYes": "ja",
+        "overflowNo": "nein"
+      },
+      "gate": {
+        "outputPrompt": "Die Schalter stehen so. Was kommt bei Y heraus?",
+        "tablePrompt": "Fülle die Spalte Y der Wahrheitstabelle aus.",
+        "cell": "Y bei {{row}}, jetzt {{value}}"
+      },
+      "cpu": {
+        "cell": "Zelle",
+        "bits": "Bitmuster",
+        "number": "Zahl",
+        "command": "Befehl",
+        "address": "Adresse",
+        "encodePrompt": "Welche Zahl steht für diesen Befehl?",
+        "decodePrompt": "Welcher Befehl steht in dieser Zelle?",
+        "tracePrompt": "Das Programm startet bei Zelle 0. Welche Zahl steht am Ende in Zelle {{cell}}?",
+        "traceReview": "Am Ende in Zelle {{cell}}?",
+        "writePrompt": "Schreibe ein Programm, das {{formula}} berechnet und in Zelle {{cell}} speichert.",
+        "slotCommand": "Befehl in Zelle {{cell}}",
+        "slotAddress": "Adresse für Zelle {{cell}}",
+        "testRun": "Probelauf",
+        "expected": "Am Ende soll in Zelle {{cell}} die {{value}} stehen.",
+        "endless": "Das Programm hält nicht an – eine Endlosschleife?",
+        "testResult": "In Zelle {{cell}} steht {{value}} (soll: {{expected}}) – nach {{steps}} Befehlen."
+      },
+      "stages": {
+        "bauen": {
+          "name": "PC-Bastler",
+          "summary": "Den besten Gaming-PC für das Budget zusammenstellen",
+          "rules": "Wähle einen Prozessor, eine Grafikkarte, Arbeitsspeicher und Massenspeicher. Der PC darf das Budget nicht sprengen und soll im Benchmark möglichst viele Punkte holen. Wie viel ein Bauteil bringt, verrät nur das Datenblatt – und {{testRuns}} Testläufe pro PC. Nicht alles, was teuer ist oder große Zahlen hat, macht schneller! {{questionsPerRound}} PCs in {{duration}} Sekunden."
+        },
+        "eva": {
+          "name": "EVA-Blitz",
+          "summary": "Geräte dem EVA-Prinzip zuordnen, Bauteile ihren Aufgaben",
+          "rules": "Ist das Gerät für Eingabe, Verarbeitung, Ausgabe oder Speicherung da? Oder: Welches Bauteil erledigt diese Aufgabe? Je schneller, desto mehr Punkte. {{questionsPerRound}} Fragen in {{duration}} Sekunden."
+        },
+        "binaer": {
+          "name": "Bitkarten",
+          "summary": "Zwischen Binär- und Dezimalzahlen umrechnen",
+          "rules": "Rechne Binärzahlen in Dezimalzahlen um – oder schalte die Bitkarten so, dass die Dezimalzahl entsteht. Jede Karte ist doppelt so viel wert wie die rechts daneben. {{questionsPerRound}} Zahlen in {{duration}} Sekunden."
+        },
+        "farbcode": {
+          "name": "Farbcodes",
+          "summary": "Hexadezimale Farbcodes wie #FF8000 lesen",
+          "rules": "Webseiten geben Farben als #RRGGBB an: je zwei Hex-Ziffern für Rot, Grün und Blau. FF heißt volle Kraft (255), 80 halbe (128), 00 aus. Finde die passende Farbe – oder den passenden Code. {{questionsPerRound}} Farben in {{duration}} Sekunden."
+        },
+        "rechnen": {
+          "name": "Binär rechnen",
+          "summary": "Schriftlich addieren und multiplizieren im Binärsystem",
+          "rules": "Rechne schriftlich wie in der Grundschule – nur mit 0 und 1. 1 + 1 = 10: schreibe 0, übertrage 1. Tippe die Ergebnisstellen an. {{questionsPerRound}} Aufgaben in {{duration}} Sekunden."
+        },
+        "gatter": {
+          "name": "Logikgatter",
+          "summary": "UND, ODER, NICHT: Ausgänge und Wahrheitstabellen bestimmen",
+          "rules": "& ist UND (alle Eingänge 1), ≥1 ist ODER (mindestens ein Eingang 1), der Kreis am Ausgang kehrt um (NICHT). Bestimme, was bei Y herauskommt, oder fülle die Wahrheitstabelle aus. {{questionsPerRound}} Schaltungen in {{duration}} Sekunden."
+        },
+        "prozessor": {
+          "name": "Mini-Prozessor",
+          "summary": "Befehle kodieren, Programme verfolgen und selbst schreiben",
+          "rules": "Jeder Befehl ist eine Zahl: Befehlsnummer · 32 + Adresse. Übersetze Befehle, verfolge Programme durch den Speicher und schreibe am Ende selbst eins – mit Probelauf. {{questionsPerRound}} Aufgaben in {{duration}} Sekunden."
+        }
+      }
     }
   },
   "settings": {
@@ -1471,7 +1630,39 @@
     "modelPartsAll": "Immer der ganze Weg",
     "flowUrl": "Adresse der Übung",
     "flowUrlHint": "Die Webadresse einer .bitflow-Datei, z. B. einer mit deinem Hyperbook veröffentlichten. Jedes Gerät lädt sie von dort.",
-    "minutes": "Zeit"
+    "minutes": "Zeit",
+    "testRuns": "Testläufe pro Computer",
+    "evaTasks": "Aufgaben",
+    "evaTasksEva": "EVA zuordnen",
+    "evaTasksBauteil": "Bauteil zur Aufgabe",
+    "binaryDirection": "Richtung",
+    "binaryDirectionBeide": "abwechselnd",
+    "binaryDirectionZuDezimal": "binär → dezimal",
+    "binaryDirectionZuBinaer": "dezimal → binär",
+    "bitCount": "Bits",
+    "showPlaceValues": "Stellenwerte über den Karten zeigen",
+    "hexDirection": "Richtung",
+    "hexDirectionBeide": "abwechselnd",
+    "hexDirectionCode": "Code → Farbe",
+    "hexDirectionFarbe": "Farbe → Code",
+    "binaryOps": "Rechenarten",
+    "binaryOpsAdd": "Addition",
+    "binaryOpsMul": "Multiplikation",
+    "register": "Register mit fester Breite (Überlauf)",
+    "gateTask": "Aufgabe",
+    "gateTaskBeide": "abwechselnd",
+    "gateTaskAusgang": "Ausgang bestimmen",
+    "gateTaskTabelle": "Wahrheitstabelle",
+    "gateCircuit": "Schaltungen",
+    "gateCircuitGemischt": "erst einzeln, dann verbunden",
+    "gateCircuitEinfach": "ein Gatter",
+    "gateCircuitVerbunden": "verbundene Gatter",
+    "withXor": "mit XOR-Gatter",
+    "cpuTasks": "Aufgaben",
+    "cpuTasksCode": "Befehl ↔ Zahl",
+    "cpuTasksTrace": "Programm verfolgen",
+    "cpuTasksWrite": "Programm schreiben",
+    "rawCodes": "Programme nur als Zahlen zeigen"
   },
   "parsons": {
     "plain": "Bringe die Zeilen in die richtige Reihenfolge.",

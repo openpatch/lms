@@ -20,6 +20,7 @@ export const ICON_NAMES = [
   "snake",
   "coffee",
   "mountain",
+  "chip",
   // things a question is about
   "bulb",
   "robot",

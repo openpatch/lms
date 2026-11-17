@@ -74,6 +74,14 @@ const ICONS: Record<IconName, ReactNode> = {
       <path d="M12 5v14" />
     </>
   ),
+  // A processor seen from above: the die, and the pins along every edge.
+  chip: (
+    <>
+      <rect x="6" y="6" width="12" height="12" rx="1.5" />
+      <rect x="9.5" y="9.5" width="5" height="5" rx="0.5" />
+      <path d="M9.5 2.5V6M14.5 2.5V6M9.5 18v3.5M14.5 18v3.5M2.5 9.5H6M2.5 14.5H6M18 9.5h3.5M18 14.5h3.5" />
+    </>
+  ),
   snake: (
     <>
       <path d="M6 4.5h5.5a4 4 0 0 1 0 8H9.5a3.5 3.5 0 0 0 0 7H14" />
