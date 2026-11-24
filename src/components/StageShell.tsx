@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ActionBarContext } from "./action-bar";
 import Calculator from "./Calculator";
@@ -10,6 +10,7 @@ import {
   answeredCount,
   comboMultiplier,
   currentStreak,
+  liveTally,
   playerRoundScore,
 } from "../../shared/framework";
 import { getStage, type GameDefinition, type StageProps } from "../lib/game-registry";
@@ -83,23 +84,41 @@ function StreakBadge({ streak }: { streak: number }) {
   );
 }
 
-/** Flashes feedback whenever a new answer of this player shows up. */
+/**
+ * Flashes feedback whenever a new answer of this player shows up.
+ *
+ * A question stage flashes off the answer that landed; a live stage has no
+ * answers, so it flashes off the tally instead — one more hit than before is
+ * green, one more miss is red, exactly the same flash the other stations give.
+ */
 function useAnswerFeedback(data: StageRoundData | null, playerId: string) {
+  const live = data != null && data.questions.length === 0;
   const answered = data ? answeredCount(data, playerId) : 0;
+  const tally = live && data ? liveTally(data, playerId) : null;
+  const count = live ? (tally ? tally.hits + tally.misses : 0) : answered;
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
+  const prevHits = useRef(0);
 
   useEffect(() => {
-    if (answered === 0) return;
-    const answers = data?.answers[playerId] ?? {};
-    const ids = Object.keys(answers)
-      .map(Number)
-      .sort((a, b) => a - b);
-    const last = answers[ids[ids.length - 1]];
-    if (!last) return;
-    setFeedback(last.correct ? "correct" : "wrong");
+    if (count === 0 || !data) return;
+    let correct: boolean;
+    if (live) {
+      const hits = tally?.hits ?? 0;
+      correct = hits > prevHits.current;
+      prevHits.current = hits;
+    } else {
+      const answers = data.answers[playerId] ?? {};
+      const ids = Object.keys(answers)
+        .map(Number)
+        .sort((a, b) => a - b);
+      const last = answers[ids[ids.length - 1]];
+      if (!last) return;
+      correct = last.correct === true;
+    }
+    setFeedback(correct ? "correct" : "wrong");
     const timer = setTimeout(() => setFeedback(null), 600);
     return () => clearTimeout(timer);
-  }, [answered]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [count]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return feedback;
 }

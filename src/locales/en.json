@@ -1436,6 +1436,128 @@
           "rules": "Every command is a number: command number · 32 + address. Translate commands, trace programs through memory and finally write one yourself – with a test run. {{questionsPerRound}} tasks in {{duration}} seconds."
         }
       }
+    },
+    "zuordnung": {
+      "title": "Zuordnungen (Mappings)",
+      "description": "Proportional and antiproportional relationships: situations, tables, graphs and rules.",
+      "rulesHelp": "Proportional: more of one, more of the other. Antiproportional: more of one, less of the other. Neither: neither of the two.",
+      "rulesHelpQuotient": "Quotient rule: {{given}} and {{applied}} — y ÷ x is the same in every row.",
+      "rulesHelpGraph": "A straight line through the origin is proportional, a hyperbola is antiproportional — anything else is neither.",
+      "rulesHelpVorschrift": "Two rows are enough: y ÷ x gives the factor; when x · y stays the same, it is the product that matters.",
+      "minutes_one": "minute",
+      "minutes_other": "minutes",
+      "kinds": {
+        "proportional": "Proportional",
+        "antiproportional": "Antiproportional",
+        "weder": "Neither"
+      },
+      "prompts": {
+        "modell": "Which model fits?",
+        "graphKlasse": "Which model fits this graph?",
+        "graphAblesen": "Which y-value belongs to x = {{x}}?",
+        "vorschrift": "Which rule fits?",
+        "pointOnGraph": "The marked point is at ({{x}} | {{y}})."
+      },
+      "tabelleHint": {
+        "proportional": "Quotient rule: y ÷ x is the same in every row.",
+        "antiproportional": "Product rule: x · y is the same in every row."
+      },
+      "axes": {
+        "portionen": "Portions",
+        "ackerflaeche": "Farmland",
+        "kilometer": "Kilometres",
+        "co2": "CO₂",
+        "minuten": "Minutes",
+        "wasser": "Water",
+        "kartoffeln": "Potatoes",
+        "preis": "Price",
+        "beutel": "Bags",
+        "handwerker": "Workers",
+        "tage": "Duration",
+        "kuehe": "Cows",
+        "personen": "Passengers",
+        "proPerson": "Price per person",
+        "ventile": "Valves",
+        "stunden": "Hours",
+        "fahrtpreis": "Fare",
+        "kosten": "Cost"
+      },
+      "ingredients": {
+        "mehl": "Flour",
+        "milch": "Milk",
+        "eier": "Eggs",
+        "haferflocken": "Oats",
+        "linsen": "Lentils",
+        "kokosmilch": "Coconut milk",
+        "reis": "Rice",
+        "hack": "Ground beef",
+        "broetchen": "Buns",
+        "kaese": "Cheese"
+      },
+      "setups": {
+        "acker": "A portion of burgers takes 7 m² of farmland.",
+        "co2": "A car emits 0.2 kg of CO₂ per kilometre.",
+        "dusche": "A shower runs through 12 litres of water per minute.",
+        "kartoffeln": "One kilo of potatoes costs €1.50.",
+        "popcorn": "A bag of popcorn costs €2.50.",
+        "bau": "The new gym roof takes 36 worker-days — more workers, fewer days.",
+        "futter": "The farm's hay lasts 60 cow-days — more cows, fewer days.",
+        "bus": "The coach for the class trip costs €120 — more passengers, less each.",
+        "tank": "The irrigation tank holds 90 litres — more open valves, fewer hours.",
+        "taxi": "The shared taxi charges a €3 base fare plus €2 per kilometre.",
+        "handy": "The phone plan costs a €10 base fee plus €0.10 per minute.",
+        "kinoticket": "The cinema ticket costs €9 — however long the film is.",
+        "alter": "Leo notes his age and his height on every birthday.",
+        "temperatur": "Mia keeps noting the outside temperature during a school day."
+      },
+      "stages": {
+        "modell": {
+          "name": "Model choice",
+          "summary": "Word form: which model fits?",
+          "rules": "Read the {{questionsPerRound}} situations and decide: proportional, antiproportional — or neither? Watch out: base fares and flat fees fit neither model! You have {{duration}} seconds."
+        },
+        "tabelle": {
+          "name": "Fill the table",
+          "summary": "Missing values with the quotient and product rules",
+          "rules": "Complete {{questionsPerRound}} tables: for proportional relationships the quotient y ÷ x is the same in every row, for antiproportional ones the product x · y is. The calculator in the bottom bar may help. You have {{duration}} seconds."
+        },
+        "kueche": {
+          "name": "Kitchen Panic",
+          "summary": "Live in the kitchen: serve as many orders as you can — scale ingredients and split baking time across pans",
+          "rules": "Live kitchen: {{ordersPerRound}} orders — serve as many as you can in {{duration}} seconds. For every dish, scale all ingredients by the same factor (proportional) or split the baking time across the pans (antiproportional), tap the right amount for each ingredient and serve. A wrong tap and the order is gone — the clock up top runs for the whole round. The calculator in the bottom bar may help."
+        },
+        "graph": {
+          "name": "Graphs",
+          "summary": "Sort graphs into their models and read values off them",
+          "rules": "{{questionsPerRound}} graphs: sort each curve into its model, or read the marked point off it and work out the value asked for. The calculator in the bottom bar may help. You have {{duration}} seconds."
+        },
+        "vorschrift": {
+          "name": "The rule",
+          "summary": "Find the rule y = … that fits",
+          "rules": "For {{questionsPerRound}} tables and graphs, pick the matching rule y = … from four terms each. You have {{duration}} seconds."
+        }
+      },
+      "orders": {
+        "pfannkuchen": "Pancakes for {{for}} people — you are cooking for {{cookingFor}}. How much of each ingredient do you need?",
+        "muesli": "Muesli for 1 person — there are {{cookingFor}} of you. How much oats and milk do you need?",
+        "curry": "Lentil curry for {{for}} people — you are cooking for {{cookingFor}}. How much of each ingredient do you need?",
+        "burger": "Burgers for {{for}} people — there are {{cookingFor}} of you. How much of each ingredient do you need?",
+        "pfanne": "{{persons}} people order pancakes: {{crepes}} pancakes — in one pan that takes {{single}} minutes. How long does it take with {{pans}} pans?"
+      },
+      "slotTime": "Time per pan",
+      "serve": "Serve!",
+      "progress": "Order {{index}} of {{total}}",
+      "allDone": "All orders done — waiting for the others …",
+      "servedFlash": "Served!",
+      "burntFlash": "Wrong order!",
+      "summary": {
+        "served": "Served",
+        "burnt": "Wrong",
+        "streak": "Best streak",
+        "average": "On average"
+      },
+      "rulesExampleKueche": "Recipe for {{for}}, cooked for {{cookingFor}}: factor {{factor}} — every ingredient × {{factor}}.",
+      "rulesExampleKuechePans": "More pans, less time: pans × minutes stays the same."
     }
   },
   "settings": {
@@ -1662,7 +1784,23 @@
     "cpuTasksCode": "Command ↔ number",
     "cpuTasksTrace": "Trace a program",
     "cpuTasksWrite": "Write a program",
-    "rawCodes": "Show programs as numbers only"
+    "rawCodes": "Show programs as numbers only",
+    "models": "Types of relationship",
+    "modelProportional": "Proportional relationships",
+    "modelAntiproportional": "Antiproportional relationships",
+    "modelLinear": "Linear relationships (y = k·x + d)",
+    "includeNeither": "Include “neither” situations",
+    "graphTasks": "Graph tasks",
+    "graphTaskKlasse": "Classify graphs",
+    "graphTaskAblesen": "Read values off graphs",
+    "sources": "Representation",
+    "sourceTabelle": "Table",
+    "sourceGraph": "Graph",
+    "vorschriftKinds": "Types of relationship",
+    "kuecheTasks": "Kitchen tasks",
+    "kuecheTaskEinkauf": "Scale dishes (proportional)",
+    "kuecheTaskPfanne": "Pans (antiproportional)",
+    "ordersPerRound": "Orders per round"
   },
   "parsons": {
     "plain": "Put the lines back in the right order.",
@@ -1683,6 +1821,8 @@
     "signOut": "Sign out",
     "signingIn": "Signing in…",
     "failed": "Wrong email or password.",
-    "noSignUp": "Accounts are created by the administrator."
+    "noSignUp": "Accounts are created by the administrator.",
+    "demoSignIn": "Sign in as the demo teacher",
+    "demoHint": "Development only: the demo account from “pnpm dev”."
   }
 }

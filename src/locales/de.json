@@ -1436,6 +1436,128 @@
           "rules": "Jeder Befehl ist eine Zahl: Befehlsnummer · 32 + Adresse. Übersetze Befehle, verfolge Programme durch den Speicher und schreibe am Ende selbst eins – mit Probelauf. {{questionsPerRound}} Aufgaben in {{duration}} Sekunden."
         }
       }
+    },
+    "zuordnung": {
+      "title": "Zuordnungen",
+      "description": "Proportionale und antiproportionale Zuordnungen: Situationen, Tabellen, Graphen und Zuordnungsvorschriften.",
+      "rulesHelp": "Proportional: mehr von dem einen, mehr von dem anderen. Antiproportional: mehr von dem einen, weniger von dem anderen. Weder noch: beides nicht.",
+      "rulesHelpQuotient": "Quotientengleichheit: {{given}} und {{applied}} — y : x ist in jeder Zeile gleich.",
+      "rulesHelpGraph": "Eine Gerade durch den Ursprung ist proportional, eine Hyperbel antiproportional — alles andere ist weder noch.",
+      "rulesHelpVorschrift": "Zwei Zeilen genügen: y : x gibt den Proportionalitätsfaktor, bei x · y bleibt das Produkt gleich.",
+      "minutes_one": "Minute",
+      "minutes_other": "Minuten",
+      "kinds": {
+        "proportional": "Proportional",
+        "antiproportional": "Antiproportional",
+        "weder": "Weder noch"
+      },
+      "prompts": {
+        "modell": "Welches Zuordnungsmodell passt?",
+        "graphKlasse": "Welches Zuordnungsmodell passt zum Graphen?",
+        "graphAblesen": "Welcher y-Wert gehört zu x = {{x}}?",
+        "vorschrift": "Welche Zuordnungsvorschrift passt?",
+        "pointOnGraph": "Der markierte Punkt liegt bei ({{x}} | {{y}})."
+      },
+      "tabelleHint": {
+        "proportional": "Quotientengleichheit: y : x ist in jeder Zeile gleich — der Proportionalitätsfaktor.",
+        "antiproportional": "Produktgleichheit: x · y ist in jeder Zeile gleich."
+      },
+      "axes": {
+        "portionen": "Portionen",
+        "ackerflaeche": "Ackerfläche",
+        "kilometer": "Kilometer",
+        "co2": "CO₂",
+        "minuten": "Minuten",
+        "wasser": "Wasser",
+        "kartoffeln": "Kartoffeln",
+        "preis": "Preis",
+        "beutel": "Beutel",
+        "handwerker": "Handwerker",
+        "tage": "Dauer",
+        "kuehe": "Kühe",
+        "personen": "Mitfahrer",
+        "proPerson": "Preis pro Person",
+        "ventile": "Ventile",
+        "stunden": "Stunden",
+        "fahrtpreis": "Fahrtpreis",
+        "kosten": "Kosten"
+      },
+      "ingredients": {
+        "mehl": "Mehl",
+        "milch": "Milch",
+        "eier": "Eier",
+        "haferflocken": "Haferflocken",
+        "linsen": "Linsen",
+        "kokosmilch": "Kokosmilch",
+        "reis": "Reis",
+        "hack": "Hackfleisch",
+        "broetchen": "Brötchen",
+        "kaese": "Käse"
+      },
+      "setups": {
+        "acker": "Eine Portion Burger braucht 7 m² Ackerfläche.",
+        "co2": "Ein Auto stößt 0,2 kg CO₂ pro Kilometer aus.",
+        "dusche": "Unter der Dusche fließen pro Minute 12 Liter Wasser.",
+        "kartoffeln": "Ein Kilo Kartoffeln kostet 1,50 €.",
+        "popcorn": "Ein Beutel Popcorn kostet 2,50 €.",
+        "bau": "Das neue Dach der Turnhalle braucht 36 Handwerker-Tage — mehr Handwerker, weniger Tage.",
+        "futter": "Der Heuvorrat des Hofs reicht 60 Kuh-Tage — mehr Kühe, weniger Tage.",
+        "bus": "Die Busfahrt zur Klassenfahrt kostet 120 € — mehr Mitfahrer, weniger pro Person.",
+        "tank": "Der 90-Liter-Tank der Bewässerung läuft über die offenen Ventile leer — mehr Ventile, weniger Stunden.",
+        "taxi": "Das Sammeltaxi nimmt 3 € Grundpreis und 2 € pro Kilometer.",
+        "handy": "Der Handytarif kostet 10 € Grundgebühr und 0,10 € pro Gesprächsminute.",
+        "kinoticket": "Das Kinoticket kostet 9 € — egal, wie lange der Film läuft.",
+        "alter": "Leo notiert zu jedem Geburtstag sein Alter und seine Körpergröße.",
+        "temperatur": "Mia notiert im Laufe eines Schultages immer wieder die Außentemperatur."
+      },
+      "stages": {
+        "modell": {
+          "name": "Modellwahl",
+          "summary": "Wortform: Welches Zuordnungsmodell passt?",
+          "rules": "Lies die {{questionsPerRound}} Situationen und entscheide: proportionale Zuordnung, antiproportionale Zuordnung – oder weder noch? Achtung, schau genau: Grundpreise und Grundgebühren passen in keins der beiden Modelle! Du hast {{duration}} Sekunden."
+        },
+        "tabelle": {
+          "name": "Tabelle ergänzen",
+          "summary": "Fehlende Werte mit Quotienten- und Produktgleichheit (Dreisatz)",
+          "rules": "Vervollständige {{questionsPerRound}} Tabellen: Bei proportionalen Zuordnungen ist der Quotient y : x in jeder Zeile gleich, bei antiproportionalen das Produkt x · y. Der Taschenrechner in der Leiste darf helfen. Du hast {{duration}} Sekunden."
+        },
+        "kueche": {
+          "name": "Küchen-Panik",
+          "summary": "Live in der Küche: so viele Bestellungen wie möglich servieren — Zutaten hochrechnen und Backzeit auf Pfannen verteilen",
+          "rules": "Live-Küche: {{ordersPerRound}} Bestellungen — so viele wie möglich in {{duration}} Sekunden. Rechne bei jedem Gericht alle Zutaten mit demselben Faktor hoch (proportional) oder teile die Backzeit auf die Pfannen auf (antiproportional), tippe pro Zutat die richtige Menge und serviere ab. Falsch getippt ist die Bestellung weg — die Uhr oben läuft für die ganze Runde. Der Taschenrechner in der Leiste darf helfen."
+        },
+        "graph": {
+          "name": "Graphen",
+          "summary": "Graphen einordnen und Werte ablesen",
+          "rules": "{{questionsPerRound}} Graphen: Ordne jede Kurve ihrem Zuordnungsmodell zu oder lies den markierten Punkt ab und bestimme damit den gefragten Wert. Der Taschenrechner in der Leiste darf helfen. Du hast {{duration}} Sekunden."
+        },
+        "vorschrift": {
+          "name": "Zuordnungsvorschrift",
+          "summary": "Die passende Zuordnungsvorschrift y = … finden",
+          "rules": "Finde zu {{questionsPerRound}} Tabellen und Graphen die passende Zuordnungsvorschrift y = … unter je vier Termen. Du hast {{duration}} Sekunden."
+        }
+      },
+      "orders": {
+        "pfannkuchen": "Pfannkuchen für {{for}} Personen — ihr kocht für {{cookingFor}} Personen. Wie viel braucht ihr von jeder Zutat?",
+        "muesli": "Müsli für 1 Person — ihr seid {{cookingFor}} Personen. Wie viel Haferflocken und Milch braucht ihr?",
+        "curry": "Linsencurry für {{for}} Personen — ihr kocht für {{cookingFor}} Personen. Wie viel braucht ihr von jeder Zutat?",
+        "burger": "Burger für {{for}} Personen — ihr seid {{cookingFor}} Personen. Wie viel braucht ihr von jeder Zutat?",
+        "pfanne": "{{persons}} Personen bestellen Pfannkuchen: {{crepes}} Stück — in einer Pfanne braucht das {{single}} Minuten. Wie lange dauert es mit {{pans}} Pfannen?"
+      },
+      "slotTime": "Zeit pro Pfanne",
+      "serve": "Servieren!",
+      "progress": "Bestellung {{index}} von {{total}}",
+      "allDone": "Alle Bestellungen erledigt — warte auf die anderen …",
+      "servedFlash": "Serviert!",
+      "burntFlash": "Falsch serviert!",
+      "summary": {
+        "served": "Serviert",
+        "burnt": "Falsch serviert",
+        "streak": "Beste Serie",
+        "average": "Im Schnitt"
+      },
+      "rulesExampleKueche": "Rezept für {{for}}, gekocht für {{cookingFor}}: Faktor {{factor}} — jede Zutat × {{factor}}.",
+      "rulesExampleKuechePans": "Mehr Pfannen, weniger Zeit: Pfannen · Minuten bleibt gleich."
     }
   },
   "settings": {
@@ -1662,7 +1784,23 @@
     "cpuTasksCode": "Befehl ↔ Zahl",
     "cpuTasksTrace": "Programm verfolgen",
     "cpuTasksWrite": "Programm schreiben",
-    "rawCodes": "Programme nur als Zahlen zeigen"
+    "rawCodes": "Programme nur als Zahlen zeigen",
+    "models": "Zuordnungsarten",
+    "modelProportional": "Proportionale Zuordnungen",
+    "modelAntiproportional": "Antiproportionale Zuordnungen",
+    "modelLinear": "Lineare Zuordnungen (y = k·x + d)",
+    "includeNeither": "Auch „weder noch“-Situationen einbeziehen",
+    "graphTasks": "Aufgaben am Graphen",
+    "graphTaskKlasse": "Graphen einordnen",
+    "graphTaskAblesen": "Werte ablesen",
+    "sources": "Darstellungsform",
+    "sourceTabelle": "Tabelle",
+    "sourceGraph": "Graph",
+    "vorschriftKinds": "Zuordnungsarten",
+    "kuecheTasks": "Küchen-Aufgaben",
+    "kuecheTaskEinkauf": "Gerichte hochrechnen (proportional)",
+    "kuecheTaskPfanne": "Pfannenhilfe (antiproportional)",
+    "ordersPerRound": "Bestellungen pro Runde"
   },
   "parsons": {
     "plain": "Bringe die Zeilen in die richtige Reihenfolge.",
@@ -1683,6 +1821,8 @@
     "signOut": "Abmelden",
     "signingIn": "Anmeldung läuft…",
     "failed": "E-Mail oder Passwort ist falsch.",
-    "noSignUp": "Konten werden von der Administration angelegt."
+    "noSignUp": "Konten werden von der Administration angelegt.",
+    "demoSignIn": "Als Demo-Lehrkraft anmelden",
+    "demoHint": "Nur Entwicklung: der Demo-Zugang aus „pnpm dev“."
   }
 }

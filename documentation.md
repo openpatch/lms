@@ -98,9 +98,10 @@ reading of its own while it was being built puts it right in `onBegin`.
 | `src/games/intuition/components/PixelPicture.tsx` | A glyph squeezed through an n-by-n canvas and blown back up, so a blocky picture needs no image file |
 | `src/games/intuition/stages/LiveSummary.tsx` | What a live round comes to: hits, misses, longest run, average reaction |
 | `scripts/check-games.ts` | `pnpm check:games` — smoke test for every registered game |
+| `scripts/dev.ts`, `scripts/demo.ts` | `pnpm dev` — the game server and the Vite client as one command, seeding the demo teacher first; local only |
 | `src/lib/auth.ts`, `src/pages/Login.tsx`, `src/components/RequireTeacher.tsx` | Signing a teacher in, and the screens that need one |
 | `scripts/check-server.ts` | `pnpm check:server` — signs in, opens a lobby, plays a round, restarts the server |
-| `scripts/teacher.ts` | `pnpm teacher add\|list\|password\|remove` — the only way accounts exist |
+| `scripts/teacher.ts` | `pnpm teacher add\|list\|password\|remove\|demo` — the only way accounts exist |
 | `deploy/nginx.conf` | Example reverse proxy; running the server is covered in the [README](README.md) |
 
 A game touches exactly three places: its spec (shared), its handlers (server), its
@@ -321,7 +322,8 @@ them instead of adding a new key per game.
 ```
 npm run check:games   # specs, handlers, one round per stage, translations
 npm run build         # types + client bundle
-npm run dev           # client, plus `npm run dev:server` for the game server
+npm run dev           # game server and client together, demo teacher signed on
+                      # (`npm run dev:server` / `npm run dev:client` for one alone)
 ```
 
 `check:games` builds a round of every stage, feeds it a nonsense answer and verifies

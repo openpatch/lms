@@ -75,9 +75,14 @@ export interface StageHandler<Q extends StageQuestion = StageQuestion> {
    * What a player may see of `extra`. Leave it out when `extra` is the board
    * the whole class plays on — the lights, the targets. A stage that keeps
    * something per player in it, which nobody else should see, returns only
-   * that player's part.
+   * that player's part. `over` says the round has ended, the way it does for
+   * questions: what was secret while playing may be revealed in the review.
    */
-  extraForPlayer?(extra: Record<string, unknown>, playerId: string): Record<string, unknown>;
+  extraForPlayer?(
+    extra: Record<string, unknown>,
+    playerId: string,
+    over: boolean,
+  ): Record<string, unknown>;
   /**
    * Whether the round is over before the clock says so. Without it a round
    * with questions ends once everyone has answered them all, and one without
@@ -399,7 +404,9 @@ export function createStageGame(spec: GameSpec, handlers: AnyStageHandler[]): Ga
         // A player's device needs their own answers — their score, their streak,
         // what they got wrong — and nobody else's.
         answers: own ? { [viewerId]: own } : {},
-        extra: handler?.extraForPlayer ? handler.extraForPlayer(data.extra, viewerId) : data.extra,
+        extra: handler?.extraForPlayer
+          ? handler.extraForPlayer(data.extra, viewerId, over)
+          : data.extra,
         questions:
           over || !handler
             ? data.questions

@@ -220,6 +220,7 @@ import intuitionGame from "../games/intuition";
 import bitflowGame from "../games/bitflow";
 import spreadsheetGame from "../games/spreadsheet";
 import rechnerGame from "../games/rechner";
+import zuordnungGame from "../games/zuordnung";
 
 export const games: Record<string, GameDefinition> = {
   example: exampleGame,
@@ -235,6 +236,7 @@ export const games: Record<string, GameDefinition> = {
   bitflow: bitflowGame,
   spreadsheet: spreadsheetGame,
   rechner: rechnerGame,
+  zuordnung: zuordnungGame,
 };
 
 // Every spec needs a client definition, and vice versa.

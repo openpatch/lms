@@ -12,6 +12,7 @@ import bitflowHandler from "./bitflow";
 import intuitionHandler from "./intuition";
 import spreadsheetHandler from "./spreadsheet";
 import rechnerHandler from "./rechner";
+import zuordnungHandler from "./zuordnung";
 
 /**
  * Server-side game handler registry.
@@ -31,4 +32,5 @@ export const gameHandlers: Record<string, GameHandler> = {
   bitflow: bitflowHandler,
   spreadsheet: spreadsheetHandler,
   rechner: rechnerHandler,
+  zuordnung: zuordnungHandler,
 };

@@ -17,19 +17,22 @@ no native module to compile — and pnpm.
 
 ```sh
 pnpm install
-pnpm dev:server     # game server on :3000
-pnpm dev            # client, proxying /parties to the game server
+pnpm dev           # game server on :3000, client on :5173 — one command, both
 ```
 
-`pnpm dev` on its own is enough to look at a single stage: `/preview` lists
-every one of them and plays it in the tab, with no server and no account. It is
-served only by the dev build.
-
-Then create an account for yourself and sign in at `/login`:
+`pnpm dev` also makes sure the demo teacher is there before anything starts, and
+in the dev build the login page grows a **“Als Demo-Lehrkraft anmelden”** button
+for it — click and you are in, no credentials to remember. That account is only
+for local development (its credentials sit in `shared/demo-teacher.ts` for
+anyone to read); real accounts come from `pnpm teacher`:
 
 ```sh
 pnpm teacher add you@example.com "Your Name"
 ```
+
+Only the client, with no server and no account, is enough to look at a single
+stage: `pnpm dev:client` and open `/preview`, which lists every one of them and
+plays it in the tab. It is served only by the dev build.
 
 The bitflow game runs `@bitflow/web-component` from the sibling `bitflow`
 checkout (`link:../bitflow/packages/web-component` in `package.json`) until the

@@ -4,6 +4,7 @@
 //   pnpm teacher list
 //   pnpm teacher password <email> [password]
 //   pnpm teacher remove <email>
+//   pnpm teacher demo
 //
 // On the server, run it from /srv/lms so it picks up the same DB_PATH.
 
@@ -11,6 +12,8 @@ import { randomBytes } from "node:crypto";
 import { betterAuth } from "better-auth";
 import { authOptions } from "../server/auth";
 import { db } from "../server/store";
+import { DEMO_EMAIL, DEMO_PASSWORD } from "../shared/demo-teacher";
+import { ensureDemoTeacher } from "./demo";
 
 // Sign-up is disabled on the running server; this instance is the way in.
 const admin = betterAuth({ ...authOptions, emailAndPassword: { ...authOptions.emailAndPassword, disableSignUp: false } });
@@ -89,8 +92,16 @@ async function main() {
     case "remove":
       remove(args[0]);
       break;
+    case "demo": {
+      const did = await ensureDemoTeacher();
+      console.log(
+        did === "created" ? `created ${DEMO_EMAIL}` : `${did === "reset" ? "password reset" : "already there"} for ${DEMO_EMAIL}`,
+      );
+      console.log(`password: ${DEMO_PASSWORD}  (local only — /login has a button for it)`);
+      break;
+    }
     default:
-      fail("usage: pnpm teacher <add|list|password|remove> …");
+      fail("usage: pnpm teacher <add|list|password|remove|demo> …");
   }
   process.exit(0);
 }

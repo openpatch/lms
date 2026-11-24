@@ -302,6 +302,31 @@ const ICONS: Record<IconName, ReactNode> = {
       <path d="M15.5 6H20v4.5" />
     </>
   ),
+  // A Zuordnung: one value, an arrow, and the value it is assigned to.
+  mapping: (
+    <>
+      <circle cx="5.5" cy="18.5" r="2.2" />
+      <circle cx="18.5" cy="5.5" r="2.2" />
+      <path d="M8.1 15.9 15.9 8.1" />
+      <path d="M12.9 8.1h3M15.9 8.1v3" />
+    </>
+  ),
+  // A burger: top bun with sesame, the patty, the bottom bun.
+  burger: (
+    <>
+      <path d="M4 10c0-3.3 3.6-6 8-6s8 2.7 8 6H4z" />
+      <path d="M9 7.5h.01M15 7h.01" />
+      <path d="M4 13.5h16" />
+      <path d="M4 17h16v1a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-1z" />
+    </>
+  ),
+  // A bowl of curry: the half bowl and two wisps of steam.
+  bowl: (
+    <>
+      <path d="M3.5 12h17a8.5 8.5 0 0 1-17 0z" />
+      <path d="M9.5 8.5c0-1.6 1.6-1.6 1.6-3.2M13.5 8.5c0-1.6 1.6-1.6 1.6-3.2" />
+    </>
+  ),
 };
 
 /**

@@ -13,6 +13,7 @@ import { bitflowSpec } from "./bitflow";
 import { intuitionSpec } from "./intuition";
 import { spreadsheetSpec } from "./spreadsheet";
 import { rechnerSpec } from "./rechner";
+import { zuordnungSpec } from "./zuordnung";
 
 /**
  * Every mini game known to client and server. Adding a game means adding its
@@ -33,6 +34,7 @@ export const gameSpecs: Record<string, GameSpec> = {
   bitflow: bitflowSpec,
   spreadsheet: spreadsheetSpec,
   rechner: rechnerSpec,
+  zuordnung: zuordnungSpec,
 };
 
 export function getGameSpec(id: string): GameSpec | undefined {

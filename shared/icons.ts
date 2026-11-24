@@ -54,6 +54,9 @@ export const ICON_NAMES = [
   "percent",
   "chartBar",
   "chartLine",
+  "mapping",
+  "burger",
+  "bowl",
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];

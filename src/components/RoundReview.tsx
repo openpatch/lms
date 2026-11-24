@@ -3,6 +3,7 @@ import type { StageRoundData } from "../../shared/framework";
 import { playerRoundScore } from "../../shared/framework";
 import type { PlayerAnswer } from "../../shared/types";
 import { getStage, type GameDefinition } from "../lib/game-registry";
+import { BADGE, MARK } from "./review-badges";
 
 /** One "label: value" line of a review row, for stages to build theirs from. */
 export function ReviewLine({ label, children }: { label: string; children: React.ReactNode }) {
@@ -21,13 +22,6 @@ function PlainReview({ answer }: { answer: PlayerAnswer | undefined }) {
   return <ReviewLine label={t("game.yourAnswer")}>{answer.answer}</ReviewLine>;
 }
 
-const BADGE = {
-  correct: "bg-green-100 text-green-700",
-  wrong: "bg-red-100 text-red-600",
-  missing: "bg-gray-100 text-gray-400",
-};
-
-const MARK = { correct: "✓", wrong: "✗", missing: "–" };
 
 /**
  * What a player gets to see once the round is over: every question of the round

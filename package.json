@@ -6,8 +6,9 @@
   "type": "module",
   "packageManager": "pnpm@11.3.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx scripts/dev.ts",
     "dev:server": "node --import tsx --watch server/index.ts",
+    "dev:client": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "check:games": "tsx scripts/check-games.ts",
